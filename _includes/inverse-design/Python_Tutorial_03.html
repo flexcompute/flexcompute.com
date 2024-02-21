@@ -1,0 +1,2249 @@
+<!DOCTYPE html>
+
+<html>
+<head><meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <link href="/assets/tidy3d/examples/css/example-notebook.css" rel="stylesheet"/>
+  <title>Tutorial3</title>
+  <!-- Load mathjax -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS_CHTML-full,Safe"> </script>
+  <!-- MathJax configuration -->
+  <script type="text/x-mathjax-config">
+    init_mathjax = function() {
+        if (window.MathJax) {
+        // MathJax loaded
+            MathJax.Hub.Config({
+                TeX: {
+                    equationNumbers: {
+                    autoNumber: "AMS",
+                    useLabelIds: true
+                    }
+                },
+                tex2jax: {
+                    inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+                    displayMath: [ ['$$','$$'], ["\\[","\\]"] ],
+                    processEscapes: true,
+                    processEnvironments: true
+                },
+                displayAlign: 'center',
+                CommonHTML: {
+                    linebreaks: {
+                    automatic: true
+                    }
+                }
+            });
+
+            MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
+        }
+    }
+    init_mathjax();
+    </script>
+  <!-- End of mathjax configuration --><script type="module">
+    document.addEventListener("DOMContentLoaded", async () => {
+      const diagrams = document.querySelectorAll(".jp-Mermaid > pre.mermaid");
+      // do not load mermaidjs if not needed
+      if (!diagrams.length) {
+        return;
+      }
+      const mermaid = (await import("https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.2.3/mermaid.esm.min.mjs")).default;
+
+      mermaid.initialize({
+        maxTextSize: 100000,
+        startOnLoad: false,
+        fontFamily: window
+          .getComputedStyle(document.body)
+          .getPropertyValue("--jp-ui-font-family"),
+        theme: document.querySelector("body[data-jp-theme-light='true']")
+          ? "default"
+          : "dark",
+      });
+
+      let _nextMermaidId = 0;
+
+      function makeMermaidImage(svg) {
+        const img = document.createElement('img');
+        const maxWidth = svg.match(/max-width: (\d+)/);
+        if (maxWidth && maxWidth[1]) {
+          const width = parseInt(maxWidth[1]);
+          if (width && !Number.isNaN(width) && Number.isFinite(width)) {
+            img.width = width;
+          }
+        }
+        img.setAttribute('src', `data:image/svg+xml,${encodeURIComponent(svg)}`);
+        return img;
+      }
+
+      async function makeMermaidError(text) {
+        let errorMessage = '';
+        try {
+          await mermaid.parse(text);
+        } catch (err) {
+          errorMessage = `${err}`;
+        }
+
+        const result = document.createElement('details');
+        const summary = document.createElement('summary');
+        const pre = document.createElement('pre');
+        const code = document.createElement('code');
+        code.innerText = text;
+        pre.appendChild(code);
+        summary.appendChild(pre);
+        result.appendChild(summary);
+
+        const warning = document.createElement('pre');
+        warning.innerText = errorMessage;
+        result.appendChild(warning);
+        return result;
+      }
+
+      async function renderOneMarmaid(src) {
+        const id = `jp-mermaid-${_nextMermaidId++}`;
+        const parent = src.parentNode;
+        let raw = src.textContent.trim();
+        const el = document.createElement("div");
+        el.style.visibility = "hidden";
+        document.body.appendChild(el);
+        let result = null;
+        try {
+          const { svg } = await mermaid.render(id, raw, el);
+          result = makeMermaidImage(svg);
+        } catch (err) {
+          parent.classList.add("jp-mod-warning");
+          result = await makeMermaidError(raw);
+        } finally {
+          el.remove();
+        }
+        parent.classList.add("jp-RenderedMermaid");
+        parent.appendChild(result);
+      }
+
+      void Promise.all([...diagrams].map(renderOneMarmaid));
+    });
+  </script>
+  <style>
+      .jp-RenderedMarkdown .jp-Mermaid:not(.jp-RenderedMermaid) {
+          display: none;
+      }
+      .jp-RenderedMarkdown .jp-RenderedMermaid.jp-mod-warning {
+          width: auto;
+          padding: 10px;
+          border: var(--jp-border-width) solid var(--jp-warn-color2);
+          border-radius: var(--jp-border-radius);
+          color: var(--jp-ui-font-color1);
+          font-size: var(--jp-ui-font-size1);
+          white-space: pre-wrap;
+          word-wrap: break-word;
+      }
+      .jp-RenderedMarkdown .jp-RenderedMermaid.jp-mod-warning details > pre {
+          margin-top: 1em;
+      }
+      .jp-RenderedMarkdown .jp-RenderedMermaid.jp-mod-warning summary {
+          color: var(--jp-warn-color2);
+      }
+      .jp-RenderedMarkdown .jp-RenderedMermaid.jp-mod-warning summary > pre {
+          display: inline-block;
+      }
+      .jp-RenderedMermaid > .mermaid {
+          display: none;
+      }
+  </style>
+  <!-- End of mermaid configuration --></head>
+<body class="jp-Notebook" data-jp-theme-light="true" data-jp-theme-name="JupyterLab Light">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=e004651b-447b-494a-8ab8-6bf448cf29ce">
+  <div class="jp-Cell-inputWrapper">
+    <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+    </div>
+    <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+    </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+      <h2 id="Adjoint-Optimization-Demo">Adjoint Optimization Demo<a class="anchor-link" href="#Adjoint-Optimization-Demo">¶</a></h2><p>In this tutorial notebook, we will use the <code>tidy3d.adjoint</code> plugin to demonstrate the inverse design of a lens using the principles outlined in the previous <a href="https://www.flexcompute.com/tidy3d/learning-center/inverse-design/">lectures</a>.</p>
+      <p>The main documentation for the <code>adjoint</code> plugin can be found <a href="https://docs.flexcompute.com/projects/tidy3d/en/latest/notebooks/AdjointPlugin1Intro.html">here</a> as well as a handful of demos of adjoint optimization in action, such as for desigining a <a href="https://docs.flexcompute.com/projects/tidy3d/en/latest/notebooks/AdjointPlugin6GratingCoupler.html">grating coupler</a> or a <a href="https://docs.flexcompute.com/projects/tidy3d/en/latest/notebooks/AdjointPlugin3InverseDesign.html">mode converter</a>.</p>
+      <h2 id="Set-Up">Set Up<a class="anchor-link" href="#Set-Up">¶</a></h2><p>First, we will set up the basic parameters of our simulation. We will define a 2D simulation domain with a central design region consisting of a grid of rectangular regions where we may vary the relative permittivity between that of vacuum and that of our lens material. Using the adjoint plugin, we compute the gradient of the lens focusing with respect to the permittivity of each grid cell. Then we use this gradient to update the grid cell permittivities in the direction of maximizing focusing strength. This process is repeated until a final design is achieved.</p>
+    </div>
+    </div>
+  </div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=b4acdc17-ada2-48cf-a0a4-c90fa8ac2fce">
+  <div class="jp-Cell-inputWrapper">
+    <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+    </div>
+    <div class="jp-InputArea jp-Cell-inputArea">
+      <div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div>
+      <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+        <div class="CodeMirror cm-s-jupyter">
+          <div class="highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">matplotlib.pylab</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">tidy3d</span> <span class="k">as</span> <span class="nn">td</span>
+
+<span class="c1"># in addition to the regular tidy3d package, we also import the adjoint plugin</span>
+<span class="c1"># this gives us special tidy3d components that track derivative information</span>
+<span class="kn">import</span> <span class="nn">tidy3d.plugins.adjoint</span> <span class="k">as</span> <span class="nn">tda</span>
+
+<span class="c1"># we also import the web run function from the adjoint plugin, which lets us use the adjoint plugin</span>
+<span class="c1"># on the server side to compute gradient information efficiently</span>
+<span class="kn">from</span> <span class="nn">tidy3d.plugins.adjoint.web</span> <span class="kn">import</span> <span class="n">run_local</span> <span class="k">as</span> <span class="n">run</span>
+
+<span class="c1"># for the rest of the process, we use the "jax" package to define our objective function</span>
+<span class="c1"># and take derivatives using automatic differentiation</span>
+<span class="kn">import</span> <span class="nn">jax</span>
+<span class="kn">import</span> <span class="nn">jax.numpy</span> <span class="k">as</span> <span class="nn">jnp</span>
+</pre></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=ae7d1d0e-a109-40c8-ab7c-ce0337e2d23f">
+  <div class="jp-Cell-inputWrapper">
+    <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+    </div>
+    <div class="jp-InputArea jp-Cell-inputArea">
+      <div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div>
+      <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+        <div class="CodeMirror cm-s-jupyter">
+          <div class="highlight hl-ipython3"><pre><span></span><span class="c1"># source info</span>
+<span class="n">wavelength</span> <span class="o">=</span> <span class="mf">1.0</span>
+<span class="n">freq0</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">C_0</span> <span class="o">/</span> <span class="n">wavelength</span>
+<span class="n">fwidth</span> <span class="o">=</span> <span class="n">freq0</span> <span class="o">/</span> <span class="mi">10</span>
+<span class="n">run_time</span> <span class="o">=</span> <span class="mi">100</span> <span class="o">/</span> <span class="n">fwidth</span>
+
+<span class="c1"># geometry into</span>
+<span class="n">lens_thick</span> <span class="o">=</span> <span class="mf">1.5575563445</span> <span class="o">*</span> <span class="n">wavelength</span>
+<span class="n">lens_width</span> <span class="o">=</span> <span class="mf">5.575563445</span> <span class="o">*</span> <span class="n">wavelength</span>
+<span class="n">dist</span> <span class="o">=</span> <span class="mf">2.3</span> <span class="o">*</span> <span class="n">wavelength</span>
+<span class="n">buffer</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">*</span> <span class="n">wavelength</span>
+
+<span class="c1"># simulation size</span>
+<span class="n">Lx</span> <span class="o">=</span> <span class="n">lens_thick</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">buffer</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">dist</span>
+<span class="n">Ly</span> <span class="o">=</span> <span class="n">lens_width</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">buffer</span>
+<span class="n">Lz</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+<span class="c1"># material information</span>
+<span class="n">ref_ind_lens</span> <span class="o">=</span> <span class="mf">1.5</span>
+<span class="n">eps_lens</span> <span class="o">=</span> <span class="n">ref_ind_lens</span> <span class="o">**</span> <span class="mi">2</span>
+
+<span class="c1"># lens discretization</span>
+<span class="n">nx</span> <span class="o">=</span> <span class="mi">33</span>
+<span class="n">ny</span> <span class="o">=</span> <span class="mi">93</span>
+
+<span class="n">dl</span> <span class="o">=</span> <span class="n">wavelength</span><span class="o">/</span><span class="mi">20</span>
+
+<span class="n">MNT_NAME_FOCUS</span> <span class="o">=</span> <span class="s2">"focus"</span>
+<span class="n">MNT_NAME_FIELD</span> <span class="o">=</span> <span class="s2">"field"</span>
+</pre></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=d11f1981-85a4-4bbc-9d98-3ff3b779c62f">
+  <div class="jp-Cell-inputWrapper">
+    <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+    </div>
+    <div class="jp-InputArea jp-Cell-inputArea">
+      <div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div>
+      <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+        <div class="CodeMirror cm-s-jupyter">
+          <div class="highlight hl-ipython3"><pre><span></span><span class="c1"># minimal thickness</span>
+<span class="n">min_thick</span> <span class="o">=</span> <span class="n">dist</span> <span class="o">*</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="p">(</span><span class="n">lens_width</span><span class="o">/</span><span class="mi">2</span><span class="o">/</span><span class="n">dist</span><span class="p">))</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'minimum thickness should be </span><span class="si">{</span><span class="p">(</span><span class="n">min_thick</span><span class="o">/</span><span class="n">wavelength</span><span class="p">)</span><span class="si">:</span><span class="s1">.2f</span><span class="si">}</span><span class="s1"> wavelengths'</span><span class="p">)</span>
+</pre></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="jp-Cell-outputWrapper">
+    <div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+    </div>
+    <div class="jp-OutputArea jp-Cell-outputArea">
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain">
+<pre>minimum thickness should be 1.12 wavelengths
+</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=1f1df611-ebe3-4a3f-96e0-0a9b2b20860a">
+  <div class="jp-Cell-inputWrapper">
+    <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+    </div>
+    <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+    </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+      <p>Next, we will define the source and field monitor components for our simulation.</p>
+    </div>
+    </div>
+  </div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=44587332-4e65-4d94-a06d-93633762c38e">
+  <div class="jp-Cell-inputWrapper">
+    <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+    </div>
+    <div class="jp-InputArea jp-Cell-inputArea">
+      <div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div>
+      <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+        <div class="CodeMirror cm-s-jupyter">
+          <div class="highlight hl-ipython3"><pre><span></span><span class="n">source</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">PointDipole</span><span class="p">(</span>
+    <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="n">lens_thick</span><span class="o">/</span><span class="mi">2</span> <span class="o">-</span> <span class="n">dist</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+    <span class="n">source_time</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">GaussianPulse</span><span class="p">(</span>
+        <span class="n">freq0</span><span class="o">=</span><span class="n">freq0</span><span class="p">,</span>
+        <span class="n">fwidth</span><span class="o">=</span><span class="n">fwidth</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="n">polarization</span><span class="o">=</span><span class="s2">"Ez"</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">fld_mnt</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">FieldMonitor</span><span class="p">(</span>
+    <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span>
+    <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">td</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">td</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+    <span class="n">freqs</span><span class="o">=</span><span class="p">[</span><span class="n">freq0</span><span class="p">],</span>
+    <span class="n">name</span><span class="o">=</span><span class="n">MNT_NAME_FIELD</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">focus_mnt</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">FieldMonitor</span><span class="p">(</span>
+    <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="n">lens_thick</span><span class="o">/</span><span class="mi">2</span> <span class="o">+</span> <span class="n">dist</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+    <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+    <span class="n">freqs</span><span class="o">=</span><span class="p">[</span><span class="n">freq0</span><span class="p">],</span>
+    <span class="n">name</span><span class="o">=</span><span class="n">MNT_NAME_FOCUS</span><span class="p">,</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"Ez"</span><span class="p">]</span>
+<span class="p">)</span>
+</pre></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=a685f915-6337-46cf-8abf-7d8fa5ca605d">
+  <div class="jp-Cell-inputWrapper">
+    <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+    </div>
+    <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+    </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+      <p>Next, we write a function to generate the <code>JaxCustomMedium</code> structure that defines our lens as a pixellated grid as a function of an array grid permittivity values. We also write a function generate the <code>JaxSimulation</code> from the same inputs. Separating these as functions makes it easier to organize our code for taking derivatives later.</p>
+    </div>
+    </div>
+  </div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=9d8a943a-ad72-420f-b6ef-79c96fe1bac0">
+  <div class="jp-Cell-inputWrapper">
+    <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+    </div>
+    <div class="jp-InputArea jp-Cell-inputArea">
+      <div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div>
+      <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+        <div class="CodeMirror cm-s-jupyter">
+          <div class="highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">make_lens</span><span class="p">(</span><span class="n">eps_array</span><span class="p">:</span> <span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">tda</span><span class="o">.</span><span class="n">JaxStructure</span><span class="p">:</span>
+    <span class="sd">"""Make a lens structure out of the grid permittivity values (nx, ny)."""</span>
+
+    <span class="c1"># define data coordinates</span>
+    <span class="n">dx</span> <span class="o">=</span> <span class="n">lens_thick</span> <span class="o">/</span> <span class="n">nx</span>
+    <span class="n">dy</span> <span class="o">=</span> <span class="n">lens_width</span> <span class="o">/</span> <span class="n">ny</span>
+
+    <span class="n">xmin</span> <span class="o">=</span> <span class="o">-</span> <span class="n">lens_thick</span> <span class="o">/</span> <span class="mf">2.0</span> <span class="o">+</span> <span class="n">dx</span> <span class="o">/</span> <span class="mf">2.0</span>
+    <span class="n">ymin</span> <span class="o">=</span> <span class="o">-</span> <span class="n">lens_width</span> <span class="o">/</span> <span class="mf">2.0</span> <span class="o">+</span> <span class="n">dy</span> <span class="o">/</span> <span class="mf">2.0</span>
+
+    <span class="n">xs</span> <span class="o">=</span> <span class="p">[</span><span class="n">xmin</span> <span class="o">+</span> <span class="n">index_x</span> <span class="o">*</span> <span class="n">dx</span> <span class="o">-</span> <span class="mf">1e-5</span> <span class="k">for</span> <span class="n">index_x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nx</span><span class="p">)]</span>
+    <span class="n">ys</span> <span class="o">=</span> <span class="p">[</span><span class="n">ymin</span> <span class="o">+</span> <span class="n">index_y</span> <span class="o">*</span> <span class="n">dy</span> <span class="o">-</span> <span class="mf">1e-5</span> <span class="k">for</span> <span class="n">index_y</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ny</span><span class="p">)]</span>
+
+
+    <span class="n">coords</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+        <span class="n">x</span><span class="o">=</span><span class="n">xs</span><span class="p">,</span>
+        <span class="n">y</span><span class="o">=</span><span class="n">ys</span><span class="p">,</span>
+        <span class="n">z</span><span class="o">=</span><span class="p">[</span><span class="mf">0.</span><span class="p">],</span>
+        <span class="n">f</span><span class="o">=</span><span class="p">[</span><span class="n">freq0</span><span class="p">],</span>
+    <span class="p">)</span>
+
+    <span class="n">data</span> <span class="o">=</span> <span class="n">eps_array</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">nx</span><span class="p">,</span> <span class="n">ny</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+
+    <span class="n">eps_components</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">dim</span> <span class="ow">in</span> <span class="s2">"xyz"</span><span class="p">:</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"eps_</span><span class="si">{</span><span class="n">dim</span><span class="si">}{</span><span class="n">dim</span><span class="si">}</span><span class="s2">"</span>
+        <span class="n">sclr_fld</span> <span class="o">=</span> <span class="n">tda</span><span class="o">.</span><span class="n">JaxDataArray</span><span class="p">(</span><span class="n">values</span><span class="o">=</span><span class="n">data</span><span class="p">,</span> <span class="n">coords</span><span class="o">=</span><span class="n">coords</span><span class="p">)</span>
+        <span class="n">eps_components</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">sclr_fld</span>
+
+    <span class="n">eps_dataset</span> <span class="o">=</span> <span class="n">tda</span><span class="o">.</span><span class="n">JaxPermittivityDataset</span><span class="p">(</span><span class="o">**</span><span class="n">eps_components</span><span class="p">)</span>
+    <span class="n">custom_medium</span> <span class="o">=</span> <span class="n">tda</span><span class="o">.</span><span class="n">JaxCustomMedium</span><span class="p">(</span><span class="n">eps_dataset</span><span class="o">=</span><span class="n">eps_dataset</span><span class="p">,</span> <span class="n">subpixel</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="n">geometry</span> <span class="o">=</span> <span class="n">tda</span><span class="o">.</span><span class="n">JaxBox</span><span class="p">(</span>
+        <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span>
+        <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">lens_thick</span><span class="p">,</span> <span class="n">lens_width</span><span class="p">,</span>  <span class="n">td</span><span class="o">.</span><span class="n">inf</span><span class="p">)</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">tda</span><span class="o">.</span><span class="n">JaxStructure</span><span class="p">(</span>
+        <span class="n">geometry</span><span class="o">=</span><span class="n">geometry</span><span class="p">,</span>
+        <span class="n">medium</span><span class="o">=</span><span class="n">custom_medium</span>
+    <span class="p">)</span>
+</pre></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=e6e4905b-bc14-46ce-8abc-39b525fbce8f">
+  <div class="jp-Cell-inputWrapper">
+    <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+    </div>
+    <div class="jp-InputArea jp-Cell-inputArea">
+      <div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div>
+      <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+        <div class="CodeMirror cm-s-jupyter">
+          <div class="highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">make_sim</span><span class="p">(</span><span class="n">eps_array</span><span class="p">:</span> <span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">,</span> <span class="n">incl_fld_mnt</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">tda</span><span class="o">.</span><span class="n">JaxSimulation</span><span class="p">:</span>
+    <span class="sd">"""Make a simulation containing the custom lens grid."""</span>
+
+    <span class="n">lens</span> <span class="o">=</span> <span class="n">make_lens</span><span class="p">(</span><span class="n">eps_array</span><span class="p">)</span>
+    <span class="n">monitors</span> <span class="o">=</span> <span class="p">[</span><span class="n">fld_mnt</span><span class="p">]</span> <span class="k">if</span> <span class="n">incl_fld_mnt</span> <span class="k">else</span> <span class="p">[]</span>
+
+    <span class="c1"># quick notes: the lens is differentiable, so it goes in input_structures</span>
+    <span class="c1"># also, we are differentiating with respect to the focus monitor output,</span>
+    <span class="c1"># so that goes in output_monitors</span>
+
+    <span class="k">return</span> <span class="n">tda</span><span class="o">.</span><span class="n">JaxSimulation</span><span class="p">(</span>
+        <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">Lx</span><span class="p">,</span> <span class="n">Ly</span><span class="p">,</span> <span class="n">Lz</span><span class="p">),</span>
+        <span class="n">run_time</span><span class="o">=</span><span class="n">run_time</span><span class="p">,</span>
+        <span class="n">boundary_spec</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">BoundarySpec</span><span class="o">.</span><span class="n">pml</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">z</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
+        <span class="n">grid_spec</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">GridSpec</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">dl</span><span class="o">=</span><span class="n">dl</span><span class="p">),</span>
+        <span class="n">input_structures</span><span class="o">=</span><span class="p">[</span><span class="n">lens</span><span class="p">],</span>
+        <span class="n">output_monitors</span><span class="o">=</span><span class="p">[</span><span class="n">focus_mnt</span><span class="p">],</span>
+        <span class="n">sources</span><span class="o">=</span><span class="p">[</span><span class="n">source</span><span class="p">],</span>
+        <span class="n">monitors</span><span class="o">=</span><span class="n">monitors</span><span class="p">,</span>
+    <span class="p">)</span>
+</pre></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=fd514a74-4082-4289-a491-2e2e6b2c63ad">
+  <div class="jp-Cell-inputWrapper">
+    <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+    </div>
+    <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+    </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+      <p>Let's make a simulation using some random starting values and make sure it looks ok.</p>
+    </div>
+    </div>
+  </div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=41b72c83-fdca-4b05-a4e7-a244f05e2bcc">
+  <div class="jp-Cell-inputWrapper">
+    <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+    </div>
+    <div class="jp-InputArea jp-Cell-inputArea">
+      <div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div>
+      <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+        <div class="CodeMirror cm-s-jupyter">
+          <div class="highlight hl-ipython3"><pre><span></span><span class="n">rand_arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">((</span><span class="n">nx</span><span class="p">,</span> <span class="n">ny</span><span class="p">))</span>
+<span class="n">rand_arr_sym_y</span> <span class="o">=</span> <span class="p">(</span><span class="n">rand_arr</span> <span class="o">+</span> <span class="n">rand_arr</span><span class="p">[:,</span> <span class="p">::</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span><span class="o">/</span><span class="mf">2.0</span>
+
+<span class="n">EPS_ARRAY</span> <span class="o">=</span> <span class="p">(</span><span class="n">eps_lens</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">rand_arr_sym_y</span> <span class="o">+</span> <span class="mi">1</span>
+
+<span class="n">sim</span> <span class="o">=</span> <span class="n">make_sim</span><span class="p">(</span><span class="n">EPS_ARRAY</span><span class="p">)</span>
+</pre></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=dc82d68b-b4ee-4c09-b296-c30fcfd5c6ba">
+  <div class="jp-Cell-inputWrapper">
+    <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+    </div>
+    <div class="jp-InputArea jp-Cell-inputArea">
+      <div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div>
+      <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+        <div class="CodeMirror cm-s-jupyter">
+          <div class="highlight hl-ipython3"><pre><span></span><span class="n">ax</span> <span class="o">=</span> <span class="n">sim</span><span class="o">.</span><span class="n">plot_eps</span><span class="p">(</span><span class="n">z</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</pre></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="jp-Cell-outputWrapper">
+    <div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+    </div>
+    <div class="jp-OutputArea jp-Cell-outputArea">
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedImage jp-OutputArea-output">
+          <img class="" loading="eager" src="/assets/images/inverse-design/Lecture_03/Python_Tutorial_03_1.png" alt="cross section at z=0.00"/>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=f2ccbaa6-cc83-4bca-ac3a-a6963f6b3c76">
+  <div class="jp-Cell-inputWrapper">
+    <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+    </div>
+    <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+    </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+      <h2 id="Objective-Function">Objective Function<a class="anchor-link" href="#Objective-Function">¶</a></h2><p>Now that we have a function that generates our simulation given an array of our permittivity values, we are ready to set up our objective function for optimization. Like before, we will write this as a function over the array of permittivity values and will try to split up the logical steps as well as possible for clarity.</p>
+      <p>First, we will write a function that maps an array of parameters with values between -infinity and infinity to permittivity values between 1 and the permittivity of our lens material. This is done to ensure that we never extend outside of these values when optimizing later.</p>
+    </div>
+    </div>
+  </div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=fece5d7e-bdd3-42e3-92f9-64267a4dd626">
+  <div class="jp-Cell-inputWrapper">
+    <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+    </div>
+    <div class="jp-InputArea jp-Cell-inputArea">
+      <div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div>
+      <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+        <div class="CodeMirror cm-s-jupyter">
+          <div class="highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">tidy3d.plugins.adjoint.utils.filter</span> <span class="kn">import</span> <span class="n">ConicFilter</span><span class="p">,</span> <span class="n">BinaryProjector</span>
+
+<span class="k">def</span> <span class="nf">params_to_eps</span><span class="p">(</span><span class="n">params</span><span class="p">:</span> <span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">:</span>
+    <span class="sd">"""Map an array of parameters with infinity extent to an array of permittivity values within bounds."""</span>
+
+    <span class="n">params_between_0_1</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">tanh</span><span class="p">(</span><span class="n">params</span><span class="p">)</span> <span class="o">+</span> <span class="mf">1.0</span><span class="p">)</span>
+
+<span class="c1">#     conic_filter = ConicFilter(feature_size=0.3, design_region_dl=dl)</span>
+    <span class="n">binary_projector</span> <span class="o">=</span> <span class="n">BinaryProjector</span><span class="p">(</span><span class="n">vmin</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="n">eps_lens</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+
+<span class="c1">#     eps_values = binary_projector.evaluate(conic_filter.evaluate(params_between_0_1.reshape((nx, ny))).reshape((nx, ny, 1, 1)))</span>
+
+    <span class="n">eps_values</span> <span class="o">=</span> <span class="n">binary_projector</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">params_between_0_1</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">eps_values</span>
+
+<span class="k">def</span> <span class="nf">measure_intensity</span><span class="p">(</span><span class="n">sim_data</span><span class="p">:</span> <span class="n">tda</span><span class="o">.</span><span class="n">JaxSimulationData</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+    <span class="sd">"""Return the intensity at the focal spot as a function of the data from the solver."""</span>
+    <span class="n">focal_fields</span> <span class="o">=</span> <span class="n">sim_data</span><span class="p">[</span><span class="n">MNT_NAME_FOCUS</span><span class="p">]</span>
+    <span class="n">intensity</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">focal_fields</span><span class="o">.</span><span class="n">monitor</span><span class="o">.</span><span class="n">fields</span><span class="p">:</span>
+        <span class="n">field</span> <span class="o">=</span> <span class="n">focal_fields</span><span class="o">.</span><span class="n">field_components</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+        <span class="n">intensity</span> <span class="o">+=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">field</span><span class="o">.</span><span class="n">values</span><span class="p">))</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">intensity</span>
+
+<span class="k">def</span> <span class="nf">objective_fn</span><span class="p">(</span><span class="n">params</span><span class="p">:</span> <span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">,</span> <span class="n">verbose</span><span class="p">:</span><span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">incl_fld_mnt</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+    <span class="sd">"""Run the full calculation from setting up sim, running, and measuring intensity."""</span>
+    <span class="n">eps_data</span> <span class="o">=</span> <span class="n">params_to_eps</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+    <span class="n">sim</span> <span class="o">=</span> <span class="n">make_sim</span><span class="p">(</span><span class="n">eps_data</span><span class="p">,</span> <span class="n">incl_fld_mnt</span><span class="o">=</span><span class="n">incl_fld_mnt</span><span class="p">)</span>
+    <span class="n">sim_data</span> <span class="o">=</span> <span class="n">run</span><span class="p">(</span><span class="n">sim</span><span class="p">,</span> <span class="n">task_name</span><span class="o">=</span><span class="s2">"lens_adjoint"</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="s1">'data/lens_adjoint.hdf5'</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">measure_intensity</span><span class="p">(</span><span class="n">sim_data</span><span class="p">),</span> <span class="n">sim_data</span>
+</pre></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=7f442d8b-fc83-4341-b194-847a3077f050">
+  <div class="jp-Cell-inputWrapper">
+    <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+    </div>
+    <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+    </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+      <p>Let's use jax to get a function that returns our objective funciton value and its gradient with respect to the eps_data array to veritfy this works as expected.</p>
+    </div>
+    </div>
+  </div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=888022ac-a3af-4561-8d1c-4faef64380df">
+  <div class="jp-Cell-inputWrapper">
+    <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+    </div>
+    <div class="jp-InputArea jp-Cell-inputArea">
+      <div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div>
+      <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+        <div class="CodeMirror cm-s-jupyter">
+          <div class="highlight hl-ipython3"><pre><span></span><span class="c1"># feed in an array of very small parameters, corresponding to vacuum simulation</span>
+<span class="n">params_empty</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1000</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">nx</span><span class="p">,</span> <span class="n">ny</span><span class="p">))</span>
+<span class="n">val_and_grad_fn</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">value_and_grad</span><span class="p">(</span><span class="n">objective_fn</span><span class="p">,</span> <span class="n">has_aux</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=498316fc-b19e-4a2d-b091-4a23a4db03b1">
+  <div class="jp-Cell-inputWrapper">
+    <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+    </div>
+    <div class="jp-InputArea jp-Cell-inputArea">
+      <div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div>
+      <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+        <div class="CodeMirror cm-s-jupyter">
+          <div class="highlight hl-ipython3"><pre><span></span><span class="p">(</span><span class="n">val_empty</span><span class="p">,</span> <span class="n">sim_data</span><span class="p">),</span> <span class="n">grad_empty</span> <span class="o">=</span> <span class="n">val_and_grad_fn</span><span class="p">(</span><span class="n">params_empty</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"value = </span><span class="si">{</span><span class="n">val_empty</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"grad = </span><span class="si">{</span><span class="n">grad_empty</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</pre></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="jp-Cell-outputWrapper">
+    <div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+    </div>
+    <div class="jp-OutputArea jp-Cell-outputArea">
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">[14:16:28] </span>Created task <span style="color: #008000; text-decoration-color: #008000">'lens_adjoint_fwd'</span> with task_id                                               <a href="file:///Users/twhughes/Documents/Flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">webapi.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file:///Users/twhughes/Documents/Flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py#189" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">189</span></a>
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span><span style="color: #008000; text-decoration-color: #008000">'fdve-70e38201-1ae1-40f5-8af2-b6ec54c3b5bcv1'</span>.                                             <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">             </span>
+</pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span>View task using web UI at                                                                  <a href="file:///Users/twhughes/Documents/Flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">webapi.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file:///Users/twhughes/Documents/Flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py#191" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">191</span></a>
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span><a href="https://tidy3d.simulation.cloud/workbench?taskId=fdve-70e38201-1ae1-40f5-8af2-b6ec54c3b5bcv1" target="_blank"><span style="color: #008000; text-decoration-color: #008000">'https://tidy3d.simulation.cloud/workbench?taskId=fdve-70e38201-1ae1-40f5-8af2-b6ec54c3b5b</span></a> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">             </span>
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span><a href="https://tidy3d.simulation.cloud/workbench?taskId=fdve-70e38201-1ae1-40f5-8af2-b6ec54c3b5bcv1" target="_blank"><span style="color: #008000; text-decoration-color: #008000">cv1'</span></a>.                                                                                      <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">             </span>
+</pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain">
+          <pre>Output()</pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html">
+          <pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">
+</pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain">
+          <pre>Output()</pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html">
+          <pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">
+</pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">[14:16:31] </span>status = queued                                                                            <a href="file:///Users/twhughes/Documents/Flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">webapi.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file:///Users/twhughes/Documents/Flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py#363" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">363</span></a>
+</pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain">
+          <pre>Output()</pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">[14:16:35] </span>status = preprocess                                                                        <a href="file:///Users/twhughes/Documents/Flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">webapi.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file:///Users/twhughes/Documents/Flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py#357" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">357</span></a>
+</pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html">
+          <pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">[14:16:41] </span>Maximum FlexCredit cost: <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0.025</span>. Use <span style="color: #008000; text-decoration-color: #008000">'web.real_cost(task_id)'</span> to get the billed FlexCredit  <a href="file:///Users/twhughes/Documents/Flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">webapi.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file:///Users/twhughes/Documents/Flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py#343" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">343</span></a>
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span>cost after a simulation run.                                                               <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">             </span>
+</pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span>starting up solver                                                                         <a href="file:///Users/twhughes/Documents/Flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">webapi.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file:///Users/twhughes/Documents/Flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py#379" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">379</span></a>
+</pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span>running solver                                                                             <a href="file:///Users/twhughes/Documents/Flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">webapi.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file:///Users/twhughes/Documents/Flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py#388" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">388</span></a>
+</pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span>To cancel the simulation, use <span style="color: #008000; text-decoration-color: #008000">'web.abort(task_id)'</span> or <span style="color: #008000; text-decoration-color: #008000">'web.delete(task_id)'</span> or             <a href="file:///Users/twhughes/Documents/Flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">webapi.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file:///Users/twhughes/Documents/Flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py#389" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">389</span></a>
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span>abort/delete the task in the web UI. Terminating the Python script will not stop the job   <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">             </span>
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span>running on the cloud.                                                                      <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">             </span>
+</pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain">
+          <pre>Output()</pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html">
+          <pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">
+</pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">[14:16:48] </span>status = postprocess                                                                       <a href="file:///Users/twhughes/Documents/Flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">webapi.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file:///Users/twhughes/Documents/Flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py#421" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">421</span></a>
+</pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain">
+          <pre>Output()</pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">[14:16:55] </span>status = success                                                                           <a href="file:///Users/twhughes/Documents/Flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">webapi.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file:///Users/twhughes/Documents/Flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py#428" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">428</span></a>
+</pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html">
+          <pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain">
+          <pre>Output()</pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html">
+          <pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">
+</pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">[14:16:57] </span>loading SimulationData from data/lens_adjoint.hdf5                                         <a href="file:///Users/twhughes/Documents/Flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">webapi.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file:///Users/twhughes/Documents/Flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py#606" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">606</span></a>
+</pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">[14:16:58] </span>Created task <span style="color: #008000; text-decoration-color: #008000">'lens_adjoint_adj'</span> with task_id                                               <a href="file:///Users/twhughes/Documents/Flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">webapi.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file:///Users/twhughes/Documents/Flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py#189" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">189</span></a>
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span><span style="color: #008000; text-decoration-color: #008000">'fdve-fcfb4628-6d93-41b0-ab95-165656be92b8v1'</span>.                                             <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">             </span>
+</pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span>View task using web UI at                                                                  <a href="file:///Users/twhughes/Documents/Flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">webapi.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file:///Users/twhughes/Documents/Flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py#191" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">191</span></a>
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span><a href="https://tidy3d.simulation.cloud/workbench?taskId=fdve-fcfb4628-6d93-41b0-ab95-165656be92b8v1" target="_blank"><span style="color: #008000; text-decoration-color: #008000">'https://tidy3d.simulation.cloud/workbench?taskId=fdve-fcfb4628-6d93-41b0-ab95-165656be92b</span></a> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">             </span>
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span><a href="https://tidy3d.simulation.cloud/workbench?taskId=fdve-fcfb4628-6d93-41b0-ab95-165656be92b8v1" target="_blank"><span style="color: #008000; text-decoration-color: #008000">8v1'</span></a>.                                                                                      <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">             </span>
+</pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain">
+          <pre>Output()</pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html">
+          <pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">
+</pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain">
+          <pre>Output()</pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html">
+          <pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">
+</pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">[14:17:01] </span>status = queued                                                                            <a href="file:///Users/twhughes/Documents/Flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">webapi.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file:///Users/twhughes/Documents/Flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py#363" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">363</span></a>
+</pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain">
+          <pre>Output()</pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">[14:17:05] </span>status = preprocess                                                                        <a href="file:///Users/twhughes/Documents/Flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">webapi.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file:///Users/twhughes/Documents/Flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py#357" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">357</span></a>
+</pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html">
+          <pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">[14:17:10] </span>Maximum FlexCredit cost: <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0.025</span>. Use <span style="color: #008000; text-decoration-color: #008000">'web.real_cost(task_id)'</span> to get the billed FlexCredit  <a href="file:///Users/twhughes/Documents/Flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">webapi.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file:///Users/twhughes/Documents/Flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py#343" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">343</span></a>
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span>cost after a simulation run.                                                               <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">             </span>
+</pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span>starting up solver                                                                         <a href="file:///Users/twhughes/Documents/Flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">webapi.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file:///Users/twhughes/Documents/Flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py#379" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">379</span></a>
+</pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span>running solver                                                                             <a href="file:///Users/twhughes/Documents/Flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">webapi.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file:///Users/twhughes/Documents/Flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py#388" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">388</span></a>
+</pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span>To cancel the simulation, use <span style="color: #008000; text-decoration-color: #008000">'web.abort(task_id)'</span> or <span style="color: #008000; text-decoration-color: #008000">'web.delete(task_id)'</span> or             <a href="file:///Users/twhughes/Documents/Flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">webapi.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file:///Users/twhughes/Documents/Flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py#389" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">389</span></a>
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span>abort/delete the task in the web UI. Terminating the Python script will not stop the job   <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">             </span>
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span>running on the cloud.                                                                      <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">             </span>
+</pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain">
+          <pre>Output()</pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">[14:17:17] </span>early shutoff detected, exiting.                                                           <a href="file:///Users/twhughes/Documents/Flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">webapi.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file:///Users/twhughes/Documents/Flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py#406" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">406</span></a>
+</pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html">
+          <pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">
+</pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span>status = postprocess                                                                       <a href="file:///Users/twhughes/Documents/Flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">webapi.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file:///Users/twhughes/Documents/Flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py#421" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">421</span></a>
+</pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain">
+          <pre>Output()</pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">[14:17:22] </span>status = success                                                                           <a href="file:///Users/twhughes/Documents/Flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">webapi.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file:///Users/twhughes/Documents/Flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py#428" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">428</span></a>
+</pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html">
+          <pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain">
+          <pre>Output()</pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html">
+          <pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">
+</pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">[14:17:23] </span>loading SimulationData from data/lens_adjoint.hdf5                                         <a href="file:///Users/twhughes/Documents/Flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">webapi.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file:///Users/twhughes/Documents/Flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py#606" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">606</span></a>
+</pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain">
+<pre>value = 2287817.0
+grad = [[0. 0. 0. ... 0. 0. 0.]
+ [0. 0. 0. ... 0. 0. 0.]
+ [0. 0. 0. ... 0. 0. 0.]
+ ...
+ [0. 0. 0. ... 0. 0. 0.]
+ [0. 0. 0. ... 0. 0. 0.]
+ [0. 0. 0. ... 0. 0. 0.]]
+</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=70edc3bb-047c-44d5-a776-21ee5bb29c2a">
+  <div class="jp-Cell-inputWrapper">
+    <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+    </div>
+    <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+    </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+      <h3 id="Normalize-Objective-function">Normalize Objective function<a class="anchor-link" href="#Normalize-Objective-function">¶</a></h3><p>Let's quickly make an objective function that is normalized by this value without a structure, so we have a dimensionless objective function that represents the "enhancement" of the intensity with respect to vacuum.</p>
+    </div>
+    </div>
+  </div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=3cbbfca1-a8f7-4818-a001-7ca55d8efd4a">
+  <div class="jp-Cell-inputWrapper">
+    <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+    </div>
+    <div class="jp-InputArea jp-Cell-inputArea">
+      <div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div>
+      <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+        <div class="CodeMirror cm-s-jupyter">
+          <div class="highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">objective_fn_normalized</span><span class="p">(</span><span class="n">params</span><span class="p">:</span> <span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">,</span> <span class="n">verbose</span><span class="p">:</span><span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">incl_fld_mnt</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+    <span class="sd">"""Run the full calculation from setting up sim, running, and measuring intensity, normalized to vacuum result."""</span>
+    <span class="n">val_orig</span><span class="p">,</span> <span class="n">aux_data</span> <span class="o">=</span> <span class="n">objective_fn</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span> <span class="n">incl_fld_mnt</span><span class="o">=</span><span class="n">incl_fld_mnt</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">val_orig</span> <span class="o">/</span> <span class="n">val_empty</span><span class="p">,</span> <span class="n">aux_data</span>
+</pre></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=f26655f4-72af-438c-b0bb-45af9eec7ed2">
+  <div class="jp-Cell-inputWrapper">
+    <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+    </div>
+    <div class="jp-InputArea jp-Cell-inputArea">
+      <div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div>
+      <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+        <div class="CodeMirror cm-s-jupyter">
+          <div class="highlight hl-ipython3"><pre><span></span><span class="c1"># get the val and grad function with normalization</span>
+<span class="n">val_and_grad_fn_normalized</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">value_and_grad</span><span class="p">(</span><span class="n">objective_fn_normalized</span><span class="p">,</span> <span class="n">has_aux</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=f926c032-57e8-4b0e-a81d-9eb16f8d57d2">
+  <div class="jp-Cell-inputWrapper">
+    <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+    </div>
+    <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+    </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+      <p>We will start our optimization with parameters slightly lower than the middle of the two permittivity limits.</p>
+    </div>
+    </div>
+  </div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=f57b372c-db98-4935-8e34-8b88f57a415f">
+  <div class="jp-Cell-inputWrapper">
+    <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+    </div>
+    <div class="jp-InputArea jp-Cell-inputArea">
+      <div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div>
+      <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+        <div class="CodeMirror cm-s-jupyter">
+          <div class="highlight hl-ipython3"><pre><span></span>
+</pre></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=3f5147fd-38c7-488b-bc42-eed7a265e514">
+  <div class="jp-Cell-inputWrapper">
+    <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+    </div>
+    <div class="jp-InputArea jp-Cell-inputArea">
+      <div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div>
+      <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+        <div class="CodeMirror cm-s-jupyter">
+          <div class="highlight hl-ipython3"><pre><span></span><span class="n">PARAMS0</span> <span class="o">=</span> <span class="o">-</span><span class="mf">0.1</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">nx</span><span class="p">,</span> <span class="n">ny</span><span class="p">))</span>
+</pre></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=634fcdbc-6e25-4c86-a419-88854d3c7fc0">
+  <div class="jp-Cell-inputWrapper">
+    <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+    </div>
+    <div class="jp-InputArea jp-Cell-inputArea">
+      <div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div>
+      <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+        <div class="CodeMirror cm-s-jupyter">
+          <div class="highlight hl-ipython3"><pre><span></span><span class="n">sim_initial</span> <span class="o">=</span> <span class="n">make_sim</span><span class="p">(</span><span class="n">params_to_eps</span><span class="p">(</span><span class="n">PARAMS0</span><span class="p">),</span> <span class="n">incl_fld_mnt</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">sim_initial</span><span class="o">.</span><span class="n">plot_eps</span><span class="p">(</span><span class="n">z</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="jp-Cell-outputWrapper">
+    <div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+    </div>
+    <div class="jp-OutputArea jp-Cell-outputArea">
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedImage jp-OutputArea-output">
+          <img class="" loading="eager" src="/assets/images/inverse-design/Lecture_03/Python_Tutorial_03_2.png" alt="cross section at z=0.00"/>
+        </div>
+      </div>
+    </div>
+  </div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=ace8fd85-5cba-4b98-9291-fc6bb12e6b5e">
+  <div class="jp-Cell-inputWrapper">
+    <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+    </div>
+    <div class="jp-InputArea jp-Cell-inputArea">
+      <div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div>
+      <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+        <div class="CodeMirror cm-s-jupyter">
+          <div class="highlight hl-ipython3"><pre><span></span><span class="n">sim_data_initial</span> <span class="o">=</span> <span class="n">run</span><span class="p">(</span><span class="n">sim_initial</span><span class="p">,</span> <span class="n">task_name</span><span class="o">=</span><span class="s2">"lens_initial"</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="s1">'data/lens_initial.hdf5'</span><span class="p">)</span>
+</pre></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="jp-Cell-outputWrapper">
+    <div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+    </div>
+    <div class="jp-OutputArea jp-Cell-outputArea">
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">[14:17:24] </span>Created task <span style="color: #008000; text-decoration-color: #008000">'lens_initial'</span> with task_id <span style="color: #008000; text-decoration-color: #008000">'fdve-de0f2f2d-c430-4053-a272-89c6569c3cfav1'</span>.    <a href="file:///Users/twhughes/Documents/Flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">webapi.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file:///Users/twhughes/Documents/Flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py#189" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">189</span></a>
+</pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span>View task using web UI at                                                                  <a href="file:///Users/twhughes/Documents/Flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">webapi.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file:///Users/twhughes/Documents/Flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py#191" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">191</span></a>
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span><a href="https://tidy3d.simulation.cloud/workbench?taskId=fdve-de0f2f2d-c430-4053-a272-89c6569c3cfav1" target="_blank"><span style="color: #008000; text-decoration-color: #008000">'https://tidy3d.simulation.cloud/workbench?taskId=fdve-de0f2f2d-c430-4053-a272-89c6569c3cf</span></a> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">             </span>
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span><a href="https://tidy3d.simulation.cloud/workbench?taskId=fdve-de0f2f2d-c430-4053-a272-89c6569c3cfav1" target="_blank"><span style="color: #008000; text-decoration-color: #008000">av1'</span></a>.                                                                                      <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">             </span>
+</pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain">
+          <pre>Output()</pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html">
+          <pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">
+</pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain">
+          <pre>Output()</pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html">
+          <pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">
+</pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">[14:17:27] </span>status = queued                                                                            <a href="file:///Users/twhughes/Documents/Flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">webapi.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file:///Users/twhughes/Documents/Flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py#363" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">363</span></a>
+</pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain">
+          <pre>Output()</pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">[14:17:31] </span>status = preprocess                                                                        <a href="file:///Users/twhughes/Documents/Flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">webapi.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file:///Users/twhughes/Documents/Flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py#357" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">357</span></a>
+</pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html">
+          <pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">[14:17:36] </span>Maximum FlexCredit cost: <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0.025</span>. Use <span style="color: #008000; text-decoration-color: #008000">'web.real_cost(task_id)'</span> to get the billed FlexCredit  <a href="file:///Users/twhughes/Documents/Flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">webapi.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file:///Users/twhughes/Documents/Flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py#343" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">343</span></a>
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span>cost after a simulation run.                                                               <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">             </span>
+</pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span>starting up solver                                                                         <a href="file:///Users/twhughes/Documents/Flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">webapi.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file:///Users/twhughes/Documents/Flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py#379" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">379</span></a>
+</pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span>running solver                                                                             <a href="file:///Users/twhughes/Documents/Flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">webapi.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file:///Users/twhughes/Documents/Flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py#388" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">388</span></a>
+</pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span>To cancel the simulation, use <span style="color: #008000; text-decoration-color: #008000">'web.abort(task_id)'</span> or <span style="color: #008000; text-decoration-color: #008000">'web.delete(task_id)'</span> or             <a href="file:///Users/twhughes/Documents/Flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">webapi.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file:///Users/twhughes/Documents/Flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py#389" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">389</span></a>
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span>abort/delete the task in the web UI. Terminating the Python script will not stop the job   <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">             </span>
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span>running on the cloud.                                                                      <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">             </span>
+</pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain">
+          <pre>Output()</pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html">
+          <pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">
+</pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">[14:17:43] </span>status = postprocess                                                                       <a href="file:///Users/twhughes/Documents/Flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">webapi.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file:///Users/twhughes/Documents/Flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py#421" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">421</span></a>
+</pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain">
+          <pre>Output()</pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">[14:17:50] </span>status = success                                                                           <a href="file:///Users/twhughes/Documents/Flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">webapi.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file:///Users/twhughes/Documents/Flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py#428" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">428</span></a>
+</pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html">
+          <pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain">
+          <pre>Output()</pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html">
+          <pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">
+</pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">[14:17:51] </span>loading SimulationData from data/lens_initial.hdf5                                         <a href="file:///Users/twhughes/Documents/Flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">webapi.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file:///Users/twhughes/Documents/Flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py#606" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">606</span></a>
+</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=deacfae6-0ebe-4e6a-867e-5c0514841284">
+  <div class="jp-Cell-inputWrapper">
+    <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+    </div>
+    <div class="jp-InputArea jp-Cell-inputArea">
+      <div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div>
+      <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+        <div class="CodeMirror cm-s-jupyter">
+          <div class="highlight hl-ipython3"><pre><span></span><span class="n">ax</span> <span class="o">=</span> <span class="n">sim_data_initial</span><span class="o">.</span><span class="n">plot_field</span><span class="p">(</span><span class="n">MNT_NAME_FIELD</span><span class="p">,</span> <span class="s1">'Ez'</span><span class="p">,</span> <span class="s1">'real'</span><span class="p">)</span>
+</pre></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="jp-Cell-outputWrapper">
+    <div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+    </div>
+    <div class="jp-OutputArea jp-Cell-outputArea">
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedImage jp-OutputArea-output">
+          <img class="" loading="eager" src="/assets/images/inverse-design/Lecture_03/Python_Tutorial_03_3.png" alt="cross section at z=0.00"/>
+        </div>
+      </div>
+    </div>
+  </div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=8155cc88-c08e-4418-8498-3d921d78fa94">
+  <div class="jp-Cell-inputWrapper">
+    <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+    </div>
+    <div class="jp-InputArea jp-Cell-inputArea">
+      <div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div>
+      <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+        <div class="CodeMirror cm-s-jupyter">
+          <div class="highlight hl-ipython3"><pre><span></span><span class="c1"># get the starting objective function value</span>
+<span class="n">val0</span> <span class="o">=</span> <span class="n">measure_intensity</span><span class="p">(</span><span class="n">sim_data_initial</span><span class="p">)</span> <span class="o">/</span> <span class="n">val_empty</span>
+</pre></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=0076c85c-8557-4f15-8eeb-8622bcbcb5d6">
+  <div class="jp-Cell-inputWrapper">
+    <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+    </div>
+    <div class="jp-InputArea jp-Cell-inputArea">
+      <div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div>
+      <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+        <div class="CodeMirror cm-s-jupyter">
+          <div class="highlight hl-ipython3"><pre><span></span><span class="n">val0</span>
+</pre></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="jp-Cell-outputWrapper">
+    <div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+    </div>
+    <div class="jp-OutputArea jp-Cell-outputArea">
+      <div class="jp-OutputArea-child jp-OutputArea-executeResult">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt">Out[ ]:</div>
+        <div class="jp-RenderedText jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/plain">
+          <pre>Array(1.9754281, dtype=float32)</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=af2b57bf-3725-475e-b33f-20f2a028f4c6">
+  <div class="jp-Cell-inputWrapper">
+    <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+    </div>
+    <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+    </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+      <h2 id="Optimization">Optimization<a class="anchor-link" href="#Optimization">¶</a></h2><p>Now that we have our objective and gradient function defined, we can perform a simple optimization of our parameters.</p>
+      <p>We will just perform a simple "gradient ascent" algorithm in which we compute the gradient, perturb each of the parameters simultaneously in the direction that maximizes the objective function, and repeat this process several times until convergence.</p>
+    </div>
+    </div>
+  </div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=8da035e0-b5a0-4a21-a610-527bd43122b8">
+  <div class="jp-Cell-inputWrapper">
+    <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+    </div>
+    <div class="jp-InputArea jp-Cell-inputArea">
+      <div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div>
+      <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+        <div class="CodeMirror cm-s-jupyter">
+          <div class="highlight hl-ipython3"><pre><span></span><span class="c1"># how many iterations</span>
+<span class="n">num_steps</span> <span class="o">=</span> <span class="mi">35</span>
+
+<span class="c1"># magnitude of the update to the parameters in units of the gradient.</span>
+<span class="n">step_size</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="n">step_size</span> <span class="o">=</span> <span class="mf">0.03</span>
+</pre></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=fbea4acf-ee91-4887-9458-8fc1294d117c">
+  <div class="jp-Cell-inputWrapper">
+    <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+    </div>
+    <div class="jp-InputArea jp-Cell-inputArea">
+      <div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div>
+      <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+        <div class="CodeMirror cm-s-jupyter">
+          <div class="highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">optax</span>
+
+<span class="n">optimizer</span> <span class="o">=</span> <span class="n">optax</span><span class="o">.</span><span class="n">adam</span><span class="p">(</span><span class="n">learning_rate</span><span class="o">=</span><span class="n">step_size</span><span class="p">,</span> <span class="n">b1</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">b2</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
+
+<span class="n">params_i</span> <span class="o">=</span> <span class="n">PARAMS0</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+<span class="n">eps_i</span> <span class="o">=</span> <span class="n">params_to_eps</span><span class="p">(</span><span class="n">params_i</span><span class="p">)</span>
+<span class="n">sim_i</span> <span class="o">=</span> <span class="n">make_sim</span><span class="p">(</span><span class="n">eps_i</span><span class="p">,</span> <span class="n">incl_fld_mnt</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="n">opt_state</span> <span class="o">=</span> <span class="n">optimizer</span><span class="o">.</span><span class="n">init</span><span class="p">(</span><span class="n">params_i</span><span class="p">)</span>
+
+<span class="c1"># lists to store the values and parameters</span>
+<span class="n">param_vals</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">obj_fn_vals</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">grad_norm_vals</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">sims</span> <span class="o">=</span> <span class="p">[</span><span class="n">sim_i</span><span class="p">]</span>
+<span class="n">sim_datas</span> <span class="o">=</span> <span class="p">[</span><span class="n">sim_data_initial</span><span class="p">]</span>
+
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_steps</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'step = </span><span class="si">{</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
+
+    <span class="c1"># compute gradient</span>
+    <span class="p">(</span><span class="n">val_i</span><span class="p">,</span> <span class="n">sim_data_i</span><span class="p">),</span> <span class="n">grad_i</span> <span class="o">=</span> <span class="n">val_and_grad_fn_normalized</span><span class="p">(</span><span class="n">params_i</span><span class="p">)</span>
+
+    <span class="c1"># update</span>
+    <span class="n">updates</span><span class="p">,</span> <span class="n">opt_state</span> <span class="o">=</span> <span class="n">optimizer</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="o">-</span><span class="n">grad_i</span><span class="p">,</span> <span class="n">opt_state</span><span class="p">,</span> <span class="n">params_i</span><span class="p">)</span>
+    <span class="n">params_i</span> <span class="o">=</span> <span class="n">optax</span><span class="o">.</span><span class="n">apply_updates</span><span class="p">(</span><span class="n">params_i</span><span class="p">,</span> <span class="n">updates</span><span class="p">)</span>
+
+    <span class="n">grad_norm_i</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">grad_i</span><span class="p">)</span>
+
+    <span class="c1"># print status</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'</span><span class="se">\t</span><span class="s1">val = </span><span class="si">{</span><span class="n">val_i</span><span class="si">:</span><span class="s1">.3e</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'</span><span class="se">\t</span><span class="s1">norm(grad) = </span><span class="si">{</span><span class="n">grad_norm_i</span><span class="si">:</span><span class="s1">.3e</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
+
+    <span class="c1"># store history</span>
+    <span class="n">obj_fn_vals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">val_i</span><span class="p">)</span>
+    <span class="n">param_vals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">params_i</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>
+    <span class="n">grad_norm_vals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">grad_norm_i</span><span class="p">)</span>
+
+    <span class="n">eps_i</span> <span class="o">=</span> <span class="n">params_to_eps</span><span class="p">(</span><span class="n">params_i</span><span class="p">)</span>
+    <span class="n">sim_i</span> <span class="o">=</span> <span class="n">make_sim</span><span class="p">(</span><span class="n">eps_i</span><span class="p">,</span> <span class="n">incl_fld_mnt</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">sims</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sim_i</span><span class="p">)</span>
+    <span class="n">sim_datas</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sim_data_i</span><span class="p">)</span>
+</pre></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="jp-Cell-outputWrapper">
+    <div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+    </div>
+    <div class="jp-OutputArea jp-Cell-outputArea">
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain">
+<pre>step = 1
+	val = 1.975e+00
+	norm(grad) = 1.846e-01
+step = 2
+	val = 2.534e+00
+	norm(grad) = 2.052e-01
+step = 3
+	val = 3.147e+00
+	norm(grad) = 2.230e-01
+step = 4
+	val = 3.805e+00
+	norm(grad) = 2.377e-01
+step = 5
+	val = 4.497e+00
+	norm(grad) = 2.492e-01
+step = 6
+	val = 5.213e+00
+	norm(grad) = 2.569e-01
+step = 7
+	val = 5.938e+00
+	norm(grad) = 2.612e-01
+step = 8
+	val = 6.661e+00
+	norm(grad) = 2.625e-01
+step = 9
+	val = 7.369e+00
+	norm(grad) = 2.612e-01
+step = 10
+	val = 8.058e+00
+	norm(grad) = 2.585e-01
+step = 11
+	val = 8.725e+00
+	norm(grad) = 2.550e-01
+step = 12
+	val = 9.367e+00
+	norm(grad) = 2.505e-01
+step = 13
+	val = 9.988e+00
+	norm(grad) = 2.453e-01
+step = 14
+	val = 1.058e+01
+	norm(grad) = 2.389e-01
+step = 15
+	val = 1.115e+01
+	norm(grad) = 2.313e-01
+step = 16
+	val = 1.170e+01
+	norm(grad) = 2.234e-01
+step = 17
+	val = 1.221e+01
+	norm(grad) = 2.140e-01
+step = 18
+	val = 1.268e+01
+	norm(grad) = 2.055e-01
+step = 19
+	val = 1.313e+01
+	norm(grad) = 1.951e-01
+step = 20
+	val = 1.354e+01
+	norm(grad) = 1.863e-01
+step = 21
+	val = 1.391e+01
+	norm(grad) = 1.754e-01
+step = 22
+	val = 1.428e+01
+	norm(grad) = 1.641e-01
+step = 23
+	val = 1.461e+01
+	norm(grad) = 1.539e-01
+step = 24
+	val = 1.491e+01
+	norm(grad) = 1.455e-01
+step = 25
+	val = 1.519e+01
+	norm(grad) = 1.326e-01
+step = 26
+	val = 1.545e+01
+	norm(grad) = 1.247e-01
+step = 27
+	val = 1.569e+01
+	norm(grad) = 1.142e-01
+step = 28
+	val = 1.590e+01
+	norm(grad) = 1.065e-01
+step = 29
+	val = 1.611e+01
+	norm(grad) = 9.667e-02
+step = 30
+	val = 1.629e+01
+	norm(grad) = 9.045e-02
+step = 31
+	val = 1.646e+01
+	norm(grad) = 8.170e-02
+step = 32
+	val = 1.661e+01
+	norm(grad) = 7.599e-02
+step = 33
+	val = 1.675e+01
+	norm(grad) = 6.905e-02
+step = 34
+	val = 1.688e+01
+	norm(grad) = 6.418e-02
+step = 35
+	val = 1.699e+01
+	norm(grad) = 5.849e-02
+</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=422ea7ec-c44a-4f40-8d9d-eaba30c86d86">
+  <div class="jp-Cell-inputWrapper">
+    <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+    </div>
+    <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+    </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+      <p>Let's visualize the optimization results and the final fields!</p>
+    </div>
+    </div>
+  </div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=ec394736-1216-4764-9bca-6db2e5356fed">
+  <div class="jp-Cell-inputWrapper">
+    <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+    </div>
+    <div class="jp-InputArea jp-Cell-inputArea">
+      <div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div>
+      <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+        <div class="CodeMirror cm-s-jupyter">
+          <div class="highlight hl-ipython3"><pre><span></span><span class="n">f</span><span class="p">,</span> <span class="p">(</span><span class="n">ax1</span><span class="p">,</span> <span class="n">ax2</span><span class="p">)</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">tight_layout</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
+
+<span class="n">iters</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">obj_fn_vals</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+
+<span class="n">ax1</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">iters</span><span class="p">,</span> <span class="n">obj_fn_vals</span><span class="p">)</span>
+<span class="n">ax1</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">'iteration number'</span><span class="p">)</span>
+<span class="n">ax1</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">'objective function value'</span><span class="p">)</span>
+<span class="n">ax1</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">'optimization progress'</span><span class="p">)</span>
+
+<span class="n">ax2</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">iters</span><span class="p">,</span> <span class="n">grad_norm_vals</span><span class="p">)</span>
+<span class="n">ax2</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">'norm(grad)'</span><span class="p">)</span>
+<span class="n">ax2</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">'norm of gradient vector'</span><span class="p">)</span>
+<span class="n">ax2</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">'gradient decay'</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="jp-Cell-outputWrapper">
+    <div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+    </div>
+    <div class="jp-OutputArea jp-Cell-outputArea">
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedImage jp-OutputArea-output">
+          <img class="" loading="eager" src="/assets/images/inverse-design/Lecture_03/Python_Tutorial_03_4.png" alt="optimization progress"/>
+        </div>
+      </div>
+    </div>
+  </div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=fc5153d6-ef20-4f5a-ba63-9b5f41cac5f7">
+  <div class="jp-Cell-inputWrapper">
+    <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+    </div>
+    <div class="jp-InputArea jp-Cell-inputArea">
+      <div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div>
+      <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+        <div class="CodeMirror cm-s-jupyter">
+          <div class="highlight hl-ipython3"><pre><span></span><span class="n">params_final</span> <span class="o">=</span> <span class="n">param_vals</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+<span class="n">sim_final</span> <span class="o">=</span> <span class="n">make_sim</span><span class="p">(</span><span class="n">params_to_eps</span><span class="p">(</span><span class="n">params_final</span><span class="p">),</span> <span class="n">incl_fld_mnt</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">ax</span> <span class="o">=</span> <span class="n">sim_final</span><span class="o">.</span><span class="n">plot_eps</span><span class="p">(</span><span class="n">z</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">monitor_alpha</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
+</pre></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="jp-Cell-outputWrapper">
+    <div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+    </div>
+    <div class="jp-OutputArea jp-Cell-outputArea">
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedImage jp-OutputArea-output">
+          <img class="" loading="eager" src="/assets/images/inverse-design/Lecture_03/Python_Tutorial_03_5.png" alt="cross section at z=0.00"/>
+        </div>
+      </div>
+    </div>
+  </div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=5febd860-f98f-4974-ab99-1f20d0e977ea">
+  <div class="jp-Cell-inputWrapper">
+    <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+    </div>
+    <div class="jp-InputArea jp-Cell-inputArea">
+      <div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div>
+      <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+        <div class="CodeMirror cm-s-jupyter">
+          <div class="highlight hl-ipython3"><pre><span></span><span class="n">sim_data_final</span> <span class="o">=</span> <span class="n">run</span><span class="p">(</span><span class="n">sim_final</span><span class="p">,</span> <span class="n">task_name</span><span class="o">=</span><span class="s2">"lens_final"</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="s1">'data/lens_final.hdf5'</span><span class="p">)</span>
+</pre></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="jp-Cell-outputWrapper">
+    <div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+    </div>
+    <div class="jp-OutputArea jp-Cell-outputArea">
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">[14:59:57] </span>Created task <span style="color: #008000; text-decoration-color: #008000">'lens_final'</span> with task_id <span style="color: #008000; text-decoration-color: #008000">'fdve-1d12301f-668a-462b-82d5-45d819cf54dav1'</span>.      <a href="file:///Users/twhughes/Documents/Flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">webapi.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file:///Users/twhughes/Documents/Flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py#189" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">189</span></a>
+</pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span>View task using web UI at                                                                  <a href="file:///Users/twhughes/Documents/Flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">webapi.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file:///Users/twhughes/Documents/Flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py#191" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">191</span></a>
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span><a href="https://tidy3d.simulation.cloud/workbench?taskId=fdve-1d12301f-668a-462b-82d5-45d819cf54dav1" target="_blank"><span style="color: #008000; text-decoration-color: #008000">'https://tidy3d.simulation.cloud/workbench?taskId=fdve-1d12301f-668a-462b-82d5-45d819cf54d</span></a> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">             </span>
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span><a href="https://tidy3d.simulation.cloud/workbench?taskId=fdve-1d12301f-668a-462b-82d5-45d819cf54dav1" target="_blank"><span style="color: #008000; text-decoration-color: #008000">av1'</span></a>.                                                                                      <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">             </span>
+</pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain">
+          <pre>Output()</pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html">
+          <pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">
+</pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain">
+          <pre>Output()</pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html">
+          <pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">
+</pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">[14:59:59] </span>status = queued                                                                            <a href="file:///Users/twhughes/Documents/Flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">webapi.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file:///Users/twhughes/Documents/Flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py#363" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">363</span></a>
+</pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain">
+          <pre>Output()</pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">[15:00:03] </span>status = preprocess                                                                        <a href="file:///Users/twhughes/Documents/Flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">webapi.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file:///Users/twhughes/Documents/Flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py#357" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">357</span></a>
+</pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html">
+          <pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">[15:00:07] </span>Maximum FlexCredit cost: <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0.025</span>. Use <span style="color: #008000; text-decoration-color: #008000">'web.real_cost(task_id)'</span> to get the billed FlexCredit  <a href="file:///Users/twhughes/Documents/Flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">webapi.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file:///Users/twhughes/Documents/Flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py#343" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">343</span></a>
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span>cost after a simulation run.                                                               <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">             </span>
+</pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span>starting up solver                                                                         <a href="file:///Users/twhughes/Documents/Flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">webapi.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file:///Users/twhughes/Documents/Flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py#379" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">379</span></a>
+</pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span>running solver                                                                             <a href="file:///Users/twhughes/Documents/Flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">webapi.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file:///Users/twhughes/Documents/Flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py#388" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">388</span></a>
+</pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span>To cancel the simulation, use <span style="color: #008000; text-decoration-color: #008000">'web.abort(task_id)'</span> or <span style="color: #008000; text-decoration-color: #008000">'web.delete(task_id)'</span> or             <a href="file:///Users/twhughes/Documents/Flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">webapi.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file:///Users/twhughes/Documents/Flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py#389" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">389</span></a>
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span>abort/delete the task in the web UI. Terminating the Python script will not stop the job   <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">             </span>
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span>running on the cloud.                                                                      <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">             </span>
+</pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain">
+          <pre>Output()</pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">[15:00:13] </span>early shutoff detected, exiting.                                                           <a href="file:///Users/twhughes/Documents/Flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">webapi.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file:///Users/twhughes/Documents/Flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py#406" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">406</span></a>
+</pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html">
+          <pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">
+</pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span>status = postprocess                                                                       <a href="file:///Users/twhughes/Documents/Flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">webapi.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file:///Users/twhughes/Documents/Flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py#421" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">421</span></a>
+</pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain">
+          <pre>Output()</pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">[15:00:18] </span>status = success                                                                           <a href="file:///Users/twhughes/Documents/Flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">webapi.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file:///Users/twhughes/Documents/Flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py#428" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">428</span></a>
+</pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html">
+          <pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain">
+          <pre>Output()</pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html">
+          <pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">
+</pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">[15:00:19] </span>loading SimulationData from data/lens_final.hdf5                                           <a href="file:///Users/twhughes/Documents/Flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">webapi.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file:///Users/twhughes/Documents/Flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py#606" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">606</span></a>
+</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=d7426429-506c-471b-8ca4-c7c04b846925">
+  <div class="jp-Cell-inputWrapper">
+    <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+    </div>
+    <div class="jp-InputArea jp-Cell-inputArea">
+      <div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div>
+      <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+        <div class="CodeMirror cm-s-jupyter">
+          <div class="highlight hl-ipython3"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="p">(</span><span class="n">ax1</span><span class="p">,</span> <span class="n">ax2</span><span class="p">)</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">tight_layout</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
+
+<span class="n">sim_data_initial</span><span class="o">.</span><span class="n">plot_field</span><span class="p">(</span><span class="s1">'field'</span><span class="p">,</span> <span class="s1">'E'</span><span class="p">,</span> <span class="s1">'abs^2'</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax1</span><span class="p">)</span>
+<span class="n">sim_data_final</span><span class="o">.</span><span class="n">plot_field</span><span class="p">(</span><span class="s1">'field'</span><span class="p">,</span> <span class="s1">'E'</span><span class="p">,</span> <span class="s1">'abs^2'</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax2</span><span class="p">)</span>
+
+<span class="n">x_meas</span><span class="p">,</span> <span class="n">y_meas</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">focus_mnt</span><span class="o">.</span><span class="n">center</span><span class="p">)[:</span><span class="mi">2</span><span class="p">]</span>
+
+<span class="n">ax1</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">x_meas</span><span class="p">,</span> <span class="n">y_meas</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="mi">80</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="s2">"white"</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mf">2.0</span><span class="p">,</span> <span class="n">edgecolor</span><span class="o">=</span><span class="s1">'black'</span><span class="p">)</span>
+<span class="n">ax2</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">x_meas</span><span class="p">,</span> <span class="n">y_meas</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="mi">80</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="s2">"white"</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mf">2.0</span><span class="p">,</span> <span class="n">edgecolor</span><span class="o">=</span><span class="s1">'black'</span><span class="p">)</span>
+
+<span class="n">ax1</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">'starting device'</span><span class="p">)</span>
+<span class="n">ax2</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">'optimized device'</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="jp-Cell-outputWrapper">
+    <div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+    </div>
+    <div class="jp-OutputArea jp-Cell-outputArea">
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedImage jp-OutputArea-output">
+          <img class="" loading="eager" src="/assets/images/inverse-design/Lecture_03/Python_Tutorial_03_6.png" alt="starting device"/>
+        </div>
+      </div>
+    </div>
+  </div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=715c5088-925a-4ab9-a85e-2114c54ce905">
+  <div class="jp-Cell-inputWrapper">
+    <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+    </div>
+    <div class="jp-InputArea jp-Cell-inputArea">
+      <div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div>
+      <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+        <div class="CodeMirror cm-s-jupyter">
+          <div class="highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">matplotlib.animation</span> <span class="k">as</span> <span class="nn">animation</span>
+<span class="kn">from</span> <span class="nn">IPython.display</span> <span class="kn">import</span> <span class="n">HTML</span>
+
+<span class="n">fig</span><span class="p">,</span> <span class="p">(</span><span class="n">ax_eps</span><span class="p">,</span> <span class="n">ax_ez</span><span class="p">,</span> <span class="n">ax_int</span><span class="p">)</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">tight_layout</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+
+<span class="k">def</span> <span class="nf">animate</span><span class="p">(</span><span class="n">i</span><span class="p">):</span>
+    <span class="n">sim_i</span> <span class="o">=</span> <span class="n">sims</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+    <span class="n">sim_data_i</span> <span class="o">=</span> <span class="n">sim_datas</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+    <span class="n">sim_i</span> <span class="o">=</span> <span class="n">sim_i</span><span class="o">.</span><span class="n">updated_copy</span><span class="p">(</span><span class="n">structures</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">sim_i</span><span class="o">.</span><span class="n">structures</span><span class="p">)</span> <span class="o">+</span> <span class="p">[</span><span class="n">td</span><span class="o">.</span><span class="n">Structure</span><span class="p">(</span><span class="n">geometry</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">Box</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mf">0.001</span><span class="p">,</span><span class="mf">0.001</span><span class="p">,</span><span class="mf">0.1</span><span class="p">),</span> <span class="n">center</span><span class="o">=</span><span class="n">focus_mnt</span><span class="o">.</span><span class="n">center</span><span class="p">),</span> <span class="n">medium</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">Medium</span><span class="p">(</span><span class="n">permittivity</span><span class="o">=</span><span class="n">eps_lens</span><span class="p">))])</span>
+    <span class="n">sim_i</span><span class="o">.</span><span class="n">plot_eps</span><span class="p">(</span><span class="n">z</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">monitor_alpha</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax_eps</span><span class="p">)</span>
+    <span class="n">sim_data_i</span><span class="p">[</span><span class="n">MNT_NAME_FIELD</span><span class="p">]</span><span class="o">.</span><span class="n">Ez</span><span class="o">.</span><span class="n">real</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">pcolormesh</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="s1">'x'</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s1">'y'</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax_ez</span><span class="p">,</span> <span class="n">add_colorbar</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">sim_data_i</span><span class="o">.</span><span class="n">get_intensity</span><span class="p">(</span><span class="n">MNT_NAME_FIELD</span><span class="p">)</span><span class="o">.</span><span class="n">real</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">pcolormesh</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="s1">'x'</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s1">'y'</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax_int</span><span class="p">,</span> <span class="n">add_colorbar</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s2">"magma"</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="mf">0.3e8</span><span class="p">)</span><span class="c1">#, aspect="equal")</span>
+
+<span class="c1"># create animation</span>
+<span class="n">ani</span> <span class="o">=</span> <span class="n">animation</span><span class="o">.</span><span class="n">FuncAnimation</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="n">animate</span><span class="p">,</span> <span class="n">frames</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">sims</span><span class="p">));</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+<span class="c1"># display the animation</span>
+<span class="n">HTML</span><span class="p">(</span><span class="n">ani</span><span class="o">.</span><span class="n">to_jshtml</span><span class="p">())</span>
+</pre></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="jp-Cell-outputWrapper">
+    <div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+    </div>
+    <div class="jp-OutputArea jp-Cell-outputArea">
+      <div class="jp-OutputArea-child jp-OutputArea-executeResult">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt">Out[ ]:</div>
+        <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/html">
+          <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css" rel="stylesheet"/>
+          <script language="javascript">
+            function isInternetExplorer() {
+              ua = navigator.userAgent;
+              /* MSIE used to detect old browsers and Trident used to newer ones*/
+              return ua.indexOf("MSIE ") > -1 || ua.indexOf("Trident/") > -1;
+            }
+
+            /* Define the Animation class */
+            function Animation(frames, img_id, slider_id, interval, loop_select_id){
+              this.img_id = img_id;
+              this.slider_id = slider_id;
+              this.loop_select_id = loop_select_id;
+              this.interval = interval;
+              this.current_frame = 0;
+              this.direction = 0;
+              this.timer = null;
+              this.frames = new Array(frames.length);
+
+              for (var i=0; i<frames.length; i++)
+              {
+                this.frames[i] = new Image();
+                this.frames[i].src = frames[i];
+              }
+              var slider = document.getElementById(this.slider_id);
+              slider.max = this.frames.length - 1;
+              if (isInternetExplorer()) {
+                // switch from oninput to onchange because IE <= 11 does not conform
+                // with W3C specification. It ignores oninput and onchange behaves
+                // like oninput. In contrast, Microsoft Edge behaves correctly.
+                slider.setAttribute('onchange', slider.getAttribute('oninput'));
+                slider.setAttribute('oninput', null);
+              }
+              this.set_frame(this.current_frame);
+            }
+
+            Animation.prototype.get_loop_state = function(){
+              var button_group = document[this.loop_select_id].state;
+              for (var i = 0; i < button_group.length; i++) {
+                var button = button_group[i];
+                if (button.checked) {
+                  return button.value;
+                }
+              }
+              return undefined;
+            }
+
+            Animation.prototype.set_frame = function(frame){
+              this.current_frame = frame;
+              document.getElementById(this.img_id).src =
+                this.frames[this.current_frame].src;
+              document.getElementById(this.slider_id).value = this.current_frame;
+            }
+
+            Animation.prototype.next_frame = function()
+            {
+              this.set_frame(Math.min(this.frames.length - 1, this.current_frame + 1));
+            }
+
+            Animation.prototype.previous_frame = function()
+            {
+              this.set_frame(Math.max(0, this.current_frame - 1));
+            }
+
+            Animation.prototype.first_frame = function()
+            {
+              this.set_frame(0);
+            }
+
+            Animation.prototype.last_frame = function()
+            {
+              this.set_frame(this.frames.length - 1);
+            }
+
+            Animation.prototype.slower = function()
+            {
+              this.interval /= 0.7;
+              if(this.direction > 0){this.play_animation();}
+              else if(this.direction < 0){this.reverse_animation();}
+            }
+
+            Animation.prototype.faster = function()
+            {
+              this.interval *= 0.7;
+              if(this.direction > 0){this.play_animation();}
+              else if(this.direction < 0){this.reverse_animation();}
+            }
+
+            Animation.prototype.anim_step_forward = function()
+            {
+              this.current_frame += 1;
+              if(this.current_frame < this.frames.length){
+                this.set_frame(this.current_frame);
+              }else{
+                var loop_state = this.get_loop_state();
+                if(loop_state == "loop"){
+                  this.first_frame();
+                }else if(loop_state == "reflect"){
+                  this.last_frame();
+                  this.reverse_animation();
+                }else{
+                  this.pause_animation();
+                  this.last_frame();
+                }
+              }
+            }
+
+            Animation.prototype.anim_step_reverse = function()
+            {
+              this.current_frame -= 1;
+              if(this.current_frame >= 0){
+                this.set_frame(this.current_frame);
+              }else{
+                var loop_state = this.get_loop_state();
+                if(loop_state == "loop"){
+                  this.last_frame();
+                }else if(loop_state == "reflect"){
+                  this.first_frame();
+                  this.play_animation();
+                }else{
+                  this.pause_animation();
+                  this.first_frame();
+                }
+              }
+            }
+
+            Animation.prototype.pause_animation = function()
+            {
+              this.direction = 0;
+              if (this.timer){
+                clearInterval(this.timer);
+                this.timer = null;
+              }
+            }
+
+            Animation.prototype.play_animation = function()
+            {
+              this.pause_animation();
+              this.direction = 1;
+              var t = this;
+              if (!this.timer) this.timer = setInterval(function() {
+                t.anim_step_forward();
+              }, this.interval);
+            }
+
+            Animation.prototype.reverse_animation = function()
+            {
+              this.pause_animation();
+              this.direction = -1;
+              var t = this;
+              if (!this.timer) this.timer = setInterval(function() {
+                t.anim_step_reverse();
+              }, this.interval);
+            }
+          </script>
+          <style>
+              .animation {
+                  display: inline-block;
+                  text-align: center;
+              }
+              input[type=range].anim-slider {
+                  width: 374px;
+                  margin-left: auto;
+                  margin-right: auto;
+              }
+              .anim-buttons {
+                  margin: 8px 0px;
+              }
+              .anim-buttons button {
+                  padding: 0;
+                  width: 36px;
+              }
+              .anim-state label {
+                  margin-right: 8px;
+              }
+              .anim-state input {
+                  margin: 0;
+                  vertical-align: middle;
+              }
+          </style>
+          <div class="animation">
+            <img id="_anim_imgde7cc580c3814776b1193be1634a0593" loading="eager"/>
+            <div class="anim-controls">
+              <input class="anim-slider" id="_anim_sliderde7cc580c3814776b1193be1634a0593" max="1" min="0" name="points" oninput="animde7cc580c3814776b1193be1634a0593.set_frame(parseInt(this.value));" step="1" type="range" value="0"/>
+              <div class="anim-buttons">
+                <button aria-label="Decrease speed" onclick="animde7cc580c3814776b1193be1634a0593.slower()" title="Decrease speed">
+                  <i class="fa fa-minus"></i></button>
+                <button aria-label="First frame" onclick="animde7cc580c3814776b1193be1634a0593.first_frame()" title="First frame">
+                  <i class="fa fa-fast-backward"></i></button>
+                <button aria-label="Previous frame" onclick="animde7cc580c3814776b1193be1634a0593.previous_frame()" title="Previous frame">
+                  <i class="fa fa-step-backward"></i></button>
+                <button aria-label="Play backwards" onclick="animde7cc580c3814776b1193be1634a0593.reverse_animation()" title="Play backwards">
+                  <i class="fa fa-play fa-flip-horizontal"></i></button>
+                <button aria-label="Pause" onclick="animde7cc580c3814776b1193be1634a0593.pause_animation()" title="Pause">
+                  <i class="fa fa-pause"></i></button>
+                <button aria-label="Play" onclick="animde7cc580c3814776b1193be1634a0593.play_animation()" title="Play">
+                  <i class="fa fa-play"></i></button>
+                <button aria-label="Next frame" onclick="animde7cc580c3814776b1193be1634a0593.next_frame()" title="Next frame">
+                  <i class="fa fa-step-forward"></i></button>
+                <button aria-label="Last frame" onclick="animde7cc580c3814776b1193be1634a0593.last_frame()" title="Last frame">
+                  <i class="fa fa-fast-forward"></i></button>
+                <button aria-label="Increase speed" onclick="animde7cc580c3814776b1193be1634a0593.faster()" title="Increase speed">
+                  <i class="fa fa-plus"></i></button>
+              </div>
+              <form action="#n" aria-label="Repetition mode" class="anim-state" name="_anim_loop_selectde7cc580c3814776b1193be1634a0593" title="Repetition mode">
+                <input id="_anim_radio1_de7cc580c3814776b1193be1634a0593" name="state" type="radio" value="once"/>
+                <label for="_anim_radio1_de7cc580c3814776b1193be1634a0593">Once</label>
+                <input checked="" id="_anim_radio2_de7cc580c3814776b1193be1634a0593" name="state" type="radio" value="loop"/>
+                <label for="_anim_radio2_de7cc580c3814776b1193be1634a0593">Loop</label>
+                <input id="_anim_radio3_de7cc580c3814776b1193be1634a0593" name="state" type="radio" value="reflect"/>
+                <label for="_anim_radio3_de7cc580c3814776b1193be1634a0593">Reflect</label>
+              </form>
+            </div>
+          </div>
+          <script language="javascript">
+            /* Instantiate the Animation class. */
+            /* The IDs given should match those used in the template above. */
+            (function() {
+              var img_id = "_anim_imgde7cc580c3814776b1193be1634a0593";
+              var slider_id = "_anim_sliderde7cc580c3814776b1193be1634a0593";
+              var loop_select_id = "_anim_loop_selectde7cc580c3814776b1193be1634a0593";
+              var frames = new Array(36);
+
+              frames[0] = "/assets/images/inverse-design/Lecture_03/Python_Tutorial_03_extra_1.png"
+              frames[1] = "/assets/images/inverse-design/Lecture_03/Python_Tutorial_03_extra_2.png"
+              frames[2] = "/assets/images/inverse-design/Lecture_03/Python_Tutorial_03_extra_3.png"
+              frames[3] = "/assets/images/inverse-design/Lecture_03/Python_Tutorial_03_extra_4.png"
+              frames[4] = "/assets/images/inverse-design/Lecture_03/Python_Tutorial_03_extra_5.png"
+              frames[5] = "/assets/images/inverse-design/Lecture_03/Python_Tutorial_03_extra_6.png"
+              frames[6] = "/assets/images/inverse-design/Lecture_03/Python_Tutorial_03_extra_7.png"
+              frames[7] = "/assets/images/inverse-design/Lecture_03/Python_Tutorial_03_extra_8.png"
+              frames[8] = "/assets/images/inverse-design/Lecture_03/Python_Tutorial_03_extra_9.png"
+              frames[9] = "/assets/images/inverse-design/Lecture_03/Python_Tutorial_03_extra_10.png"
+              frames[10] = "/assets/images/inverse-design/Lecture_03/Python_Tutorial_03_extra_11.png"
+              frames[11] = "/assets/images/inverse-design/Lecture_03/Python_Tutorial_03_extra_12.png"
+              frames[12] = "/assets/images/inverse-design/Lecture_03/Python_Tutorial_03_extra_13.png"
+              frames[13] = "/assets/images/inverse-design/Lecture_03/Python_Tutorial_03_extra_14.png"
+              frames[14] = "/assets/images/inverse-design/Lecture_03/Python_Tutorial_03_extra_15.png"
+              frames[15] = "/assets/images/inverse-design/Lecture_03/Python_Tutorial_03_extra_16.png"
+              frames[16] = "/assets/images/inverse-design/Lecture_03/Python_Tutorial_03_extra_17.png"
+              frames[17] = "/assets/images/inverse-design/Lecture_03/Python_Tutorial_03_extra_18.png"
+              frames[18] = "/assets/images/inverse-design/Lecture_03/Python_Tutorial_03_extra_19.png"
+              frames[19] = "/assets/images/inverse-design/Lecture_03/Python_Tutorial_03_extra_20.png"
+              frames[20] = "/assets/images/inverse-design/Lecture_03/Python_Tutorial_03_extra_21.png"
+              frames[21] = "/assets/images/inverse-design/Lecture_03/Python_Tutorial_03_extra_22.png"
+              frames[22] = "/assets/images/inverse-design/Lecture_03/Python_Tutorial_03_extra_23.png"
+              frames[23] = "/assets/images/inverse-design/Lecture_03/Python_Tutorial_03_extra_24.png"
+              frames[24] = "/assets/images/inverse-design/Lecture_03/Python_Tutorial_03_extra_25.png"
+              frames[25] = "/assets/images/inverse-design/Lecture_03/Python_Tutorial_03_extra_26.png"
+              frames[26] = "/assets/images/inverse-design/Lecture_03/Python_Tutorial_03_extra_27.png"
+              frames[27] = "/assets/images/inverse-design/Lecture_03/Python_Tutorial_03_extra_28.png"
+              frames[28] = "/assets/images/inverse-design/Lecture_03/Python_Tutorial_03_extra_29.png"
+              frames[29] = "/assets/images/inverse-design/Lecture_03/Python_Tutorial_03_extra_30.png"
+              frames[30] = "/assets/images/inverse-design/Lecture_03/Python_Tutorial_03_extra_31.png"
+              frames[31] = "/assets/images/inverse-design/Lecture_03/Python_Tutorial_03_extra_32.png"
+              frames[32] = "/assets/images/inverse-design/Lecture_03/Python_Tutorial_03_extra_33.png"
+              frames[33] = "/assets/images/inverse-design/Lecture_03/Python_Tutorial_03_extra_34.png"
+              frames[34] = "/assets/images/inverse-design/Lecture_03/Python_Tutorial_03_extra_35.png"
+              frames[35] = "/assets/images/inverse-design/Lecture_03/Python_Tutorial_03_extra_36.png"
+
+
+              /* set a timeout to make sure all the above elements are created before
+                 the object is initialized. */
+              setTimeout(function() {
+                animde7cc580c3814776b1193be1634a0593 = new Animation(frames, img_id, slider_id, 200.0,
+                  loop_select_id);
+              }, 0);
+            })()
+          </script>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain">
+          <pre>&lt;Figure size 640x480 with 0 Axes&gt;</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=865d41df-aef7-4f3b-8669-ee5615981e81">
+  <div class="jp-Cell-inputWrapper">
+    <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+    </div>
+    <div class="jp-InputArea jp-Cell-inputArea">
+      <div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div>
+      <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+        <div class="CodeMirror cm-s-jupyter">
+          <div class="highlight hl-ipython3"><pre><span></span><span class="n">ani</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s1">'animation_basic.gif'</span><span class="p">,</span> <span class="n">writer</span><span class="o">=</span><span class="s1">'imagemagick'</span><span class="p">,</span> <span class="n">fps</span><span class="o">=</span><span class="mi">60</span><span class="p">)</span>
+</pre></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="jp-Cell-outputWrapper">
+    <div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+    </div>
+    <div class="jp-OutputArea jp-Cell-outputArea">
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="application/vnd.jupyter.stderr">
+<pre>MovieWriter imagemagick unavailable; using Pillow instead.
+</pre>
+        </div>
+      </div>
+      <div class="jp-OutputArea-child">
+        <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+        <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain">
+          <pre>&lt;Figure size 640x480 with 0 Axes&gt;</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=d726e5eb-1c47-490f-89e4-fa4a5502ebb8">
+  <div class="jp-Cell-inputWrapper">
+    <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+    </div>
+    <div class="jp-InputArea jp-Cell-inputArea">
+      <div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div>
+      <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+        <div class="CodeMirror cm-s-jupyter">
+          <div class="highlight hl-ipython3"><pre><span></span>
+</pre></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=2e5874c8-ce69-4e48-804a-f640adca4fe1">
+  <div class="jp-Cell-inputWrapper">
+    <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+    </div>
+    <div class="jp-InputArea jp-Cell-inputArea">
+      <div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div>
+      <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+        <div class="CodeMirror cm-s-jupyter">
+          <div class="highlight hl-ipython3"><pre><span></span>
+</pre></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

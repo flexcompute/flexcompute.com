@@ -1,0 +1,104 @@
+{
+  "title": "Tidy3D GUI: Tutorial 1",
+  "pages": [
+    {
+      "id": "",
+      "title": "",
+      "transcript": "Hello! Today we'll guide you through the basics of setting up and running FDTD simulations using a simple waveguide example in the graphical user interface. So, open a web browser and log in to your account. Click on \"New Simulation\" and create a new empty simulation."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "Now, let's add the waveguide structure. Click on the \"Add Structure\" button, and choose the Box option from the available geometries."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "Feel free to rename your structure as desired. Next, we'll define the geometry of the waveguide."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "For this example, you can leave the \"center\" position at its default value of 0."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "To simulate an arbitrarily long waveguide, set the \"x\" size to Infinity. Then, for single-mode operation with transverse electric polarization, set the \"y\" size to 0.5 microns. Finally, assuming this is a standard SOI wafer, set the \"z\" size to 0.22 microns."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "The next step is to assign a material to the waveguide. In this case, let's create a new medium. However, you also have the option to load a material from the library."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "Give the medium an appropriate name, such as \"Si\" for silicon. In this case, a simple lossless medium will be enough. Set the material's permittivity to 12 and apply the changes."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "Now, adjust the simulation domain size to 5 microns in the \"x\" direction, 2.5 microns in the \"y\" direction, and 2 microns in the \"z\" direction. After clicking on the \"Apply\" button, you will see the rectangular waveguide structure."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "Proceed to the \"Grid Specifications\" tab. Set the value of \"min_steps_per_wavelengths\" to 15 and the wavelength to 1.5 microns, which will be the minimum wavelength used in the simulation. By choosing the \"AutoGrid\" type, a non-uniform mesh will be created over the entire simulation domain."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "Let's now add a light source to drive the FDTD simulation. Click on the \"Add Sources\" button, then select the \"ModeSource\" type. Adjust the center position to -2.4 microns in the x-direction, set the width to 1.5 microns, and the height to 1 micron. To propagate the light in the positive x-direction, select the \"+\" sign from the \"direction\" drop-down menu."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "To complete the setup, limit the source bandwidth to wavelengths between 1.5 and 1.6 microns [highlight]."
+    },{
+      "id": "",
+      "title": "",
+      "transcript": "Additionally, set the \"target_neff\" parameter to 3.47. This will instruct the mode solver to search for the fundamental transverse electric guided mode. You can find details about the other parameters using the “Help” buttons."
+    },{
+      "id": "",
+      "title": "",
+      "transcript": "In order to visualize the mode coupling efficiency at the other end of the waveguide, include a monitor of type \"ModeMonitor\". Position this monitor at 2.4 microns, and set the same dimensions as used for build the source plane."
+    },{
+      "id": "",
+      "title": "",
+      "transcript": "Enable the \"Set the range from source\" check box, which ensures that the monitor's bandwidth matches that of the source. Set the \"number of points\" parameter to 101 to obtain a resolution of 1 nm. Finally, set the \"target_neff\" parameter to 3.47 and apply the changes."
+    },{
+      "id": "",
+      "title": "",
+      "transcript": "The last element you need to include in this FDTD simulation is a field monitor to visualize the electromagnetic fields propagating along the waveguide. So, insert another monitor and select the \"FieldMonitor\" type. Put the field monitor at the waveguide's center plane, making it infinity in the x-, y-directions, and zero-dimensional in the z-direction. Then, choose the custom wavelength option and adjust it to the central simulation wavelength of 1.55 microns."
+    },{
+      "id": "",
+      "title": "",
+      "transcript": "Now, the FDTD simulation is fully defined. You can rename it \"Silicon Waveguide\", or any other name that will help you locate it later. Finally, click the \"Run\" button to initiate the FDTD solver."
+    },{
+      "id": "",
+      "title": "",
+      "transcript": "While the solver works, you can monitor the simulation's progress. Once it's complete, a pop-up message will appear. Click the \"Go to Post Run Result\" command to view the results."
+    },{
+      "id": "",
+      "title": "",
+      "transcript": "The initial screen will display the mode monitor result. As expected, all the power injected into the fundamental transverse electric waveguide mode propagates through the silicon waveguide across the entire simulation bandwidth. You can download this data for your records and explore it in more detail using the visualization tools."
+    },{
+      "id": "",
+      "title": "",
+      "transcript": "To observe the light propagation throughout the waveguide, select the \"field_xy\" monitor from the \"Monitor Name\" selection box. By utilizing the \"Field Component\" menu, you can choose the specific field component you wish to visualize."
+    },{
+      "id": "",
+      "title": "",
+      "paragraphs": [
+        {
+          "title": "",
+          "transcript": "If you wish to modify the FDTD model after analyzing the results, you can use the \"Edit\" command."
+        },{
+          "title": "",
+          "transcript": "This video covered the process of setting up and running a simple FDTD simulation, which included a silicon waveguide, a mode source, as well as a mode and a field monitor. For more information on FDTD simulations, refer to our next tutorials."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,2164 @@
+---
+author: Tom Chen
+custom_css:
+- learning-center/fdtd101
+- learning-center/menu
+- learning-center/home
+custom_font: font2
+description: This notebook demonstrates how to model a chiral metasurface based on
+  phase change material in Tidy3D FDTD.
+image:
+  alt: Tunable Chiral Metasurface Based on Phase Change Material | Flexcompute
+  path: /assets/tidy3d/examples/image/tunable_chiral_metasurface.png
+layout: learning-center/example-library
+menu_config:
+  collapsed: true
+  selected: Example Library
+metadata:
+  category: Metamaterials, Gratings, and Other Periodic Structures
+  enable_more_examples: true
+  more_examples:
+  - name: Dielectric metasurface absorber
+    path: notebooks/DielectricMetasurfaceAbsorber/
+    thumbnail:
+      description: Dielectric metasurface absorber
+      image: /assets/tidy3d/examples/image/metasurface.png
+  - name: Germanium Fano metasurface
+    path: notebooks/HighQGe/
+    thumbnail:
+      description: Germanium Fano metasurface
+      image: /assets/tidy3d/examples/image/fano_metasurface.png
+  - name: Distributed Bragg reflector and cavity
+    path: notebooks/DistributedBraggReflectorCavity/
+    thumbnail:
+      description: Distributed Bragg reflector and cavity
+      image: /assets/tidy3d/examples/image/dbr_schematic.png
+  pagination:
+    next:
+      name: Microwave frequency selective surface
+      path: notebooks/MicrowaveFrequencySelectiveSurface/
+    previous:
+      name: Graphene metamaterial absorber
+      path: notebooks/GrapheneMetamaterial/
+  type: example-library
+page_title: Tunable chiral metasurface based on phase change material
+source_link: https:/docs.flexcompute.com/projects/tidy3d/en/latest/_sources/notebooks/TunableChiralMetasurface.ipynb
+tags:
+- chiral
+- metasurface
+- circular dichroism
+- GST
+- phase change
+- Tidy3D
+- FDTD
+title: Tunable Chiral Metasurface Based on Phase Change Material | Flexcompute
+---
+
+
+<html lang="en">
+<head><meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="/assets/tidy3d/examples/css/example-notebook.css" rel="stylesheet"/>
+
+
+
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS_CHTML-full,Safe"> </script>
+
+<script type="text/x-mathjax-config">
+    init_mathjax = function() {
+        if (window.MathJax) {
+        // MathJax loaded
+            MathJax.Hub.Config({
+                TeX: {
+                    equationNumbers: {
+                    autoNumber: "AMS",
+                    useLabelIds: true
+                    }
+                },
+                tex2jax: {
+                    inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+                    displayMath: [ ['$$','$$'], ["\\[","\\]"] ],
+                    processEscapes: true,
+                    processEnvironments: true
+                },
+                displayAlign: 'center',
+                CommonHTML: {
+                    linebreaks: {
+                    automatic: true
+                    }
+                }
+            });
+
+            MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
+        }
+    }
+    init_mathjax();
+    </script>
+<script type="module">
+  document.addEventListener("DOMContentLoaded", async () => {
+    const diagrams = document.querySelectorAll(".jp-Mermaid > pre.mermaid");
+    // do not load mermaidjs if not needed
+    if (!diagrams.length) {
+      return;
+    }
+    const mermaid = (await import("https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.7.0/mermaid.esm.min.mjs")).default;
+    const parser = new DOMParser();
+
+    mermaid.initialize({
+      maxTextSize: 100000,
+      maxEdges: 100000,
+      startOnLoad: false,
+      fontFamily: window
+        .getComputedStyle(document.body)
+        .getPropertyValue("--jp-ui-font-family"),
+      theme: document.querySelector("body[data-jp-theme-light='true']")
+        ? "default"
+        : "dark",
+    });
+
+    let _nextMermaidId = 0;
+
+    function makeMermaidImage(svg) {
+      const img = document.createElement("img");
+      const doc = parser.parseFromString(svg, "image/svg+xml");
+      const svgEl = doc.querySelector("svg");
+      const { maxWidth } = svgEl?.style || {};
+      const firstTitle = doc.querySelector("title");
+      const firstDesc = doc.querySelector("desc");
+
+      img.setAttribute("src", `data:image/svg+xml,${encodeURIComponent(svg)}`);
+      if (maxWidth) {
+        img.width = parseInt(maxWidth);
+      }
+      if (firstTitle) {
+        img.setAttribute("alt", firstTitle.textContent);
+      }
+      if (firstDesc) {
+        const caption = document.createElement("figcaption");
+        caption.className = "sr-only";
+        caption.textContent = firstDesc.textContent;
+        return [img, caption];
+      }
+      return [img];
+    }
+
+    async function makeMermaidError(text) {
+      let errorMessage = "";
+      try {
+        await mermaid.parse(text);
+      } catch (err) {
+        errorMessage = `${err}`;
+      }
+
+      const result = document.createElement("details");
+      result.className = 'jp-RenderedMermaid-Details';
+      const summary = document.createElement("summary");
+      summary.className = 'jp-RenderedMermaid-Summary';
+      const pre = document.createElement("pre");
+      const code = document.createElement("code");
+      code.innerText = text;
+      pre.appendChild(code);
+      summary.appendChild(pre);
+      result.appendChild(summary);
+
+      const warning = document.createElement("pre");
+      warning.innerText = errorMessage;
+      result.appendChild(warning);
+      return [result];
+    }
+
+    async function renderOneMarmaid(src) {
+      const id = `jp-mermaid-${_nextMermaidId++}`;
+      const parent = src.parentNode;
+      let raw = src.textContent.trim();
+      const el = document.createElement("div");
+      el.style.visibility = "hidden";
+      document.body.appendChild(el);
+      let results = null;
+      let output = null;
+      try {
+        let { svg } = await mermaid.render(id, raw, el);
+        svg = cleanMermaidSvg(svg);
+        results = makeMermaidImage(svg);
+        output = document.createElement("figure");
+        results.map(output.appendChild, output);
+      } catch (err) {
+        parent.classList.add("jp-mod-warning");
+        results = await makeMermaidError(raw);
+        output = results[0];
+      } finally {
+        el.remove();
+      }
+      parent.classList.add("jp-RenderedMermaid");
+      parent.appendChild(output);
+    }
+
+
+    /**
+     * Post-process to ensure mermaid diagrams contain only valid SVG and XHTML.
+     */
+    function cleanMermaidSvg(svg) {
+      return svg.replace(RE_VOID_ELEMENT, replaceVoidElement);
+    }
+
+
+    /**
+     * A regular expression for all void elements, which may include attributes and
+     * a slash.
+     *
+     * @see https://developer.mozilla.org/en-US/docs/Glossary/Void_element
+     *
+     * Of these, only `<br>` is generated by Mermaid in place of `\n`,
+     * but _any_ "malformed" tag will break the SVG rendering entirely.
+     */
+    const RE_VOID_ELEMENT =
+      /<\s*(area|base|br|col|embed|hr|img|input|link|meta|param|source|track|wbr)\s*([^>]*?)\s*>/gi;
+
+    /**
+     * Ensure a void element is closed with a slash, preserving any attributes.
+     */
+    function replaceVoidElement(match, tag, rest) {
+      rest = rest.trim();
+      if (!rest.endsWith('/')) {
+        rest = `${rest} /`;
+      }
+      return `<${tag} ${rest}>`;
+    }
+
+    void Promise.all([...diagrams].map(renderOneMarmaid));
+  });
+</script>
+
+</head>
+<body class="jp-Notebook" data-jp-theme-light="true" data-jp-theme-name="JupyterLab Light">
+<main>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=32c6f6b4">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=4e0d0a39">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>Chiral optical structures, characterized by their absence of mirror symmetry, interact distinctively with left circularly polarized (LCP) and right circularly polarized (RCP) light, resulting in circular dichroism (CD) responses. This phenomenon is crucial in diverse research fields, such as drug synthesis, chiral sensing, and optical communication. However, natural optical materials exhibit very weak CD due to limited chiral light-matter interaction strength. In contrast, optical metasurfaces, as artificially engineered materials, can exhibit electromagnetic properties surpassing those of natural materials. Specifically, optical metasurfaces with chiral structures as unit cells can demonstrate strong chiroptical properties with high CD.</p>
+<p>In this notebook, we demonstrate a wavelength-tunable infrared chiral metasurface, incorporating the phase-change material GST-225, with a parallelogram-shaped resonator as its unit cell. The metasurface's resonance wavelength is tuned through the phase transition of GST-225. The design is based on <code>Haotian Tang, Liliana Stan, David A. Czaplewski, Xiaodong Yang, and Jie Gao, "Wavelength-tunable infrared chiral metasurfaces with phase-change materials," Opt. Express 31, 21118-21127 (2023)</code> <a href="https://doi.org/10.1364/OE.489841" target="_blank">DOI:10.1364/OE.489841</a>.</p>
+<img alt="Schematic of the metasurface" src="/assets/tidy3d/examples/image/tunable_chiral_metasurface.png" width="500"/>
+<p>For more metamaterial and metasurface examples, please see the <a href="https://www.flexcompute.com/tidy3d/examples/notebooks/DielectricMetasurfaceAbsorber/" target="_blank">dielectric metasurface absorber</a>, the <a href="https://www.flexcompute.com/tidy3d/examples/notebooks/GrapheneMetamaterial/" target="_blank">graphene metamaterial absorber</a>, the <a href="https://www.flexcompute.com/tidy3d/examples/notebooks/HighQGe/" target="_blank">Fano metasurface</a>, and the <a href="https://www.flexcompute.com/tidy3d/examples/notebooks/GradientMetasurfaceReflector/" target="_blank">gradient metasurface reflector</a>.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=53369c5c">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[1]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+
+<span class="kn">import</span> <span class="nn">tidy3d</span> <span class="k">as</span> <span class="nn">td</span>
+<span class="kn">import</span> <span class="nn">tidy3d.web</span> <span class="k">as</span> <span class="nn">web</span>
+<span class="kn">from</span> <span class="nn">tidy3d.plugins.dispersion</span> <span class="kn">import</span> <span class="n">FastDispersionFitter</span><span class="p">,</span> <span class="n">AdvancedFastFitterParam</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=2d2b35fb">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="Simulation-Setup">Simulation Setup<a class="anchor-link" href="#Simulation-Setup">¶</a></h2>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=c770707c">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>In this example, we investigate the wavelength range of 2-3 µm.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=1e07a08b">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[2]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">lda0</span> <span class="o">=</span> <span class="mf">2.5</span>  <span class="c1"># central wavelength</span>
+<span class="n">freq0</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">C_0</span> <span class="o">/</span> <span class="n">lda0</span>  <span class="c1"># central frequency</span>
+<span class="n">ldas</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">101</span><span class="p">)</span>  <span class="c1"># wavelength range</span>
+<span class="n">freqs</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">C_0</span> <span class="o">/</span> <span class="n">ldas</span>  <span class="c1"># frequency range</span>
+<span class="n">fwidth</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">freqs</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">freqs</span><span class="p">))</span>  <span class="c1"># width of the source frequency range</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=be81fdfe">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h3 id="Define-Geometric-Parameters">Define Geometric Parameters<a class="anchor-link" href="#Define-Geometric-Parameters">¶</a></h3><p>The physical meaning of the parameters is schematically shown in Fig. 1(b) of the <a href="https://doi.org/10.1364/OE.489841" target="_blank">paper</a>.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=3a43a9b2">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[3]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">Px</span> <span class="o">=</span> <span class="mf">1.25</span>  <span class="c1"># unit cell period in the x direction</span>
+<span class="n">Py</span> <span class="o">=</span> <span class="mf">0.4</span>  <span class="c1"># unit cell period in the y direction</span>
+<span class="n">A</span> <span class="o">=</span> <span class="mf">0.24</span>  <span class="c1"># width of the Al resonator</span>
+<span class="n">B</span> <span class="o">=</span> <span class="mf">0.21</span>  <span class="c1"># width of the slot</span>
+<span class="n">alpha</span> <span class="o">=</span> <span class="mi">30</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">180</span>  <span class="c1"># tilted angle of the slot</span>
+<span class="n">t_gst</span> <span class="o">=</span> <span class="mf">0.075</span>  <span class="c1"># thickness of the GST layer</span>
+<span class="n">t_al2o3</span> <span class="o">=</span> <span class="mf">0.025</span>  <span class="c1"># thickness of the Al2O3 capping layer</span>
+<span class="n">t_al</span> <span class="o">=</span> <span class="mf">0.06</span>  <span class="c1"># thickness of the Al layer</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=02d340f5">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h3 id="Define-Material-Media">Define Material Media<a class="anchor-link" href="#Define-Material-Media">¶</a></h3><p>For aluminum, we directly use the predefined medium from the <a href="https://docs.flexcompute.com/projects/tidy3d/en/latest/material_library.html" target="_blank">material library</a>. Alumina is defined by a <a href="https://docs.flexcompute.com/projects/tidy3d/en/latest/_autosummary/tidy3d.Sellmeier.html" target="_blank">Sellmeier</a> model.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=0f84df0b">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[4]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">Al</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">material_library</span><span class="p">[</span><span class="s2">"Al"</span><span class="p">][</span><span class="s2">"RakicLorentzDrude1998"</span><span class="p">]</span>
+
+<span class="n">coeffs</span> <span class="o">=</span> <span class="p">[(</span><span class="mf">1.431</span><span class="p">,</span> <span class="mf">0.0727</span><span class="o">**</span><span class="mi">2</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.651</span><span class="p">,</span> <span class="mf">0.119</span><span class="o">**</span><span class="mi">2</span><span class="p">),</span> <span class="p">(</span><span class="mf">5.341</span><span class="p">,</span> <span class="mf">18.028</span><span class="o">**</span><span class="mi">2</span><span class="p">)]</span>
+<span class="n">Al2O3</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">Sellmeier</span><span class="p">(</span><span class="n">coeffs</span><span class="o">=</span><span class="n">coeffs</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=076cbb25">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>The crystalline and amorphous states of GST are defined by using the <a href="https://docs.flexcompute.com/projects/tidy3d/en/latest/_autosummary/tidy3d.plugins.dispersion.FastDispersionFitter.html" target="_blank">FastDispersionFitter</a> to fit wavelength-dependent refractive index profiles stored in CSV files.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=e50e4b12">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[5]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">fitter</span> <span class="o">=</span> <span class="n">FastDispersionFitter</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="s2">"misc/GST_A_nk.csv"</span><span class="p">,</span> <span class="n">skiprows</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s2">","</span><span class="p">)</span>
+<span class="n">advanced_param</span> <span class="o">=</span> <span class="n">AdvancedFastFitterParam</span><span class="p">(</span><span class="n">weights</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+<span class="n">GST_A</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">fitter</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">max_num_poles</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">advanced_param</span><span class="o">=</span><span class="n">advanced_param</span><span class="p">,</span> <span class="n">tolerance_rms</span><span class="o">=</span><span class="mf">0.05</span><span class="p">)</span>
+<span class="n">fitter</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">GST_A</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Output()</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">[11:00:08] </span><span style="color: #800000; text-decoration-color: #800000">WARNING: Unable to fit with weighted RMS error under </span><span style="color: #008000; text-decoration-color: #008000">'tolerance_rms'</span><span style="color: #800000; text-decoration-color: #800000"> </span>
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span><span style="color: #800000; text-decoration-color: #800000">of </span><span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0.05</span><span style="color: #800000; text-decoration-color: #800000">                                                              </span>
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedImage jp-OutputArea-output" tabindex="0">
+<img alt="No description has been provided for this image" class="" src="/assets/tidy3d/examples/image/TunableChiralMetasurface/TunableChiralMetasurface_2.png"/>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=e8ae3954">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[6]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">fitter</span> <span class="o">=</span> <span class="n">FastDispersionFitter</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="s2">"misc/GST_C_nk.csv"</span><span class="p">,</span> <span class="n">skiprows</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s2">","</span><span class="p">)</span>
+<span class="n">GST_C</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">fitter</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">max_num_poles</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">advanced_param</span><span class="o">=</span><span class="n">advanced_param</span><span class="p">,</span> <span class="n">tolerance_rms</span><span class="o">=</span><span class="mf">0.05</span><span class="p">)</span>
+<span class="n">fitter</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">GST_C</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Output()</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedImage jp-OutputArea-output" tabindex="0">
+<img alt="No description has been provided for this image" class="" src="/assets/tidy3d/examples/image/TunableChiralMetasurface/TunableChiralMetasurface_3.png"/>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=a7a1c66c">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h3 id="Define-Structures-in-the-Unit-Cell">Define Structures in the Unit Cell<a class="anchor-link" href="#Define-Structures-in-the-Unit-Cell">¶</a></h3><p>The unit cell includes a 200 nm-thick aluminum mirror layer on a silicon substrate, followed by a 75 nm GST-225 spacer layer. Above this, there is a 25 nm-thick alumina capping layer, and the assembly is topped with a 60 nm-thick aluminum layer, patterned into parallelogram-shaped resonators. The resonators are defined as <a href="https://docs.flexcompute.com/projects/tidy3d/en/latest/_autosummary/tidy3d.PolySlab.html" target="_blank">PolySlabs</a> with calculated vertices. Since we need to simulate the metasurface with the GST in two states, we define a <code>make_gst_layer(state)</code> function to construct the GST layer given the state.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=219afd33">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[7]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">inf_eff</span> <span class="o">=</span> <span class="mf">1e2</span>  <span class="c1"># effective infinity</span>
+
+<span class="c1"># calculate the vertices of the resonator on the left</span>
+<span class="n">vertices</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">(</span><span class="o">-</span><span class="n">inf_eff</span><span class="p">,</span> <span class="n">A</span> <span class="o">/</span> <span class="mi">2</span><span class="p">),</span>
+    <span class="p">(</span><span class="o">-</span><span class="n">inf_eff</span><span class="p">,</span> <span class="o">-</span><span class="n">A</span> <span class="o">/</span> <span class="mi">2</span><span class="p">),</span>
+    <span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="n">B</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">alpha</span><span class="p">)</span> <span class="o">+</span> <span class="n">A</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">tan</span><span class="p">(</span><span class="n">alpha</span><span class="p">))</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="n">A</span> <span class="o">/</span> <span class="mi">2</span><span class="p">),</span>
+    <span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="n">B</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">alpha</span><span class="p">)</span> <span class="o">-</span> <span class="n">A</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">tan</span><span class="p">(</span><span class="n">alpha</span><span class="p">))</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">A</span> <span class="o">/</span> <span class="mi">2</span><span class="p">),</span>
+<span class="p">]</span>
+
+<span class="c1"># define the left resonator structure</span>
+<span class="n">left_resonator</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">Structure</span><span class="p">(</span>
+    <span class="n">geometry</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">PolySlab</span><span class="p">(</span><span class="n">vertices</span><span class="o">=</span><span class="n">vertices</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">slab_bounds</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">t_al</span><span class="p">)),</span> <span class="n">medium</span><span class="o">=</span><span class="n">Al</span>
+<span class="p">)</span>
+
+<span class="c1"># calculate the vertices of the resonator on the right</span>
+<span class="n">vertices</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">(</span><span class="n">inf_eff</span><span class="p">,</span> <span class="n">A</span> <span class="o">/</span> <span class="mi">2</span><span class="p">),</span>
+    <span class="p">(</span><span class="n">inf_eff</span><span class="p">,</span> <span class="o">-</span><span class="n">A</span> <span class="o">/</span> <span class="mi">2</span><span class="p">),</span>
+    <span class="p">((</span><span class="n">B</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">alpha</span><span class="p">)</span> <span class="o">-</span> <span class="n">A</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">tan</span><span class="p">(</span><span class="n">alpha</span><span class="p">))</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="n">A</span> <span class="o">/</span> <span class="mi">2</span><span class="p">),</span>
+    <span class="p">((</span><span class="n">B</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">alpha</span><span class="p">)</span> <span class="o">+</span> <span class="n">A</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">tan</span><span class="p">(</span><span class="n">alpha</span><span class="p">))</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">A</span> <span class="o">/</span> <span class="mi">2</span><span class="p">),</span>
+<span class="p">]</span>
+
+<span class="c1"># define the right resonator structure</span>
+<span class="n">right_resonator</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">Structure</span><span class="p">(</span>
+    <span class="n">geometry</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">PolySlab</span><span class="p">(</span><span class="n">vertices</span><span class="o">=</span><span class="n">vertices</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">slab_bounds</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">t_al</span><span class="p">)),</span> <span class="n">medium</span><span class="o">=</span><span class="n">Al</span>
+<span class="p">)</span>
+
+<span class="c1"># define the Al2O3 buffer layer</span>
+<span class="n">buffer_layer</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">Structure</span><span class="p">(</span>
+    <span class="n">geometry</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">Box</span><span class="p">(</span><span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="n">t_al2o3</span> <span class="o">/</span> <span class="mi">2</span><span class="p">),</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">td</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">td</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">t_al2o3</span><span class="p">)),</span> <span class="n">medium</span><span class="o">=</span><span class="n">Al2O3</span>
+<span class="p">)</span>
+
+<span class="c1"># define a function to construct the GST layer given the state</span>
+<span class="k">def</span> <span class="nf">make_gst_layer</span><span class="p">(</span><span class="n">state</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">state</span> <span class="o">==</span> <span class="s2">"amorphous"</span><span class="p">:</span>
+        <span class="n">medium</span> <span class="o">=</span> <span class="n">GST_A</span>
+    <span class="k">elif</span> <span class="n">state</span> <span class="o">==</span> <span class="s2">"crystalline"</span><span class="p">:</span>
+        <span class="n">medium</span> <span class="o">=</span> <span class="n">GST_C</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"state must be `amorphous` or `crystalline`"</span><span class="p">)</span>
+
+    <span class="n">gst_layer</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">Structure</span><span class="p">(</span>
+        <span class="n">geometry</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">Box</span><span class="p">(</span><span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="n">t_al2o3</span> <span class="o">-</span> <span class="n">t_gst</span> <span class="o">/</span> <span class="mi">2</span><span class="p">),</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">td</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">td</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">t_gst</span><span class="p">)),</span>
+        <span class="n">medium</span><span class="o">=</span><span class="n">medium</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">gst_layer</span>
+
+
+<span class="c1"># define the Al substrate</span>
+<span class="n">al_substrate</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">Structure</span><span class="p">(</span>
+    <span class="n">geometry</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">Box</span><span class="o">.</span><span class="n">from_bounds</span><span class="p">(</span>
+        <span class="n">rmin</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="n">inf_eff</span><span class="p">,</span> <span class="o">-</span><span class="n">inf_eff</span><span class="p">,</span> <span class="o">-</span><span class="n">inf_eff</span><span class="p">),</span> <span class="n">rmax</span><span class="o">=</span><span class="p">(</span><span class="n">inf_eff</span><span class="p">,</span> <span class="n">inf_eff</span><span class="p">,</span> <span class="o">-</span><span class="n">t_al2o3</span> <span class="o">-</span> <span class="n">t_gst</span><span class="p">)</span>
+    <span class="p">),</span>
+    <span class="n">medium</span><span class="o">=</span><span class="n">Al</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=162c797a">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h3 id="Define-Source-and-Monitors">Define Source and Monitors<a class="anchor-link" href="#Define-Source-and-Monitors">¶</a></h3><p>A circularly polarized plane wave is just two perpendicularly linearly polarized plane waves with a 90 degree phase difference. Here we define a <code>circular_polarized_plane_wave(pol)</code> function to construct the circularly polarized plane wave given the polarization, either left or right.</p>
+<p>Since the metasurface is fabricated on a metal mirror, the transmission will be zero. We only need to define a <a href="https://docs.flexcompute.com/projects/tidy3d/en/latest/_autosummary/tidy3d.FluxMonitor.html" target="_blank">FluxMonitor</a> to measure reflection ($R$). Absorption can be calculated simply by $A=1-R$. To further inspect the resonant field patterns, we define two <a href="https://docs.flexcompute.com/projects/tidy3d/en/latest/_autosummary/tidy3d.FieldMonitor.html" target="_blank">FieldMonitors</a> in the $xz$ and $xy$ planes. To reduce the result data size, we only record fields at the resonant wavelength when GST is in the amorphous state, which is predetermined to be 2.4 µm.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=89a54dd9">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[8]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">circular_polarized_plane_wave</span><span class="p">(</span><span class="n">pol</span><span class="p">):</span>
+    <span class="c1"># define a plane wave polarized in the x direction</span>
+    <span class="n">plane_wave_x</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">PlaneWave</span><span class="p">(</span>
+        <span class="n">source_time</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">GaussianPulse</span><span class="p">(</span><span class="n">freq0</span><span class="o">=</span><span class="n">freq0</span><span class="p">,</span> <span class="n">fwidth</span><span class="o">=</span><span class="n">fwidth</span><span class="p">),</span>
+        <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">td</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">td</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+        <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">0.3</span> <span class="o">*</span> <span class="n">lda0</span><span class="p">),</span>
+        <span class="n">direction</span><span class="o">=</span><span class="s2">"-"</span><span class="p">,</span>
+        <span class="n">pol_angle</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="p">)</span>
+    
+    <span class="c1"># determine the phase difference given the polarization</span>
+    <span class="k">if</span> <span class="n">pol</span> <span class="o">==</span> <span class="s2">"left"</span><span class="p">:</span>
+        <span class="n">phase</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">2</span>
+    <span class="k">elif</span> <span class="n">pol</span> <span class="o">==</span> <span class="s2">"right"</span><span class="p">:</span>
+        <span class="n">phase</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">2</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"pol must be `left` or `right`"</span><span class="p">)</span>
+    
+    <span class="c1"># define a plane wave polarized in the y direction with a phase difference</span>
+    <span class="n">plane_wave_y</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">PlaneWave</span><span class="p">(</span>
+        <span class="n">source_time</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">GaussianPulse</span><span class="p">(</span><span class="n">freq0</span><span class="o">=</span><span class="n">freq0</span><span class="p">,</span> <span class="n">fwidth</span><span class="o">=</span><span class="n">fwidth</span><span class="p">,</span> <span class="n">phase</span><span class="o">=</span><span class="n">phase</span><span class="p">),</span>
+        <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">td</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">td</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+        <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">0.3</span> <span class="o">*</span> <span class="n">lda0</span><span class="p">),</span>
+        <span class="n">direction</span><span class="o">=</span><span class="s2">"-"</span><span class="p">,</span>
+        <span class="n">pol_angle</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">[</span><span class="n">plane_wave_x</span><span class="p">,</span> <span class="n">plane_wave_y</span><span class="p">]</span>
+
+
+<span class="c1"># add a flux monitor to detect transmission</span>
+<span class="n">monitor_r</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">FluxMonitor</span><span class="p">(</span>
+    <span class="n">center</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">lda0</span><span class="p">],</span> <span class="n">size</span><span class="o">=</span><span class="p">[</span><span class="n">td</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">td</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">freqs</span><span class="o">=</span><span class="n">freqs</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"R"</span>
+<span class="p">)</span>
+
+<span class="n">freq_res</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">C_0</span> <span class="o">/</span> <span class="mf">2.4</span> <span class="c1"># resonant frequency</span>
+
+<span class="c1"># add field monitors to see the field profiles at the absorption peak frequency when GST is in the amorphous state</span>
+<span class="n">monitor_field_xz</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">FieldMonitor</span><span class="p">(</span>
+    <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">td</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">td</span><span class="o">.</span><span class="n">inf</span><span class="p">),</span> <span class="n">freqs</span><span class="o">=</span><span class="p">[</span><span class="n">freq_res</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="s2">"field_xz"</span>
+<span class="p">)</span>
+
+<span class="n">monitor_field_xy</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">FieldMonitor</span><span class="p">(</span>
+    <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">td</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">td</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">freqs</span><span class="o">=</span><span class="p">[</span><span class="n">freq_res</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="s2">"field_xy"</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">[11:00:10] </span><span style="color: #800000; text-decoration-color: #800000">WARNING: Default value for the field monitor </span><span style="color: #008000; text-decoration-color: #008000">'colocate'</span><span style="color: #800000; text-decoration-color: #800000"> setting has  </span>
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span><span style="color: #800000; text-decoration-color: #800000">changed to </span><span style="color: #008000; text-decoration-color: #008000">'True'</span><span style="color: #800000; text-decoration-color: #800000"> in Tidy3D </span><span style="color: #008080; text-decoration-color: #008080; font-weight: bold">2.4</span><span style="color: #800000; text-decoration-color: #800000">.</span><span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0</span><span style="color: #800000; text-decoration-color: #800000">. All field components will be      </span>
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span><span style="color: #800000; text-decoration-color: #800000">colocated to the grid boundaries. Set to </span><span style="color: #008000; text-decoration-color: #008000">'False'</span><span style="color: #800000; text-decoration-color: #800000"> to get the raw      </span>
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span><span style="color: #800000; text-decoration-color: #800000">fields on the Yee grid instead.                                      </span>
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span><span style="color: #800000; text-decoration-color: #800000">WARNING: Default value for the field monitor </span><span style="color: #008000; text-decoration-color: #008000">'colocate'</span><span style="color: #800000; text-decoration-color: #800000"> setting has  </span>
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span><span style="color: #800000; text-decoration-color: #800000">changed to </span><span style="color: #008000; text-decoration-color: #008000">'True'</span><span style="color: #800000; text-decoration-color: #800000"> in Tidy3D </span><span style="color: #008080; text-decoration-color: #008080; font-weight: bold">2.4</span><span style="color: #800000; text-decoration-color: #800000">.</span><span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0</span><span style="color: #800000; text-decoration-color: #800000">. All field components will be      </span>
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span><span style="color: #800000; text-decoration-color: #800000">colocated to the grid boundaries. Set to </span><span style="color: #008000; text-decoration-color: #008000">'False'</span><span style="color: #800000; text-decoration-color: #800000"> to get the raw      </span>
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span><span style="color: #800000; text-decoration-color: #800000">fields on the Yee grid instead.                                      </span>
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=22eba7fa">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h3 id="Define-Simulation">Define Simulation<a class="anchor-link" href="#Define-Simulation">¶</a></h3><p>Now we are ready to set up the simulation. In total we need to run four simulations to cover both polarizations and GST states. To make it more convenient, we define a <code>make_sim(pol, state)</code> function.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=d4de3eec">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[9]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">run_time</span> <span class="o">=</span> <span class="mf">3e-13</span>  <span class="c1"># simulation run time</span>
+
+<span class="c1"># simulation domain box</span>
+<span class="n">sim_box</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">Box</span><span class="o">.</span><span class="n">from_bounds</span><span class="p">(</span>
+    <span class="n">rmin</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="n">Px</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="n">Py</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="n">t_al2o3</span> <span class="o">-</span> <span class="n">t_gst</span> <span class="o">-</span> <span class="n">lda0</span> <span class="o">/</span> <span class="mi">2</span><span class="p">),</span> <span class="n">rmax</span><span class="o">=</span><span class="p">(</span><span class="n">Px</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">Py</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">t_al</span> <span class="o">+</span> <span class="n">lda0</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+<span class="p">)</span>
+
+<span class="c1"># define a function to construct a simulation given the polarization and GST state</span>
+<span class="k">def</span> <span class="nf">make_sim</span><span class="p">(</span><span class="n">pol</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
+    <span class="n">sim</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">Simulation</span><span class="p">(</span>
+        <span class="n">center</span><span class="o">=</span><span class="n">sim_box</span><span class="o">.</span><span class="n">center</span><span class="p">,</span>
+        <span class="n">size</span><span class="o">=</span><span class="n">sim_box</span><span class="o">.</span><span class="n">size</span><span class="p">,</span>
+        <span class="n">grid_spec</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">GridSpec</span><span class="o">.</span><span class="n">auto</span><span class="p">(</span><span class="n">min_steps_per_wvl</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">wavelength</span><span class="o">=</span><span class="n">lda0</span><span class="p">),</span>
+        <span class="n">structures</span><span class="o">=</span><span class="p">[</span>
+            <span class="n">left_resonator</span><span class="p">,</span>
+            <span class="n">right_resonator</span><span class="p">,</span>
+            <span class="n">buffer_layer</span><span class="p">,</span>
+            <span class="n">make_gst_layer</span><span class="p">(</span><span class="n">state</span><span class="p">),</span>
+            <span class="n">al_substrate</span><span class="p">,</span>
+        <span class="p">],</span>
+        <span class="n">sources</span><span class="o">=</span><span class="n">circular_polarized_plane_wave</span><span class="p">(</span><span class="n">pol</span><span class="p">),</span>
+        <span class="n">monitors</span><span class="o">=</span><span class="p">[</span><span class="n">monitor_r</span><span class="p">,</span> <span class="n">monitor_field_xz</span><span class="p">,</span> <span class="n">monitor_field_xy</span><span class="p">],</span>
+        <span class="n">run_time</span><span class="o">=</span><span class="n">run_time</span><span class="p">,</span>
+        <span class="n">boundary_spec</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">BoundarySpec</span><span class="p">(</span>
+            <span class="n">x</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">Boundary</span><span class="o">.</span><span class="n">periodic</span><span class="p">(),</span> <span class="n">y</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">Boundary</span><span class="o">.</span><span class="n">periodic</span><span class="p">(),</span> <span class="n">z</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">Boundary</span><span class="o">.</span><span class="n">pml</span><span class="p">()</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">sim</span>
+
+
+<span class="c1"># make one simulation and plot it to inspect</span>
+<span class="n">sim_left_A</span> <span class="o">=</span> <span class="n">make_sim</span><span class="p">(</span><span class="s2">"left"</span><span class="p">,</span> <span class="s2">"amorphous"</span><span class="p">)</span>
+<span class="n">sim_left_A</span><span class="o">.</span><span class="n">plot_3d</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<iframe allowfullscreen="true" height="800" id="simulation-viewer170205121025924377" src="https://feature-simulation-viewer.d3a9gfg7glllfq.amplifyapp.com/simulation-viewer?uuid=170205121025924377" width="800"></iframe>
+<script>
+        
+    window.postMessageToViewer170205121025924377 = event => {
+        if(event.data.type === 'viewer'&&event.data.uuid==='170205121025924377'){
+            document.getElementById('simulation-viewer170205121025924377').contentWindow.postMessage({ type: 'jupyter', uuid:'170205121025924377', value:{
+    "type": "Simulation",
+    "center": [
+        0.0,
+        0.0,
+        -0.020000000000000018
+    ],
+    "size": [
+        1.25,
+        0.4,
+        2.66
+    ],
+    "run_time": 3e-13,
+    "medium": {
+        "name": null,
+        "frequency_range": null,
+        "allow_gain": false,
+        "nonlinear_spec": null,
+        "type": "Medium",
+        "permittivity": 1.0,
+        "conductivity": 0.0
+    },
+    "symmetry": [
+        0,
+        0,
+        0
+    ],
+    "structures": [
+        {
+            "geometry": {
+                "type": "PolySlab",
+                "axis": 2,
+                "sidewall_angle": 0.0,
+                "reference_plane": "middle",
+                "slab_bounds": [
+                    0.0,
+                    0.06
+                ],
+                "dilation": 0.0,
+                "vertices": [
+                    [
+                        -100.0,
+                        0.12
+                    ],
+                    [
+                        -100.0,
+                        -0.12
+                    ],
+                    [
+                        -0.19052558883257648,
+                        -0.12
+                    ],
+                    [
+                        -0.05196152422706632,
+                        0.12
+                    ]
+                ]
+            },
+            "name": null,
+            "type": "Structure",
+            "medium": {
+                "name": null,
+                "frequency_range": [
+                    1208986804855.426,
+                    4835986224028907.0
+                ],
+                "allow_gain": false,
+                "nonlinear_spec": null,
+                "type": "PoleResidue",
+                "eps_inf": 1.0,
+                "poles": [
+                    [
+                        {
+                            "real": 0.0,
+                            "imag": 0.0
+                        },
+                        {
+                            "real": 1.896844347324609e+18,
+                            "imag": 0.0
+                        }
+                    ],
+                    [
+                        {
+                            "real": -71405570055817.98,
+                            "imag": 0.0
+                        },
+                        {
+                            "real": -1.896844347324609e+18,
+                            "imag": 0.0
+                        }
+                    ],
+                    [
+                        {
+                            "real": -194545209645174.6,
+                            "imag": 0.0
+                        },
+                        {
+                            "real": 5.0321060071503546e+17,
+                            "imag": 0.0
+                        }
+                    ],
+                    [
+                        {
+                            "real": -311370850537535.75,
+                            "imag": 0.0
+                        },
+                        {
+                            "real": -5.0321060071503546e+17,
+                            "imag": 0.0
+                        }
+                    ],
+                    [
+                        {
+                            "real": -237005721887395.88,
+                            "imag": -2333745139453868.0
+                        },
+                        {
+                            "real": 0.0,
+                            "imag": 5548539400655871.0
+                        }
+                    ],
+                    [
+                        {
+                            "real": -1026265161121383.9,
+                            "imag": -2547917843202808.5
+                        },
+                        {
+                            "real": 0.0,
+                            "imag": 1.6872706975652862e+16
+                        }
+                    ],
+                    [
+                        {
+                            "real": -2569081254561451.5,
+                            "imag": -4608729293067524.0
+                        },
+                        {
+                            "real": 0.0,
+                            "imag": 1685784870483934.2
+                        }
+                    ]
+                ]
+            }
+        },
+        {
+            "geometry": {
+                "type": "PolySlab",
+                "axis": 2,
+                "sidewall_angle": 0.0,
+                "reference_plane": "middle",
+                "slab_bounds": [
+                    0.0,
+                    0.06
+                ],
+                "dilation": 0.0,
+                "vertices": [
+                    [
+                        100.0,
+                        0.12
+                    ],
+                    [
+                        100.0,
+                        -0.12
+                    ],
+                    [
+                        0.05196152422706632,
+                        -0.12
+                    ],
+                    [
+                        0.19052558883257648,
+                        0.12
+                    ]
+                ]
+            },
+            "name": null,
+            "type": "Structure",
+            "medium": {
+                "name": null,
+                "frequency_range": [
+                    1208986804855.426,
+                    4835986224028907.0
+                ],
+                "allow_gain": false,
+                "nonlinear_spec": null,
+                "type": "PoleResidue",
+                "eps_inf": 1.0,
+                "poles": [
+                    [
+                        {
+                            "real": 0.0,
+                            "imag": 0.0
+                        },
+                        {
+                            "real": 1.896844347324609e+18,
+                            "imag": 0.0
+                        }
+                    ],
+                    [
+                        {
+                            "real": -71405570055817.98,
+                            "imag": 0.0
+                        },
+                        {
+                            "real": -1.896844347324609e+18,
+                            "imag": 0.0
+                        }
+                    ],
+                    [
+                        {
+                            "real": -194545209645174.6,
+                            "imag": 0.0
+                        },
+                        {
+                            "real": 5.0321060071503546e+17,
+                            "imag": 0.0
+                        }
+                    ],
+                    [
+                        {
+                            "real": -311370850537535.75,
+                            "imag": 0.0
+                        },
+                        {
+                            "real": -5.0321060071503546e+17,
+                            "imag": 0.0
+                        }
+                    ],
+                    [
+                        {
+                            "real": -237005721887395.88,
+                            "imag": -2333745139453868.0
+                        },
+                        {
+                            "real": 0.0,
+                            "imag": 5548539400655871.0
+                        }
+                    ],
+                    [
+                        {
+                            "real": -1026265161121383.9,
+                            "imag": -2547917843202808.5
+                        },
+                        {
+                            "real": 0.0,
+                            "imag": 1.6872706975652862e+16
+                        }
+                    ],
+                    [
+                        {
+                            "real": -2569081254561451.5,
+                            "imag": -4608729293067524.0
+                        },
+                        {
+                            "real": 0.0,
+                            "imag": 1685784870483934.2
+                        }
+                    ]
+                ]
+            }
+        },
+        {
+            "geometry": {
+                "type": "Box",
+                "center": [
+                    0.0,
+                    0.0,
+                    -0.0125
+                ],
+                "size": [
+                    "Infinity",
+                    "Infinity",
+                    0.025
+                ]
+            },
+            "name": null,
+            "type": "Structure",
+            "medium": {
+                "name": null,
+                "frequency_range": null,
+                "allow_gain": false,
+                "nonlinear_spec": null,
+                "type": "Sellmeier",
+                "coeffs": [
+                    [
+                        1.431,
+                        0.00528529
+                    ],
+                    [
+                        0.651,
+                        0.014160999999999998
+                    ],
+                    [
+                        5.341,
+                        325.00878399999993
+                    ]
+                ]
+            }
+        },
+        {
+            "geometry": {
+                "type": "Box",
+                "center": [
+                    0.0,
+                    0.0,
+                    -0.0625
+                ],
+                "size": [
+                    "Infinity",
+                    "Infinity",
+                    0.075
+                ]
+            },
+            "name": null,
+            "type": "Structure",
+            "medium": {
+                "name": null,
+                "frequency_range": null,
+                "allow_gain": false,
+                "nonlinear_spec": null,
+                "type": "PoleResidue",
+                "eps_inf": 1.0,
+                "poles": [
+                    [
+                        {
+                            "real": -241517035804075.06,
+                            "imag": -2119127076058500.5
+                        },
+                        {
+                            "real": 3353421957284537.0,
+                            "imag": 1.4520779923859642e+16
+                        }
+                    ]
+                ]
+            }
+        },
+        {
+            "geometry": {
+                "type": "Box",
+                "center": [
+                    0.0,
+                    0.0,
+                    -50.05
+                ],
+                "size": [
+                    200.0,
+                    200.0,
+                    99.9
+                ]
+            },
+            "name": null,
+            "type": "Structure",
+            "medium": {
+                "name": null,
+                "frequency_range": [
+                    1208986804855.426,
+                    4835986224028907.0
+                ],
+                "allow_gain": false,
+                "nonlinear_spec": null,
+                "type": "PoleResidue",
+                "eps_inf": 1.0,
+                "poles": [
+                    [
+                        {
+                            "real": 0.0,
+                            "imag": 0.0
+                        },
+                        {
+                            "real": 1.896844347324609e+18,
+                            "imag": 0.0
+                        }
+                    ],
+                    [
+                        {
+                            "real": -71405570055817.98,
+                            "imag": 0.0
+                        },
+                        {
+                            "real": -1.896844347324609e+18,
+                            "imag": 0.0
+                        }
+                    ],
+                    [
+                        {
+                            "real": -194545209645174.6,
+                            "imag": 0.0
+                        },
+                        {
+                            "real": 5.0321060071503546e+17,
+                            "imag": 0.0
+                        }
+                    ],
+                    [
+                        {
+                            "real": -311370850537535.75,
+                            "imag": 0.0
+                        },
+                        {
+                            "real": -5.0321060071503546e+17,
+                            "imag": 0.0
+                        }
+                    ],
+                    [
+                        {
+                            "real": -237005721887395.88,
+                            "imag": -2333745139453868.0
+                        },
+                        {
+                            "real": 0.0,
+                            "imag": 5548539400655871.0
+                        }
+                    ],
+                    [
+                        {
+                            "real": -1026265161121383.9,
+                            "imag": -2547917843202808.5
+                        },
+                        {
+                            "real": 0.0,
+                            "imag": 1.6872706975652862e+16
+                        }
+                    ],
+                    [
+                        {
+                            "real": -2569081254561451.5,
+                            "imag": -4608729293067524.0
+                        },
+                        {
+                            "real": 0.0,
+                            "imag": 1685784870483934.2
+                        }
+                    ]
+                ]
+            }
+        }
+    ],
+    "sources": [
+        {
+            "type": "PlaneWave",
+            "center": [
+                0.0,
+                0.0,
+                0.75
+            ],
+            "size": [
+                "Infinity",
+                "Infinity",
+                0.0
+            ],
+            "source_time": {
+                "amplitude": 1.0,
+                "phase": 0.0,
+                "type": "GaussianPulse",
+                "freq0": 119916983200000.0,
+                "fwidth": 24982704833333.336,
+                "offset": 5.0,
+                "remove_dc_component": true
+            },
+            "name": null,
+            "direction": "-",
+            "angle_theta": 0.0,
+            "angle_phi": 0.0,
+            "pol_angle": 0.0
+        },
+        {
+            "type": "PlaneWave",
+            "center": [
+                0.0,
+                0.0,
+                0.75
+            ],
+            "size": [
+                "Infinity",
+                "Infinity",
+                0.0
+            ],
+            "source_time": {
+                "amplitude": 1.0,
+                "phase": -1.5707963267948966,
+                "type": "GaussianPulse",
+                "freq0": 119916983200000.0,
+                "fwidth": 24982704833333.336,
+                "offset": 5.0,
+                "remove_dc_component": true
+            },
+            "name": null,
+            "direction": "-",
+            "angle_theta": 0.0,
+            "angle_phi": 0.0,
+            "pol_angle": 1.5707963267948966
+        }
+    ],
+    "boundary_spec": {
+        "x": {
+            "plus": {
+                "name": null,
+                "type": "Periodic"
+            },
+            "minus": {
+                "name": null,
+                "type": "Periodic"
+            },
+            "type": "Boundary"
+        },
+        "y": {
+            "plus": {
+                "name": null,
+                "type": "Periodic"
+            },
+            "minus": {
+                "name": null,
+                "type": "Periodic"
+            },
+            "type": "Boundary"
+        },
+        "z": {
+            "plus": {
+                "name": null,
+                "type": "PML",
+                "num_layers": 12,
+                "parameters": {
+                    "sigma_order": 3,
+                    "sigma_min": 0.0,
+                    "sigma_max": 1.5,
+                    "type": "PMLParams",
+                    "kappa_order": 3,
+                    "kappa_min": 1.0,
+                    "kappa_max": 3.0,
+                    "alpha_order": 1,
+                    "alpha_min": 0.0,
+                    "alpha_max": 0.0
+                }
+            },
+            "minus": {
+                "name": null,
+                "type": "PML",
+                "num_layers": 12,
+                "parameters": {
+                    "sigma_order": 3,
+                    "sigma_min": 0.0,
+                    "sigma_max": 1.5,
+                    "type": "PMLParams",
+                    "kappa_order": 3,
+                    "kappa_min": 1.0,
+                    "kappa_max": 3.0,
+                    "alpha_order": 1,
+                    "alpha_min": 0.0,
+                    "alpha_max": 0.0
+                }
+            },
+            "type": "Boundary"
+        },
+        "type": "BoundarySpec"
+    },
+    "monitors": [
+        {
+            "type": "FluxMonitor",
+            "center": [
+                0.0,
+                0.0,
+                1.25
+            ],
+            "size": [
+                "Infinity",
+                "Infinity",
+                0.0
+            ],
+            "name": "R",
+            "interval_space": [
+                1,
+                1,
+                1
+            ],
+            "colocate": true,
+            "freqs": [
+                149896229000000.0,
+                149150476616915.44,
+                148412107920792.06,
+                147681013793103.47,
+                146957087254901.97,
+                146240223414634.16,
+                145530319417475.72,
+                144827274396135.28,
+                144130989423076.9,
+                143441367464114.84,
+                142758313333333.3,
+                142081733649289.1,
+                141411536792452.8,
+                140747632863849.78,
+                140089933644859.81,
+                139438352558139.55,
+                138792804629629.62,
+                138153206451612.9,
+                137519476146788.98,
+                136891533333333.34,
+                136269299090909.08,
+                135652695927601.81,
+                135041647747747.73,
+                134436079820627.8,
+                133835918749999.98,
+                133241092444444.44,
+                132651530088495.6,
+                132067162114537.44,
+                131487920175438.58,
+                130913737117903.92,
+                130344546956521.75,
+                129780284848484.84,
+                129220887068965.53,
+                128666290987124.45,
+                128116435042735.05,
+                127571258723404.25,
+                127030702542372.89,
+                126494708016877.62,
+                125963217647058.83,
+                125436174895397.48,
+                124913524166666.67,
+                124395210788381.73,
+                123881180991735.55,
+                123371381893004.11,
+                122865761475409.84,
+                122364268571428.56,
+                121866852845528.45,
+                121373464777327.92,
+                120884055645161.3,
+                120398577510040.16,
+                119916983200000.0,
+                119439226294820.73,
+                118965261111111.11,
+                118495042687747.03,
+                118028526771653.55,
+                117565669803921.58,
+                117106428906250.0,
+                116650761867704.27,
+                116198627131782.94,
+                115749983783783.8,
+                115304791538461.53,
+                114863010727969.36,
+                114424602290076.33,
+                113989527756654.0,
+                113557749242424.23,
+                113129229433962.27,
+                112703931578947.36,
+                112281819475655.44,
+                111862857462686.56,
+                111447010408921.94,
+                111034243703703.7,
+                110624523247232.47,
+                110217815441176.48,
+                109814087179487.19,
+                109413305839416.05,
+                109015439272727.27,
+                108620455797101.45,
+                108228324187725.62,
+                107839013669064.73,
+                107452493906810.03,
+                107068735000000.0,
+                106687707473309.61,
+                106309382269503.53,
+                105933730742049.47,
+                105560724647887.33,
+                105190336140350.88,
+                104822537762237.77,
+                104457302439024.39,
+                104094603472222.22,
+                103734414532871.97,
+                103376709655172.42,
+                103021463230240.55,
+                102668650000000.0,
+                102318245051194.53,
+                101970223809523.81,
+                101624562033898.3,
+                101281235810810.81,
+                100940221548821.56,
+                100601495973154.36,
+                100265036120401.33,
+                99930819333333.33
+            ],
+            "apodization": {
+                "start": null,
+                "end": null,
+                "width": null,
+                "type": "ApodizationSpec"
+            },
+            "normal_dir": "+",
+            "exclude_surfaces": null
+        },
+        {
+            "type": "FieldMonitor",
+            "center": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "size": [
+                "Infinity",
+                0.0,
+                "Infinity"
+            ],
+            "name": "field_xz",
+            "interval_space": [
+                1,
+                1,
+                1
+            ],
+            "colocate": true,
+            "freqs": [
+                124913524166666.67
+            ],
+            "apodization": {
+                "start": null,
+                "end": null,
+                "width": null,
+                "type": "ApodizationSpec"
+            },
+            "fields": [
+                "Ex",
+                "Ey",
+                "Ez",
+                "Hx",
+                "Hy",
+                "Hz"
+            ]
+        },
+        {
+            "type": "FieldMonitor",
+            "center": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "size": [
+                "Infinity",
+                "Infinity",
+                0.0
+            ],
+            "name": "field_xy",
+            "interval_space": [
+                1,
+                1,
+                1
+            ],
+            "colocate": true,
+            "freqs": [
+                124913524166666.67
+            ],
+            "apodization": {
+                "start": null,
+                "end": null,
+                "width": null,
+                "type": "ApodizationSpec"
+            },
+            "fields": [
+                "Ex",
+                "Ey",
+                "Ez",
+                "Hx",
+                "Hy",
+                "Hz"
+            ]
+        }
+    ],
+    "grid_spec": {
+        "grid_x": {
+            "type": "AutoGrid",
+            "min_steps_per_wvl": 20.0,
+            "max_scale": 1.4,
+            "dl_min": 0.0,
+            "mesher": {
+                "type": "GradedMesher"
+            }
+        },
+        "grid_y": {
+            "type": "AutoGrid",
+            "min_steps_per_wvl": 20.0,
+            "max_scale": 1.4,
+            "dl_min": 0.0,
+            "mesher": {
+                "type": "GradedMesher"
+            }
+        },
+        "grid_z": {
+            "type": "AutoGrid",
+            "min_steps_per_wvl": 20.0,
+            "max_scale": 1.4,
+            "dl_min": 0.0,
+            "mesher": {
+                "type": "GradedMesher"
+            }
+        },
+        "wavelength": 2.5,
+        "override_structures": [],
+        "type": "GridSpec"
+    },
+    "shutoff": 1e-05,
+    "subpixel": true,
+    "normalize_index": 0,
+    "courant": 0.99,
+    "version": "2.4.3"
+}}, '*')
+        }
+    };
+    window.addEventListener(
+        'message',
+        window.postMessageToViewer170205121025924377,
+        false
+    );
+    
+    </script>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=2474780d">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>In addition, we can inspect the grid to ensure it is sufficiently fine.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=ca12725b">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[10]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">ax</span> <span class="o">=</span> <span class="n">sim_left_A</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">y</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">sim_left_A</span><span class="o">.</span><span class="n">plot_grid</span><span class="p">(</span><span class="n">y</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="o">-</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="o">-</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_aspect</span><span class="p">(</span><span class="s2">"auto"</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedImage jp-OutputArea-output" tabindex="0">
+<img alt="No description has been provided for this image" class="" src="/assets/tidy3d/examples/image/TunableChiralMetasurface/TunableChiralMetasurface_4.png"/>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=ae0bd98d">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h3 id="Run-Simulation-Batch">Run Simulation Batch<a class="anchor-link" href="#Run-Simulation-Batch">¶</a></h3><p>To make the simulations more efficient, we define a <a href="https://docs.flexcompute.com/projects/tidy3d/en/latest/_autosummary/tidy3d.web.Batch.html" target="_blank">Batch</a> and submit it to run all four simulations in parallel.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=7843ff78">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[11]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># define four simulations</span>
+<span class="n">sims</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"LCP_A"</span><span class="p">:</span> <span class="n">sim_left_A</span><span class="p">,</span>
+    <span class="s2">"LCP_C"</span><span class="p">:</span> <span class="n">make_sim</span><span class="p">(</span><span class="s2">"left"</span><span class="p">,</span> <span class="s2">"crystalline"</span><span class="p">),</span>
+    <span class="s2">"RCP_A"</span><span class="p">:</span> <span class="n">make_sim</span><span class="p">(</span><span class="s2">"right"</span><span class="p">,</span> <span class="s2">"amorphous"</span><span class="p">),</span>
+    <span class="s2">"RCP_C"</span><span class="p">:</span> <span class="n">make_sim</span><span class="p">(</span><span class="s2">"right"</span><span class="p">,</span> <span class="s2">"crystalline"</span><span class="p">),</span>
+<span class="p">}</span>
+
+<span class="c1"># create a batch and run all sims in parallel</span>
+<span class="n">batch</span> <span class="o">=</span> <span class="n">web</span><span class="o">.</span><span class="n">Batch</span><span class="p">(</span><span class="n">simulations</span><span class="o">=</span><span class="n">sims</span><span class="p">)</span>
+<span class="n">batch_results</span> <span class="o">=</span> <span class="n">batch</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">path_dir</span><span class="o">=</span><span class="s2">"data"</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">[11:00:11] </span>Created task <span style="color: #008000; text-decoration-color: #008000">'LCP_A'</span> with task_id                                    
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span><span style="color: #008000; text-decoration-color: #008000">'fdve-e17dcdf5-1304-490c-9588-3b73ad22e767'</span>.                         
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span>View task using web UI at                                            
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span><a href="https://tidy3d.simulation.cloud/workbench?taskId=fdve-e17dcdf5-1304-490c-9588-3b73ad22e767" target="_blank"><span style="color: #000080; text-decoration-color: #000080; text-decoration: underline">'https://tidy3d.simulation.cloud/workbench?taskId=fdve-e17dcdf5-1304-</span></a>
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span><a href="https://tidy3d.simulation.cloud/workbench?taskId=fdve-e17dcdf5-1304-490c-9588-3b73ad22e767" target="_blank"><span style="color: #000080; text-decoration-color: #000080; text-decoration: underline">490c-9588-3b73ad22e767'</span></a><span style="color: #000080; text-decoration-color: #000080; text-decoration: underline">.</span>                                             
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Output()</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">[11:00:12] </span>Created task <span style="color: #008000; text-decoration-color: #008000">'LCP_C'</span> with task_id                                    
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span><span style="color: #008000; text-decoration-color: #008000">'fdve-856e20a7-57ad-4dda-b52c-59002a7ff7c7'</span>.                         
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span>View task using web UI at                                            
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span><a href="https://tidy3d.simulation.cloud/workbench?taskId=fdve-856e20a7-57ad-4dda-b52c-59002a7ff7c7" target="_blank"><span style="color: #000080; text-decoration-color: #000080; text-decoration: underline">'https://tidy3d.simulation.cloud/workbench?taskId=fdve-856e20a7-57ad-</span></a>
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span><a href="https://tidy3d.simulation.cloud/workbench?taskId=fdve-856e20a7-57ad-4dda-b52c-59002a7ff7c7" target="_blank"><span style="color: #000080; text-decoration-color: #000080; text-decoration: underline">4dda-b52c-59002a7ff7c7'</span></a><span style="color: #000080; text-decoration-color: #000080; text-decoration: underline">.</span>                                             
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Output()</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span>Created task <span style="color: #008000; text-decoration-color: #008000">'RCP_A'</span> with task_id                                    
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span><span style="color: #008000; text-decoration-color: #008000">'fdve-08307142-1135-4c42-9a46-2e7709c80479'</span>.                         
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span>View task using web UI at                                            
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span><a href="https://tidy3d.simulation.cloud/workbench?taskId=fdve-08307142-1135-4c42-9a46-2e7709c80479" target="_blank"><span style="color: #000080; text-decoration-color: #000080; text-decoration: underline">'https://tidy3d.simulation.cloud/workbench?taskId=fdve-08307142-1135-</span></a>
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span><a href="https://tidy3d.simulation.cloud/workbench?taskId=fdve-08307142-1135-4c42-9a46-2e7709c80479" target="_blank"><span style="color: #000080; text-decoration-color: #000080; text-decoration: underline">4c42-9a46-2e7709c80479'</span></a><span style="color: #000080; text-decoration-color: #000080; text-decoration: underline">.</span>                                             
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Output()</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">[11:00:13] </span>Created task <span style="color: #008000; text-decoration-color: #008000">'RCP_C'</span> with task_id                                    
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span><span style="color: #008000; text-decoration-color: #008000">'fdve-e49b61cc-8049-4a39-90cc-7d49004bb27f'</span>.                         
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span>View task using web UI at                                            
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span><a href="https://tidy3d.simulation.cloud/workbench?taskId=fdve-e49b61cc-8049-4a39-90cc-7d49004bb27f" target="_blank"><span style="color: #000080; text-decoration-color: #000080; text-decoration: underline">'https://tidy3d.simulation.cloud/workbench?taskId=fdve-e49b61cc-8049-</span></a>
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span><a href="https://tidy3d.simulation.cloud/workbench?taskId=fdve-e49b61cc-8049-4a39-90cc-7d49004bb27f" target="_blank"><span style="color: #000080; text-decoration-color: #000080; text-decoration: underline">4a39-90cc-7d49004bb27f'</span></a><span style="color: #000080; text-decoration-color: #000080; text-decoration: underline">.</span>                                             
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Output()</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">[11:00:22] </span>Started working on Batch.                                            
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">[11:00:24] </span>Maximum FlexCredit cost: <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">1.207</span> for the whole batch. Use              
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span><span style="color: #008000; text-decoration-color: #008000">'Batch.real_cost()'</span> to get the billed FlexCredit cost after the Batch
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span>has completed.                                                       
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Output()</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">[11:05:37] </span>Batch complete.                                                      
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=c836569f">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="Result-Analysis">Result Analysis<a class="anchor-link" href="#Result-Analysis">¶</a></h2>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=e9fd369e">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>After the simulations are complete, we can extract the absorption spectra for all simulations.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=66c77096">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[12]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># extract absorption from four simulations</span>
+<span class="n">A_LCP_A</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">batch_results</span><span class="p">[</span><span class="s2">"LCP_A"</span><span class="p">][</span><span class="s2">"R"</span><span class="p">]</span><span class="o">.</span><span class="n">flux</span> <span class="o">/</span> <span class="mi">2</span>
+<span class="n">A_LCP_C</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">batch_results</span><span class="p">[</span><span class="s2">"LCP_C"</span><span class="p">][</span><span class="s2">"R"</span><span class="p">]</span><span class="o">.</span><span class="n">flux</span> <span class="o">/</span> <span class="mi">2</span>
+<span class="n">A_RCP_A</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">batch_results</span><span class="p">[</span><span class="s2">"RCP_A"</span><span class="p">][</span><span class="s2">"R"</span><span class="p">]</span><span class="o">.</span><span class="n">flux</span> <span class="o">/</span> <span class="mi">2</span>
+<span class="n">A_RCP_C</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">batch_results</span><span class="p">[</span><span class="s2">"RCP_C"</span><span class="p">][</span><span class="s2">"R"</span><span class="p">]</span><span class="o">.</span><span class="n">flux</span> <span class="o">/</span> <span class="mi">2</span>
+
+<span class="c1"># plot absorption spectra</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ldas</span><span class="p">,</span> <span class="n">A_LCP_A</span><span class="p">,</span> <span class="s2">"red"</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">"LCP_A"</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ldas</span><span class="p">,</span> <span class="n">A_RCP_A</span><span class="p">,</span> <span class="s2">"red"</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">"--"</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">"RCP_A"</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ldas</span><span class="p">,</span> <span class="n">A_LCP_C</span><span class="p">,</span> <span class="s2">"blue"</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">"LCP_C"</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ldas</span><span class="p">,</span> <span class="n">A_RCP_C</span><span class="p">,</span> <span class="s2">"blue"</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">"--"</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">"RCP_C"</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">"Absorption"</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">"Wavelength ($\mu m$)"</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Output()</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">[11:05:43] </span>loading SimulationData from                                          
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span>data\fdve-<span style="color: #ffff00; text-decoration-color: #ffff00">e17dcdf5-1304-490c-9588-3b73ad22e767</span>.hdf5                  
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Output()</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">[11:05:45] </span>loading SimulationData from                                          
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span>data\fdve-<span style="color: #ffff00; text-decoration-color: #ffff00">856e20a7-57ad-4dda-b52c-59002a7ff7c7</span>.hdf5                  
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Output()</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">[11:05:47] </span>loading SimulationData from                                          
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span>data\fdve-<span style="color: #ffff00; text-decoration-color: #ffff00">08307142-1135-4c42-9a46-2e7709c80479</span>.hdf5                  
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Output()</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">[11:05:49] </span>loading SimulationData from                                          
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span>data\fdve-<span style="color: #ffff00; text-decoration-color: #ffff00">e49b61cc-8049-4a39-90cc-7d49004bb27f</span>.hdf5                  
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedImage jp-OutputArea-output" tabindex="0">
+<img alt="No description has been provided for this image" class="" src="/assets/tidy3d/examples/image/TunableChiralMetasurface/TunableChiralMetasurface_5.png"/>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=aab8d370">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>With the absorption spectra, we can further calculate CD for both GST states. Note that compared to the <a href="">publication</a>, the results are similar but not identical, which is likely due to the slightly different refractive indices for the materials.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=f13b358d">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[13]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># plot CD spectra</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ldas</span><span class="p">,</span> <span class="n">A_LCP_A</span> <span class="o">-</span> <span class="n">A_RCP_A</span><span class="p">,</span> <span class="s2">"red"</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">"A"</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ldas</span><span class="p">,</span> <span class="n">A_LCP_C</span> <span class="o">-</span> <span class="n">A_RCP_C</span><span class="p">,</span> <span class="s2">"blue"</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">"C"</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">"Circular dichroism (CD)"</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedImage jp-OutputArea-output" tabindex="0">
+<img alt="No description has been provided for this image" class="" src="/assets/tidy3d/examples/image/TunableChiralMetasurface/TunableChiralMetasurface_6.png"/>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=429ef077">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>Lastly, we can plot the field distributions at the resonant wavelength when GST is in the amorphous state to visualize the resonant mode. We can see that with the left circularly polarized incident, the response is much stronger, leading to a much higher absorption as seen above.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=e1b9c92f">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[14]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">tight_layout</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">batch_results</span><span class="p">[</span><span class="s2">"LCP_A"</span><span class="p">]</span><span class="o">.</span><span class="n">plot_field</span><span class="p">(</span><span class="n">field_monitor_name</span><span class="o">=</span><span class="s2">"field_xy"</span><span class="p">,</span> <span class="n">field_name</span><span class="o">=</span><span class="s2">"E"</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="s2">"abs"</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<span class="n">batch_results</span><span class="p">[</span><span class="s2">"RCP_A"</span><span class="p">]</span><span class="o">.</span><span class="n">plot_field</span><span class="p">(</span><span class="n">field_monitor_name</span><span class="o">=</span><span class="s2">"field_xy"</span><span class="p">,</span> <span class="n">field_name</span><span class="o">=</span><span class="s2">"E"</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="s2">"abs"</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span>loading SimulationData from                                          
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span>data\fdve-<span style="color: #ffff00; text-decoration-color: #ffff00">e17dcdf5-1304-490c-9588-3b73ad22e767</span>.hdf5                  
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">[11:05:50] </span>loading SimulationData from                                          
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span>data\fdve-<span style="color: #ffff00; text-decoration-color: #ffff00">08307142-1135-4c42-9a46-2e7709c80479</span>.hdf5                  
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedImage jp-OutputArea-output" tabindex="0">
+<img alt="No description has been provided for this image" class="" src="/assets/tidy3d/examples/image/TunableChiralMetasurface/TunableChiralMetasurface_7.png"/>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=31caddcc">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>Similarly, plot the field distributions in the $xz$ plane.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=f5d42178">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[15]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">tight_layout</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">batch_results</span><span class="p">[</span><span class="s2">"LCP_A"</span><span class="p">]</span><span class="o">.</span><span class="n">plot_field</span><span class="p">(</span><span class="n">field_monitor_name</span><span class="o">=</span><span class="s2">"field_xz"</span><span class="p">,</span> <span class="n">field_name</span><span class="o">=</span><span class="s2">"E"</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="s2">"abs"</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="o">-</span><span class="mf">0.2</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">batch_results</span><span class="p">[</span><span class="s2">"RCP_A"</span><span class="p">]</span><span class="o">.</span><span class="n">plot_field</span><span class="p">(</span><span class="n">field_monitor_name</span><span class="o">=</span><span class="s2">"field_xz"</span><span class="p">,</span> <span class="n">field_name</span><span class="o">=</span><span class="s2">"E"</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="s2">"abs"</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="o">-</span><span class="mf">0.2</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span>loading SimulationData from                                          
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span>data\fdve-<span style="color: #ffff00; text-decoration-color: #ffff00">e17dcdf5-1304-490c-9588-3b73ad22e767</span>.hdf5                  
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">[11:05:51] </span>loading SimulationData from                                          
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span>data\fdve-<span style="color: #ffff00; text-decoration-color: #ffff00">08307142-1135-4c42-9a46-2e7709c80479</span>.hdf5                  
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedImage jp-OutputArea-output" tabindex="0">
+<img alt="No description has been provided for this image" class="" src="/assets/tidy3d/examples/image/TunableChiralMetasurface/TunableChiralMetasurface_8.png"/>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=fa56861c">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[ ]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body>
+</html>

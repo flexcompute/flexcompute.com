@@ -1,0 +1,108 @@
+{
+  "title": "Tidy3D GUI: Tutorial 3",
+  "pages": [
+    {
+      "id": "",
+      "title": "",
+      "transcript": "Hey there! In this tutorial, we'll walk you through the process of creating structures, such as rectangles, cylinders, spheres, and polygons, that you'll commonly use when modeling electromagnetic devices. So let's start by creating a new simulation."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "We'll reproduce the results of the dielectric metasurface absorber Python notebook, which you can find at this URL. After that, we'll test it with different resonator shapes. Please, take a look at the notebook to get all the details."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "This absorber is designed for THz applications, which means its geometry has dimensions in the hundreds of micrometers scale. So, enter the parameters shown here to set the \"Simulation domain\" and then adjust the \"Run Time\" to 300 picoseconds. This will ensure the electromagnetic waves have enough time to travel through the entire simulation domain."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "Moving on, let's create the PDMS medium using the models and parameters provided here."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "Similarly, create the Silicon medium that you'll need to define the structures."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "Now, it's time to create the geometry for your simulation. Click on the \"Add Structure\" command, and from the available primitive geometries, select the \"Box\" option."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "This structure will serve as the absorber substrate, so name it \"pdms\". Set its z-center position to -4 microns, make it infinite in the x- and y-direction, and 8 microns thick. Lastly, choose the PDMS medium you created earlier. Once you click the \"Apply\" button, you'll see the rectangular structure you just created."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "Now, let's create a \"Cylinder\" structure and name it \"cylinder_resonator.\" Set its center position to 42.5 microns, its length to 85 microns, and its radius to 106 microns. In this case, select the Silicon medium to define the resonator."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "To complete the setup for the FDTD simulation, include a plane wave source, two flux monitors to calculate light transmittance and reflectance, and a field monitor to visualize the field distribution. You can use the same parameters as in the Python notebook."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "With everything set up, you're ready to run the simulation. Once complete, click on the \"Go To Post-Run Result\" command."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "In the transmission spectrum of the absorber, you'll notice a deep drop around 0.6 THz, which corresponds to the resonance frequency of the cylinder."
+    },{
+      "id": "",
+      "title": "",
+      "transcript": "You'll also observe a strongly localized field within the silicon cylinder, indicating high power dissipation due to the cylinder's resonance mode."
+    },{
+      "id": "",
+      "title": "",
+      "transcript": "Now, let's explore how other shapes can modify this resonance. Click on the \"Edit\" command to create a new version of the FDTD model."
+    },{
+      "id": "",
+      "title": "",
+      "transcript": "In this new model version, you can turn off the visualization of sources and monitors. Also, disable the \"cylinder_resonator\" for this version."
+    },{
+      "id": "",
+      "title": "",
+      "transcript": "Then, create a silicon resonator structure using a \"Box\" shape, and set its center and size parameters as shown here."
+    },{
+      "id": "",
+      "title": "",
+      "transcript": "After running the simulation, you'll notice additional resonances appearing in the transmittance spectrum of the rectangular resonator."
+    },{
+      "id": "",
+      "title": "",
+      "transcript": "You can repeat this process to create a silicon resonator using the sphere geometry. Follow the instructions provided here, adjusting both its radius and position to 85 microns."
+    },{
+      "id": "",
+      "title": "",
+      "transcript": "Moving forward, how about trying a cross-shaped resonator? For that, create a new model version and include a \"PolySlab\" geometry. Set its minimum and maximum z-coordinates to 0 and 85 microns, respectively."
+    },{
+      "id": "",
+      "title": "",
+      "transcript": "Next, add the vertices of the polygon according to the x- and y-coordinate values shown here from the letter \"a\" to “l”. Once you've created the new structure, run the simulation and visualize the results as you've done before."
+    },{
+      "id": "",
+      "title": "",
+      "transcript": "Our final structure will be a silicon dimer. Include a \"GeometryGroup\" and name it \"dimer_resonator\". Select the Silicon medium and click the \"Add Geometry\" button."
+    },{
+      "id": "",
+      "title": "",
+      "transcript": "Choose the \"Sphere\" geometry, set its radius to 60 microns, and position it at -61 and 60 microns in the x- and z-directions, respectively."
+    },{
+      "id": "",
+      "title": "",
+      "transcript": "Repeat the process to include another silicon sphere identical to the previous one but positioned at 61 microns in the x-direction. All the geometries within this group will share the same medium, which is particularly useful for managing large arrays."
+    },{
+      "id": "",
+      "title": "",
+      "transcript": "To conclude this tutorial, let's look at the device's absorptance spectrum. You can calculate it by downloading the transmittance and reflectance data obtained in each simulation. In our upcoming tutorials, you'll learn how to import GDS files, parameterize structure geometry, and create even more complex geometries using Python scripts. See you there!"
+    }
+  ]
+}

@@ -1,0 +1,233 @@
+:root {
+    --seminar-color-primary: #C43C5B;
+    --seminar-color-gray: #424242;
+    --seminar-color-gray-1: #7a7a7a;
+    --seminar-color-gray-2: #a9a9a9;
+    --seminar-color-orange: #E27619
+}
+
+@font-face {
+    font-family: Coustard;
+    src: url('/assets/css/font/Coustard/Coustard-Regular.ttf') format('truetype');
+}
+@font-face {
+    font-family: Poppins;
+    src: url('/assets/css/font/Poppins/Poppins-Bold.ttf') format('truetype');
+}
+.font-poppins {
+    font-family: Poppins, inter-var, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol";
+}
+
+.section-box {
+    width: 100%;
+    border: 1px solid #ECECEC;
+    border-radius: 16px;
+    padding: 24px;
+}
+
+.section-bg-img {
+    background: url('/assets/images/seminar/bg.png') center/cover;
+}
+.seminar-color-orange {
+    color: var(--seminar-color-orange);
+}
+.seminar-color-primary {
+    color: var(--seminar-color-primary);
+}
+
+.seminar-color-gray {
+    color: var(--seminar-color-gray);
+}.seminar-color-gray-1 {
+     color: var(--seminar-color-gray-1);
+ }.seminar-color-gray-2 {
+     color: var(--seminar-color-gray-2);
+ }
+.seminar-color-gray-light {
+    color: rgba(112, 112, 112, 0.73)
+}
+.color-dark-light {
+    color: rgba(51, 51, 51, 0.78);
+}
+.font-size-21 {
+    font-size: 21px;
+}
+
+.font-size-60 {
+    font-size: 60px;
+}
+.line-height-40 {
+    line-height: 40px;
+}
+.register-btn {
+    padding-top: 16px; border-radius: 50px;
+}
+.intro-section {
+    column-gap: 50px;
+}
+
+.intro-section .register {
+    width: 400px;
+    flex-shrink: 0;
+}
+
+.intro-section .ways {
+    flex: 1;
+    min-width: 400px;
+}
+
+.speaker-avatar{
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 180px;
+    border-radius: 50%;
+}
+
+.seminar-section {
+    column-gap: 50px;
+}
+
+.seminar-section .speaker {
+    width: 240px;
+    flex-shrink: 0;
+    text-align: center;
+}
+
+.seminar-section .session {
+
+}
+
+.seminar-section .session .schedule {
+    column-gap: 24px;
+}
+
+.seminar-section .session .schedule .session-index {
+    display: inline-block;
+    padding: 8px 16px;
+    height: 48px;
+    font-size: 18px;
+    font-weight: 600;
+    border: 1px solid var(--seminar-color-primary);
+    border-radius: 5px;
+    color: var(--seminar-color-primary);
+}
+
+.seminar-section .session .schedule .date {
+    color: rgba(100, 98, 104, 1);
+    line-height: 20px;
+    font-weight: 600;
+}
+
+.seminar-section .session .schedule .agenda {
+    display: inline-block;
+    color: rgba(100, 98, 104, 0.76);
+}
+.product-text {
+    padding: 0 50px
+}
+.about-text {
+    padding: 0 50px
+}
+.ioptics-box {
+    border: 1px solid #E27619;
+    background: url('/assets/images/seminar/ioptics-bg.jpeg') center/cover;;
+}
+
+.ioptics-box h3 {
+    font-family: Coustard, inter-var, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol";
+    font-size: 34px;
+    font-weight: 400;
+    color: #E27619;
+}
+
+.ioptics-box .btn-dashed-primary {
+    color: #E27619;
+    border-color: #E27619 !important;
+}
+
+.remove-background-color {
+    background-color: unset !important;
+}
+.logo-title h3 {
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+}
+
+.font-size-36 {
+    font-size: 36px;
+}
+
+@media (max-width: 992px) {
+    .seminar-section,
+    .intro-section {
+        flex-direction: column;
+    }
+}
+
+@media (max-width: 800px) {
+    .seminar-thumbnail {
+        position: static !important;
+        margin: 8px auto;
+    }
+}
+
+@media (max-width: 576px) {
+    .font-size-42 {
+        font-size: 32px;
+    }
+    .font-size-22 {
+        font-size: 18px !important;
+    }
+    .font-size-25 {
+        font-size: 20px !important;
+    }
+    .font-size-20 {
+        font-size: 18px !important;
+    }
+    .font-size-18 {
+        font-size: 16px !important;
+    }
+    .font-size-16 {
+        font-size: 14px !important;
+    }
+    .line-height-28,
+    .line-height-26 {
+        line-height: 24px !important;
+    }
+    .line-height-50 {
+        line-height: 38px;
+    }
+
+    .intro-section .ways,
+    .intro-section .register {
+        width: fit-content;
+        min-width: fit-content;
+    }
+    .register-btn {
+        padding: 12px 22px;
+        border-radius: 50px
+    }
+
+    .seminar-section .session .schedule {
+        flex-direction: column;
+        row-gap: 8px;
+        text-align: center;
+    }
+    .about-text {
+        padding: 0 16px;
+    }
+    .product-more-btn {
+        position: static !important;
+        bottom: unset !important;
+        width: 100% !important;
+        margin-top: 16px;
+    }
+    .product-text {
+        padding: 0;
+    }
+    .logo-title {
+        text-align: center;
+    }
+}

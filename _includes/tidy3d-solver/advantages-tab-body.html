@@ -1,0 +1,43 @@
+{% assign tabs = include.tabs  %}
+{% for tab in tabs %}
+{% assign tabName = tab.tab | slugify %}
+{% if include.salt %}
+{% assign tabName = tab.tab | slugify | append: '-' | append: include.salt %}
+{%endif%}
+<div data-tab-name="{{tabName}}" class="tab-body p-24 {%if forloop.first%}selected{%endif%}">
+  {%if tab.description%}
+  <p class="color-dark mb-16 line-height-20">{{tab.description}}</p>
+  {%endif%}
+  <div class="position-relative advantage-container {%if tab.mac_layout%}clean-interface-container{%endif%}" style="min-height: 430px">
+    {% if tab.video %}
+    <div class='embed-container'>
+      <iframe {%if tab.loading%} loading="{{tab.loading}}" {%endif%} id="{{tab.video_id}}" src='{{ tab.video }}' frameborder='0' allow="autoplay; fullscreen; picture-in-picture" allowfullscreen="" title="{{tab.description}}"></iframe>
+    </div>
+    {% endif %}
+    {% if tab.image %}
+    {%include webp-tag.html src=tab.image alt=tab.description class="aspect-ratio" loading='eager'%}
+<!--    <img class="aspect-ratio" src="{{tab.image}}" alt="{{tab.description}}">-->
+    {% endif %}
+    {% if tab.mac_layout %}
+    <!-- back right top -->
+    {% assign back = tab.mac_layout.back %}
+    <div class="python-interface">
+      {%include webp-tag.html src=back.image alt=tab.description class="aspect-ratio" loading='eager'%}
+<!--      <img class="aspect-ratio" src="{{back.image}}" alt="{{tab.description}}">-->
+      <div class='embed-container'>
+        <iframe {%if back.loading%} loading="{{back.loading}}" {%endif%} id="{{back.video_id}}" src='{{ back.video }}' frameborder='0' allow="autoplay; fullscreen; picture-in-picture" allowfullscreen="" title="{{tab.description}}"></iframe>
+      </div>
+    </div>
+    <!-- font left bottom -->
+    {% assign front = tab.mac_layout.front %}
+    <div class="gui">
+      {%include webp-tag.html src=front.image alt=tab.description class="aspect-ratio" loading='eager'%}
+<!--      <img class="aspect-ratio" src="{{front.image}}" alt="{{tab.description}}">-->
+      <div class='embed-container'>
+        <iframe {%if front.loading%} loading="{{front.loading}}" {%endif%} id="{{front.video_id}}" src='{{ front.video }}' frameborder='0' allow="autoplay; fullscreen; picture-in-picture" allowfullscreen="" title="{{tab.description}}"></iframe>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endfor %}

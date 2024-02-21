@@ -1,0 +1,296 @@
+---
+layout: default
+
+custom_font: font2
+---
+<div class="content-wrapper">
+{% include header.html extra_class="absolute transparent" logo_class="logo fc-logo" container_class="container" %}
+<div style="height: 135px; position: relative; top: 66px; z-index: 0">
+  <div class="container">
+    <span class="font-size-14 color-dark-gray">
+      <a href="/cfd-essentials/" class="color-dark-gray">CFD Essentials</a> /
+      {{ page.lecture_title }}
+    </span>
+  </div>
+</div>
+
+<div class="container">
+  <div class="d-none d-lg-block clearfix sticky-top float-left fdtd-slider">
+    <div class="lecture-directory mb-30 box bg-white shadow">
+      {% assign directory = 'left-directory' | split: ',' %}
+      {% assign directory_prefix = page.click_id_prefix | split: '_' | concat:directory | join: '_'  %}
+      {% include lecture/lecture_directory.html data=site.data.lecture.turbulence.lecture_section extra_class="lecture-directory-header" extra_id_prefix=directory_prefix %}
+    </div>
+    <a id="{%if page.click_id_prefix%}{{page.click_id_prefix}}_left-directory_tidy3d{%endif%}" href="/flow360/solver/">
+      <div class="lecture-directory tidy3d-box box bg-white shadow text-center">
+        <picture>
+          <source srcset="/assets/images/Flow360-logo.svg" type="image/svg+xml">
+          <img src="/assets/images/Flow360-logo.svg" style="width: 122px" alt="{{page.left_cfd_logo_alt}}">
+        </picture>
+        <p class="color-dark-gray font-size-12 mb-0 mt-5">CFD simulation tool</p>
+      </div>
+    </a>
+  </div>
+  <div class="row ml-lg-3 fdtd-container">
+    <div class="col-lg-12 mx-auto">
+      <div class="blog classic-view">
+        <div class="post mb-0">
+          <div class="post-content">
+            <!--<div class="d-flex flex-column flex-wrap justify-content-start">
+              {% if page.lecture_title %}
+              <h1 class="post-title font-size-24 mb-0 color-dark-7">{{page.course_title}}</h1>
+              {% endif %}
+              <div class="meta mb-0">
+                {% if page.author %}
+                <span class="author reset-author font-size-16" style="line-height: 19px">
+                  <a href="javascript:void(0)">By {{page.author}}</a>
+                </span>
+                {% endif %}
+              </div>
+            </div>
+            <div class="space20"></div>-->
+            <div class="h-100 box bg-white shadow p-0">
+              {% if page.videoId %}
+              <lite-vimeo id="{{page.click_id_prefix}}_video" videoid="{{page.videoId}}"></lite-vimeo>
+              {% endif %}
+              <div class="space20"></div>
+              {% if page.lecture_title %}
+              <div class="p-20">
+                <h1 class="font-size-24 font-weight-bold mb-0" style="line-height: 29px !important; color: #000000">
+                  {{page.lecture_title}}
+                </h1>
+                <div class="meta mb-0">
+                  {% if page.author %}
+                  <span class="author reset-author font-size-16" style="line-height: 19px">
+                    <span>By {{page.author}}</span>
+                  </span>
+                  {% endif %}
+                </div>
+                <div class="space20"></div>
+                <div class="description">
+                  {% if page.lecture_description %}
+                  <p class="font-size-16 color-dark-gray line-height-32 mb-0">
+                    {{page.lecture_description}}
+                  </p>
+                  {% endif %}
+                  {% if page.abstracts %}
+                  <ul class="special_point list-unstyled color-dark-gray font-size-16 mb-0">
+                    {% for item in page.abstracts %}
+                    <li class="align-items-start">
+                      <span class="sphere line-height-24"></span>
+                      <span style="line-height: 26px !important;">{{item.text}}</span>
+                    </li>
+                    {% endfor %}
+                  </ul>
+                  {% endif %}
+                </div>
+                <div class="space10"></div>
+                {% if page.container %}
+                <p class="font-size-16 color-dark-gray line-height-32 mb-0">
+                  {{page.container}}
+                </p>
+                {% endif %}
+                <div class="space20"></div>
+                <div class="fdtd-view-tool d-flex justify-content-start align-items-center font-size-16 color-black-1 flex-wrap" style="column-gap: 50px; row-gap: 10px">
+                  {% if page.public_links %}
+                  <div class="public-links">
+                    {% assign numOfPublicLinks = page.public_links.size %}
+                    <span>Visit public projects</span>
+                    {% for numOfLink in (1..numOfPublicLinks) %}
+                    {% assign linkIndex = numOfLink | minus: 1 %}
+                    {% assign linkItem = page.public_links[linkIndex] %}
+                    <a target="_blank" data-trigger="hover" data-placement="top" title="{{linkItem.text}}" id="{{linkItem.click_id}}" class="color-primary-hover has-tooltip" href="{{linkItem.url}}">
+                      [{{numOfLink}}]
+                    </a>
+                    {% endfor %}
+                  </div>
+                  {% endif %}
+                  {% if page.download_links %}
+                  {% assign numOfLinks = page.download_links.size %}
+                  <span class="download-ipynb">
+                    {% if numOfLinks > 0 %}
+                    Download .ipynb {% if numOfLinks == 1 %}file{% else %}files{% endif %}
+                      {% for link in page.download_links %}
+                        <a id="{{link.click_id}}" class="color-primary-hover underline" onclick="handleDownload('{{link.url}}')" href="javascript:void(0);">{{link.text}}</a>
+                      {% endfor %}
+                    {% endif %}
+                  </span>
+                  {% endif %}
+                  {% if page.pdf_url and page.enable_slides_scroll %}
+                  <span class="view-presentation-slides">
+                    View Presentation Slides
+                    <a class="color-primary-hover underline" onclick="handleScroll('presentation-slides')" href="javascript:void(0);">
+                      HERE
+                    </a>
+                  </span>
+                  <div class="space20"></div>
+                  {% endif %}
+                </div>
+                <div class="d-flex flex-wrap justify-content-between align-items-center" style="row-gap: 10px">
+                  {%if page.click_id_prefix %}
+                  {% assign subscribe_btn = 'btn,subscribe-to-receive-update' | split: ',' %}
+                  {% assign share_btn = 'share,btn' | split: ',' %}
+                  {% assign subscribe_prefix = page.click_id_prefix | split: '_' | concat:subscribe_btn | join: '_'  %}
+                  {% assign share_prefix = page.click_id_prefix | split: '_' | concat:share_btn | join: '_'  %}
+                    {% include subscribe_btn.html extra_id=subscribe_prefix %}
+                    {% include social_link.html extra_id=share_prefix %}
+                  {%else%}
+                  <span>
+                    {% include subscribe_btn.html %}
+                  </span>
+                  <span>
+                    {% include social_link.html %}
+                  </span>
+                  {%endif%}
+                </div>
+              </div>
+              {% endif %}
+            </div>
+            <div class="space30"></div>
+            <div class="h-100 box bg-white shadow pr-0 pl-0 pt-0 pb-0">
+              <div id="{{page.active}}" class="accordion-wrapper simple custom-collapsed">
+                <!-- source html -->
+                {% if page.source_html_list %}
+                <div class="card">
+                  <div class="card-header" id="introduction">
+                    <button
+                        class="lecture-collapsed-header"
+                        data-toggle="collapse"
+                        data-target="#introduction-content"
+                        data-expanded="true"
+                        data-controls="introduction-content">
+                      Introduction
+                    </button>
+                  </div>
+                  <!-- /.card-header -->
+                  <div id="introduction-content" class="collapse show" data-labelledby="introduction" data-target="#{{page.active}}">
+                    <div class="card-body">
+                      {% for html in page.source_html_list %}
+                      {% include {{html.html}} %}
+                      <div class="space50"></div>
+                      {% endfor %}
+                    </div>
+                    <!-- /.card-body -->
+                  </div>
+                  <!-- /.collapse -->
+                </div>
+                {% endif %}
+                <!-- /.card -->
+                <!-- ppt -->
+                {% if page.pdf_url %}
+                <div class="card">
+                  <div class="card-header d-flex flex-wrap align-items-center justify-content-between" id="presentation-slides">
+                    <button
+                        class="lecture-collapsed-header"
+                        data-toggle="collapse"
+                        data-target="#presentation-slides-content"
+                        data-expanded="true"
+                        data-controls="presentation-slides-content">
+                      View Presentation Slides
+                    </button>
+                    <div class="collapse-header-ext">
+                      <img width="27" height="27" src="/assets/images/pdf.png" alt="">
+                      <span class="font-size-16 color-black-1">
+                        {% assign download_btn = 'btn,download-pdf' | split: ',' %}
+                        {% assign download_prefix = page.click_id_prefix | split: '_' | concat:download_btn | join: '_'  %}
+                        {% include download_pdf.html
+                          extra_id=download_prefix
+                          url=page.pdf_url
+                          title=page.download_pdf_title
+                        %}
+                      </span>
+                    </div>
+                  </div>
+                  <!-- /.card-header -->
+                  <div id="presentation-slides-content" class="collapse show" data-labelledby="presentation-slides" data-target="#{{page.active}}">
+                    <div class="card-body p-20">
+                      {% if page.transcript %}
+                      {% assign transcript = site.data.transcripts.cfd_essentials[page.transcript] | jsonfy %}
+                      {% include pdf-viewer.html transcript=transcript %}
+                      {% endif %}
+                    </div>
+                    <!-- /.card-body -->
+                  </div>
+                  <!-- /.collapse -->
+                </div>
+                {% endif %}
+                <!-- /.card -->
+
+              </div>
+            </div>
+            <div class="space30"></div>
+            <div class="pagination fdtd-pagination">
+              <ul class="d-flex justify-content-between align-items-center">
+                <li class="previous" style="text-align: start">
+                  {% if page.previous_link %}
+                  <a id="{{page.click_id_prefix}}_previous-lecture_btn" href="{{ page.previous_link }}" class="d-flex align-items-center color-primary-hover" style="column-gap: 10px">
+                    <i class="jam jam-arrow-left"></i>
+                    <span>
+                      <span class="font-size-14 ">
+                        Previous Lecture {{page.prev_course_number}}
+                      </span>
+                      <br>
+                    {% if page.prev_lecture_title %}
+                      <span class="font-size-12 lecture-title">
+                        {{page.prev_lecture_title}}
+                      </span>
+                    {% endif %}
+                    </span>
+                  </a>
+                  {% endif %}
+                </li>
+                <li class="next" style="text-align: end">
+                  {% if page.next_link %}
+                  <a id="{{page.click_id_prefix}}_next-lecture_btn" href="{{ page.next_link }}" class="d-flex align-items-center color-primary-hover" style="column-gap: 10px">
+                    <span>
+                      <span class="font-size-14 ">Next Lecture {{page.next_course_number}}</span>
+                      <br>
+                      {% if page.next_lecture_title %}
+                      <span class="font-size-12 lecture-title">
+                        {{page.next_lecture_title}}
+                      </span>
+                      {% endif %}
+                    </span>
+                    <i class="jam jam-arrow-right"></i>
+                  </a>
+                  {% endif %}
+                </li>
+              </ul>
+          </div>
+          </div>
+          <!-- /.post-content -->
+        </div>
+        <!-- /.post -->
+      </div>
+      <!-- /.blog -->
+    </div>
+    <!-- /column -->
+  </div>
+  <!-- /.row -->
+</div>
+<div class="space70"></div>
+<script>
+  function handleScroll(id) {
+    const getScrollHeight = (dom) => {
+      const root = document.body;
+      let height = 0;
+      while (dom !== root) {
+        height += dom.offsetTop;
+        dom = dom.offsetParent;
+      }
+      return height
+    }
+    const scrollElement = document.querySelector(`#${id}`);
+    if (scrollElement){
+      const height = getScrollHeight(scrollElement);
+      window.scrollTo({
+        // 480 each slider height
+        top: height - 100,
+        behavior: 'smooth'
+      })
+    }
+  }
+</script>
+<!-- /.wrapper -->
+{% include footer_2.html light_logo="false" %}
+</div>

@@ -1,0 +1,340 @@
+baseurl: '' # the subpath of your site, e.g. /blog
+url: 'https://www.flexcompute.com' # the base hostname & protocol for your site
+permalink: /blog/:year/:month/:day/:title/
+excerpt_separator: <!--more-->
+sign_in: https://www.simulation.cloud/
+sign_up: https://www.simulation.cloud/
+
+google_analytics:
+  enable: false
+  key: UA-223920516-1
+google_tag_manager:
+  enable: true
+  container_id: GTM-MXLS734
+
+# Build settings
+theme: minima
+plugins:
+  - jekyll-feed
+  - jekyll-paginate-v2
+  - jekyll-admin
+  - jekyll-sitemap
+  - jekyll-redirect-from
+  - jekyll-purgecss
+  - jekyll-minifier
+
+css_dir: '/assets/css'
+
+collections:
+  authors:
+    output: true
+  shop_items:
+    output: true
+    permalink: /shop/:name
+  publications:
+    output: false
+  faqs:
+    output: false
+  fdtd101:
+    output: true
+    permalink: '/fdtd101/:name/'
+  cfd:
+    output: true
+    permalink: '/aircraft-cfd101/:name/'
+  positions:
+    output: true
+    permalink: '/careers/:name/'
+  turbulence:
+    output: true
+    permalink: '/cfd-essentials/:name/'
+  tidy3d-gui:
+    output: true
+    permalink: '/tidy3d/learning-center/tidy3d-gui/:name/'
+  inverse-design:
+    output: true
+    permalink: '/tidy3d/learning-center/inverse-design/:name/'
+
+############################################################
+# Site configuration for the Jekyll 3 Pagination Gem
+# The values here represent the defaults if nothing is set
+# Produces a cleaner folder structure when using categories
+pagination:
+  # Site-wide kill switch, disabled here it doesn't run at all
+  enabled: true
+
+  # Set to 'true' to enable pagination debugging. This can be enabled in the site config or only for individual pagination pages
+  debug: true
+
+  # The default document collection to paginate if nothing is specified ('posts' is default)
+  collection: 'posts'
+
+  # How many objects per paginated page, used to be `paginate` (default: 0, means all)
+  per_page: 5
+
+  # The permalink structure for the paginated pages (this can be any level deep)
+  permalink: '/page/:num/' # Pages are index.html inside this folder (default)
+  #permalink: '/page/:num.html' # Pages are simple html files
+  #permalink: '/page/:num' # Pages are html files, linked jekyll extensionless permalink style.
+  # Pagination Settings
+
+  # Optional the title format for the paginated pages (supports :title for original page title, :num for pagination page number, :max for total number of pages)
+  title: ':title - page :num'
+
+  # Limit how many pagenated pages to create (default: 0, means all)
+  limit: 0
+
+  # Optional, defines the field that the posts should be sorted on (omit to default to 'date')
+  sort_field: 'date'
+
+  # Optional, sorts the posts in reverse order (omit to default decending or sort_reverse: true)
+  sort_reverse: true
+
+  # Optional, the default category to use, omit or just leave this as 'posts' to get a backwards-compatible behavior (all posts)
+  category: 'posts'
+
+  # Optional, the default tag to use, omit to disable
+  tag: ''
+
+  # Optional, the default locale to use, omit to disable (depends on a field 'locale' to be specified in the posts,
+  # in reality this can be any value, suggested are the Microsoft locale-codes (e.g. en_US, en_GB) or simply the ISO-639 language code )
+  locale: ''
+
+  # Optional,omit or set both before and after to zero to disable.
+  # Controls how the pagination trail for the paginated pages look like.
+  trail:
+    before: 2
+    after: 2
+
+  # Optional, the default file extension for generated pages (e.g html, json, xml).
+  # Internally this is set to html by default
+  extension: html
+
+  # Optional, the default name of the index file for generated pages (e.g. 'index.html')
+  # Without file extension
+  indexpage: 'index'
+
+  # Old jekyll-paginate pagination logic
+#paginate: 3
+#paginate_path: "/legacy/page:num/"
+
+############################################################
+
+#tag_page_layout: tag_page
+#tag_page_dir: tag
+#tag_permalink_style: pretty
+
+jekyll-archives:
+  enabled: [categories, tags, authors]
+  layouts:
+    category: category
+    tag: category
+    author: category
+  permalinks:
+    category: '/blog/category/:name/'
+    tag: '/blog/tag/:name/'
+    author: '/blog/author/:name/'
+
+feed:
+  collections:
+    posts:
+      path: '/blog/feed.xml'
+
+defaults:
+  - scope:
+      path: 'about/**'
+    values:
+      sitemap: false
+  - scope:
+      path: 'elements/**'
+    values:
+      sitemap: false
+  - scope:
+      path: 'contact/**'
+    values:
+      sitemap: false
+  - scope:
+      path: 'tag/**/*'
+    values:
+      sitemap: false
+
+  - scope:
+      path: 'publications'
+    values:
+      noindex: true
+      sitemap: false
+  - scope:
+      path: 'tidy3d/volt3d'
+    values:
+      noindex: true
+      sitemap: false
+  - scope:
+      path: 'flow360/technical-support/thankyou'
+    values:
+      noindex: true
+      sitemap: false
+  - scope:
+      path: 'tidy3d/technical-support/thankyou'
+    values:
+      noindex: true
+      sitemap: false
+  - scope:
+      path: 'tidy3d/educational-licenses/teaching-program/thankyou'
+    values:
+      noindex: true
+      sitemap: false
+  - scope:
+      path: 'assets/**'
+    values:
+      sitemap: false
+  - scope:
+      path: 'uploads/**'
+    values:
+      sitemap: false
+  - scope:
+      path: 'tidy3d/landing-page'
+    values:
+      noindex: true
+      sitemap: false
+
+  - scope:
+      path: 'fdtd101'
+    values:
+      noindex: true
+      sitemap: false
+  - scope:
+      path: '_fdtd101'
+    values:
+      custom_js:
+        - learning-center/breadcrumb.min
+  - scope:
+      path: '_inverse-design'
+    values:
+      custom_js:
+        - learning-center/breadcrumb.min
+  - scope:
+      path: '_tidy3d-gui'
+    values:
+      custom_js:
+        - learning-center/breadcrumb.min
+  - scope:
+      path: 'tidy3d/examples/notebooks'
+    values:
+      custom_js:
+        - learning-center/breadcrumb.min
+        - learning-center/search-examples.min
+  - scope:
+      path: 'tidy3d/publications'
+    values:
+      noindex: true
+      sitemap: false
+
+  - scope:
+      path: 'blog/tag'
+      type: 'tag'
+    values:
+      custom_font: font2
+      image:
+        path: '/assets/images/default-feature-image.png'
+#      noindex: true
+#      sitemap: false
+
+  - scope:
+      path: 'blog/author'
+      type: 'author'
+    values:
+      custom_font: font2
+      image:
+        path: '/assets/images/default-feature-image.png'
+#      noindex: true
+#      sitemap: false
+
+  - scope:
+      path: 'blog/category'
+      type: 'category'
+    values:
+      custom_font: font2
+      image:
+        path: '/assets/images/default-feature-image.png'
+#      noindex: true
+#      sitemap: false
+
+  - scope:
+      path: '_posts'
+      type: posts
+    values:
+      custom_font: font2
+  - scope:
+      path: '_positions'
+      type: positions
+    values:
+      custom_font: font2
+      author: Flexcompute
+
+exclude: ['node_modules']
+
+jekyll-minifier:
+  exclude: ['sitemap.xml','*.html', 'robots.txt']
+  uglifier_args:
+    harmony: true
+  compress_javascript: false
+
+# Compressing HTML with Plugin jekyll_tidy not jekyll-minifier.
+# From zongfu:
+# Need to output beautiful HTML source code, so set the compress_html to false.
+jekyll_tidy:
+  ignore_env: development
+  compress_html: false
+
+tidy3d:
+  enable: true
+  sign_in: 'https://tidy3d.simulation.cloud/'
+  sign_up: 'https://tidy3d.simulation.cloud/signup'
+  quick_start_link: 'https://tidy3d.simulation.cloud/notebook?file=StartHere.ipynb'
+flow360:
+  enable: true
+  sign_in: 'https://flow360.simulation.cloud/'
+
+forms_link:
+  teaching_program: https://forms.zohopublic.com/cms6/form/TeachingProgram/formperma/RyBIfDEPIKUfJFDpkxVlaOru8LVWfGMt6w0O5UK9HN0/htmlRecords/submit
+
+svg:
+  optimize: true
+
+############################################################
+# Site configuration for the WebP Generator Plugin
+# The values here represent the defaults if nothing is set
+webp:
+  enabled: true
+
+  # The quality of the webp conversion 0 to 100 (where 100 is least lossy)
+  quality: 75
+
+  # List of directories containing images to optimize, nested directories will only be checked if `nested` is true
+  # By default the generator will search for a folder called `/img` under the site root and process all jpg, png and tiff image files found there.
+  img_dir: ["/assets/images/product/tidy3D/", "/assets/images/journal/", "/assets/images/clients/"]
+
+  # Whether to search in nested directories or not
+  nested: true
+
+  # add ".gif" to the format list to generate webp for animated gifs as well
+  formats: [".jpeg", ".jpg", ".png", ".tiff"]
+
+  # File extensions for animated gif files
+  gifs: [".gif"]
+
+  # Set to true to always regenerate existing webp files
+  regenerate: false
+
+  # Local path to the WebP utilities to use (relative or absolute)
+  # Omit or leave as nil to use the utilities shipped with the gem, override only to use your local install
+  # Eg : "/usr/local/bin/cwebp"
+  webp_path: nil
+
+  # List of files or directories to exclude
+  # e.g. custom or hand generated webp conversion files
+  exclude: []
+
+  # append '.webp' to filename after original extension rather than replacing it.
+  # Default transforms `image.png` to `image.webp`, while changing to true transforms `image.png` to `image.png.webp`
+  append_ext: true
+############################################################

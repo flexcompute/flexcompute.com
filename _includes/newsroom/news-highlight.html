@@ -1,0 +1,48 @@
+{% assign newsHighlight = site.data.newsroom.news_highlight %}
+{% if newsHighlight.enable %}
+{% if newsHighlight.enable_blog %}
+{% assign highlightPost = '' %}
+{% for post in site.posts %}
+{% if post.path == newsHighlight.blog %}
+{% assign highlightPost = post %}
+{% endif %}
+{% endfor %}
+{% if highlightPost.path %}
+{% assign default_post_image = "/uploads/tutorial-03.png" %}
+{% assign img_src = default_post_image  %}
+{% assign post_image_length = highlightPost.post_image | size %}
+{% if post_image_length > 0 %}
+{% assign img_src = highlightPost.post_image %}
+{% endif %}
+<section>
+  <h1>{{newsHighlight.title | default: 'News Highlight'}}</h1>
+  <div class="row align-items-center">
+    <div class="col-12 col-lg-6">
+      <img class="aspect-ratio" src="{{img_src}}" alt="{{highlightPost.post_title | default: highlightPost.title}}">
+    </div>
+    <div class="col-12 col-lg-6">
+      <span class="date font-size-14" style="color: #999999"><i class="jam jam-clock"></i>{{highlightPost.date | date_to_string}}</span>
+      <h2 class="post-title font-size-20 line-height-24 mb-0">
+        <a id="__pg_newsroom_news-highlight_{{highlightPost.post_title | slugify}}_link" href="{{highlightPost.url}}" class="color-dark-3 color-primary-hover">
+          {{highlightPost.post_title | default: highlightPost.title}}
+        </a></h2>
+      {% if highlightPost.author != nil %}
+      {% assign authorSize = highlightPost.author | size%}
+      {% if authorSize>0  %}
+      {% assign authors = highlightPost.author | split: ',' %}
+      <span class="author mr-20 font-size-14" style="color: #787878"><i class="jam jam-user"></i>By
+        {% for author in authors %}
+        <a id="__pg_newsroom_news-highlight_{{highlightPost.post_title | slugify}}_{{author|slugify}}_link" href="/blog/author/{{author | slugify}}/" class="color-primary-hover" style="color: #787878">{{author}}</a>{%unless forloop.last%},&nbsp;&nbsp;{%endunless%}
+        {%endfor%}
+      </span>
+      {% endif %}
+      {% endif %}
+      <p class="color-dark-gray line-height-24">{{highlightPost.excerpt | strip_html | truncatewords: "80"}}</p>
+    </div>
+  </div>
+</section>
+{% endif %}
+{% else %}
+{% include newsroom/new-highlight-publications.html newsHighlight=newsHighlight%}
+{% endif %}
+{% endif %}

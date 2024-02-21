@@ -1,0 +1,16 @@
+{% for example in site.data.notebooks.example.example_menus %}
+{% if example.enable_library %}
+{% for secondaryMenu in example.menus  %}
+{% assign tag = secondaryMenu.title %}
+<span class="custom-radio {%if include.enable_redirect%}p-0{%endif%}" data-tag-value="{{tag}}" data-tag-slugify="{{tag | slugify}}">
+  {% if include.enable_redirect %}
+  {% assign url_size = page.url | size %}
+  {% assign page_id = page.url | slice: 1, url_size | split: '/' | join: '-' | downcase %}
+  <a class="d-inline-block" style="padding: 8px" id="__pg_{{page_id}}_{{tag | slugify}}" href="/tidy3d/learning-center/example-library/?category={{{tag | slugify}}">{{tag}}</a>
+  {% else %}
+  {{tag}}
+  {% endif %}
+</span>
+{% endfor %}
+{% endif %}
+{% endfor %}

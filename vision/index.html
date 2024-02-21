@@ -1,0 +1,102 @@
+---
+layout: default
+title: Future of Simulation | Flexcompute
+description: Our end-to-end processes and high-tech based simulation solvers are different from anything you’ve ever seen before.
+tags:
+- simulation
+- design innovation
+- R&D accellaration
+- advanced technology
+- CFD
+- EM
+- FDTD
+author: Flexcompute
+custom_font: font2
+banner_section:
+  enable: true
+  bg: "/assets/images/why-flexcompute/top_bg_img.png"
+  title: Vision
+vision_section:
+  enable: true
+  lists:
+    - title: 'What is simulation?'
+      title_bg: "/assets/images/contact/point.png"
+      description: 'Simulations allow us to create alternate worlds where ideas, models, and concepts can be observed in perfectly controlled conditions. This power enables us to predict how things may play out in the future, make better decisions, and test ideas faster, all with far less effort than required by experimental prototyping. This quick and effective iteration is the fundamental driver of R&D for both large and small companies. Our vision at Flexcompute is to dramatically improve the efficiency of this process and alleviate barriers to entry as much as possible. In turn, our work seeks to drive dramatic acceleration in technological growth for our customers.'
+      image: '/assets/images/why-flexcompute/pic_01.png'
+      image_class: 'right-0 width-700'
+    - title: 'Development of simulation'
+      title_bg: "/assets/images/contact/point.png"
+      description: 'Our vision fits into a larger historical context, where we observe how simulation technology has advanced and continues to advance each year.  20 years ago, simulations were 1000 times smaller than they are today, yet they also ran 1000 times slower. The technology was difficult to use and wasn’t powerful enough to be able to model complex physics from first principles. Not surprisingly, the use of simulation was mostly limited to universities and government labs, and therefore, minimally impacted technological development in industry.
+      <br><br>Today, simulations are ubiquitous in many industries, including automotive, aerospace, telecommunications, semiconductors, consumer electronics, and even finance. Interestingly, simulations are even relied upon on heavily in the development of the computing hardware that powers them. As both the size and the speed of simulations have greatly improved in recent years, so has their prominence in commercial R&D. However, simulations still remain a luxury to most teams. Companies still need to invest in expensive equipment, licenses, and skilled professionals to develop and run the software. Even with such capabilities, teams often find themselves waiting days or weeks for simulations to complete and still need time to analyze and interpret the results.'
+      image: '/assets/images/why-flexcompute/pic_02.png'
+      class: 'offset-lg-5'
+      image_class: 'left-0'
+    - title: "What’s the future of simulation"
+      title_bg: "/assets/images/contact/point.png"
+      description: "Given these outstanding limitations, where do we imagine taking simulation technology 20 years from now? We’ll continue leveraging technological improvements to enhance simulation capabilities, such as integrated multi-physics, efficient high-fidelity methods, and a 1000x increase in speed and size. Additionally, we believe that simulation technology should be accessible to everyone, even those without specialized skills. People should be able to test the real-world performance of hundreds of variations of their designs effortlessly and instantaneously. Today, running simulations is a specialized task, but tomorrow, simulation technology should become so essential that it is a basic utility at all companies, empowering work humbly without even being noticed.
+      <br><br> Hardware companies of the future will look more like software companies of today because they can iterate on new technology without fabrication. Conceptualization, design, optimization, and testing will all be done in computer simulations, reducing time and cost. The barriers to hardware innovation will be reduced to a level similar to those in today’s software development. This, in turn, will create new industries and the pace of technological innovation will reach a new level not seen before in humankind.
+      <br><br> This is the future that will be enabled by Flexcompute."
+      image: '/assets/images/why-flexcompute/pic_03.png'
+      image_class: 'right-0'
+
+lecture_section:
+  enable: true
+  lists:
+    - description: Our technology leverages emerging computing chips to enable massive computing power,improving simulation speed and scalability by a magnitude of more than 20 times.
+      image: '/assets/images/why-flexcompute/modular1_img.png'
+      float: left
+    - description: The ultra-fast speed promotes unbeatable company time and cost saving by minimizingsimulation time and maximizing iterations of design optimization,will greatly increase thedesign accuracy before Prototype kickoff and speeding up product launch.
+      image: '/assets/images/why-flexcompute/modular2_img.png'
+      float: right
+    - description: We energize,inspire and partner with the world's top innovators across a variety ofindustries like Aerospace, Automotive, Energy, eVTOL, Wind Turbines,Computing Chips,High Tech and more.
+      image: '/assets/images/why-flexcompute/modular3_img.png'
+      float: left
+---
+<div class="content-wrapper">
+	{% include header.html extra_class="absolute transparent" logo_class="logo fc-logo" container_class="container" %}
+	{% if page.banner_section.enable %}
+	<div
+      class="wrapper fdtd-banner"
+      style="height: 200px; position: relative; top: 66px;"
+    >
+      <div class="container text-center pb-0 pt-40">
+          <div class="row">
+            <div class="col-md-12 mx-auto">
+              <h1 class="page-title text-capitalize color-dark">{{page.banner_section.title}}</h1>
+            </div>
+          </div>
+      </div>
+      <!-- /.container -->
+  </div>
+	{% endif %}
+
+  {% if page.vision_section.enable %}
+  <div class="container">
+    <div class="row align-items-center justify-content-center">
+      {% for list in page.vision_section.lists %}
+      <div class="col-lg-12 row row-relative">
+        <div class="col-md-12 col-lg-7 box bg-white-transparent shadow {{list.class}}" style="position: relative; z-index: 1;">
+          {% if list.title %}
+          <h3 class="font-size-22 font-weight-bold color-dark" style="position: relative;z-index: 2;">
+            {{list.title}}
+            {% if list.title_bg %}
+            <img src="{{list.title_bg}}" alt="{{list.title}}" class="office-location-icon" style="object-fit: cover;">
+            {% endif %}
+          </h3>
+          {% endif %}
+          {% if list.description %}
+          <p class="font-size-14 color-dark-gray" style="line-height: 22px !important;">{{list.description}}</p>
+          {% endif %}
+        </div>
+        {% if list.image %}
+        <img class="row-relative-image {{list.image_class}}" src="{{ list.image }}" alt="{{list.title}}">
+        {% endif %}
+      </div>
+      <div class="space60"></div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+	{% include footer_2.html %}
+</div></div>

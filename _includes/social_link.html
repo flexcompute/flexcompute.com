@@ -1,0 +1,27 @@
+<div class="divider d-flex justify-content-start align-items-center" onclick="onClick()">
+  {% if site.data.general_settings.social.enable %}
+  <span class="{% if include.ext-class %} {{include.ext-class}} {%endif%} mr-10">Share On: </span>
+  {% assign socialList = site.data.general_settings.social.list %}
+  {% for item in socialList %}
+  {% if item.enable%}
+  <a id="{%if include.extra_id%}{{include.extra_id}}_{{item.type | downcase}}{%else%}{{item.id}}{%endif%}"
+      href="{%if include.post_url%}
+      {{item.url}}?url={{ site.url }}{{ site.baseurl }}{{ include.post_url }}
+      {%else%}
+      {{item.url}}?url={{ site.url }}{{ site.baseurl }}{{ page.url }}
+      {%endif%}"
+      class="{% if include.icon-class %} {{include.icon-class}} {%endif%} font-size-20 social-icon color-dark"
+      target="_blank"
+      title="{{item.title}}"
+  >
+    <i class="{{item.icon}}" ></i>
+  </a>
+  {% endif %}
+  {% endfor %}
+  {% endif %}
+</div>
+<script>
+  function onClick() {
+    event.stopPropagation()
+  }
+</script>

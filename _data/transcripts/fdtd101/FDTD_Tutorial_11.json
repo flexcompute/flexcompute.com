@@ -1,0 +1,50 @@
+{
+  "title": "FDTD 101: Lecture 11",
+  "pages": [
+    {
+      "id": "",
+      "title": "",
+      "transcript": "This is the first sequence of lectures on inverse design in photonics. Today we'll provide a brief introduction to the concepts behind inverse design optimization."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "Computational design is a very common procedure in photonics. Often times, we would like to design a device to satisfy a particular functionality. To accomplish this, we likely will need to tune the parameters of the device until it accomplishes the desired behavior. As a simple illustration, consider the design of a metasurface as illustrated in the figure above.  Assume that the metalens is made of an array of dielectric or metallic elements of varying sizes. The objective here may be for this device to operate as a lens so that if you have a plane wave coming in from the left, the incident energy will be focused to a point on the right. For this purpose, the natural way to formulate the design is to imagine a focal point to the right of this device. Then, you can adjust each of the tunable elements, in this case, the radii of these cylinders, such that eventually the light is focused into this region. You can define an “objective function”, which represents the amount of energy that get focused inside the focal region. The computational design of this device therefore becomes a mathematical optimization problem where you try to maximize the objective function by tweaking the parameters associated with each of these tunable elements."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "First, we will discuss a concept closely related to this optimization problem called “sensitivity analysis”. Suppose you already have a device that works, in this case, a device that focuses incident light. It is natural to consider the “sensitivity” of this device, especially for experimental implementations. Specifically, one might ask if you have small fluctuation of the size of one these tunable elements from your design value, how does that affect the performance of the device? Knowing the sensitivity of course is very important if you're trying to implement these devices experimentally For example, you may like a device that have low sensitivity such that it is robust to fabrication errors. On the other hand, many times you may like a device that you can easily adjust after it has been fabricated by, for example, changing the refractive index of each these each individual elements a little bit. In this case, you may actually want a higher sensitivity. In this case, the sensitivity is related to the objective function in that it quantities the <strong>derivative</strong> of the amount of energy that you have in the focal region with respect to the tunable parameters in the device. As we will show, the sensitivity analysis we are discussing here and computational optimization problem from the previous slides are very closely connected."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "For simplicity, imagine that you have a optimization problem in one dimension, meaning that you are looking at only one parameter of the entire device. You may plot the objective function as a function of this parameter and this will give you a curve as shown above. The optimization problem then corresponds to maximizing the objective function, in other words, reaching the highest point on the landscape defined by this curve. Now suppose you have a starting point away from the optimum. One way of doing this optimization is by computing the “gradient”, or the sensitivity, which tells you which direction that you need to go to maximize the objective. Then, you can move along the direction of the gradient and repeat this step multiple times until you finally reach the peak of this curve, where the gradient is zero. Therefore, computing the sensitivity (or the gradient) enables you to perform the optimization efficiently. While this example is only using one dimension, this approach can be naturally generalized to a high dimensional system."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "Before that, let’s discuss how one could compute this gradient. In one dimension, the gradient can be computed using the definition of the gradient known as the “finite difference derivative”. Suppose, for example, that the parameter “p” is the radius of a particular cylinder in the metalens, colored blue in the illustration. To compute the derivative, you can do two simulations. In the first, you can make the radius of the cylinder a little bit larger and perform one simulation to compute how much energy is in the focal region. Next, you can make the cylinder a little smaller and again compute how much energy is the focal region. Taking the difference between these two and dividing by the total change in the radius of this element gives the gradient or the derivative. This information thus enables one to perform the optimization from the previous slide. "
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "Now, let’s generalize this idea to higher dimensions. Suppose you are interested in doing an optimization for a two dimensional problem, consisting of two tunable parameters (p1, p2). You can imagine representing the objective function as a function of these tunable parameters in a two dimensional plot where the contour corresponds to a constant value of the objective function. In this case, suppose the optimum solution is indicated by the dark green region and you are starting from a point far away. Then, you can optimize by first computing the gradient and then moving along the direction of the gradient to reach the next point. This process can be repeated until you reach the optimum of the design. As you can see, if you are optimizing in a two dimensional parameter space, you will therefore need to compute a two-dimensional gradient."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "Now, how can one compute a gradient in two dimensions? Again, one approach is to use finite difference derivatives. Like before, you perturb the first element, perform two calculations by changing, in this case, the radius a little bit, which gives you the derivative with respect to the first parameter. Then you must repeat this process, except by changing only the radius of the second element. Again, you must perform two more simulations and compute the second element of the gradient. As you can see, this approach requires 4 total simulations to compute the two-dimensional gradient."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "More generally, in the optimization problems or sensitivity analyses common in photonics, there can be very large number of parameters. For example, in metasurface design problems, you can imagine hundreds or even thousands of elements that are defined on the surface. You may therefore need to compute the derivative of the objective function with respect to the radius of each of these elements. If you try to apply the process of finite difference derivatives, you must perturb the radius of each individual element one by one. Therefore, with N parameters, you will require 2N simulations, which can be a very costly and impractical procedure."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "As discussed for many optimization problem, the number of elements can easily be on the order thousands or even more and computing the gradient needed for a single optimization step can be exceedingly expensive. Moreover, there are other issues associated with this finite difference scheme. For example, to compute the gradient, we must choose a step size. One does not know a priori how large of a step size to choose. If it is too large, you will be outside of the linear approximation regime and the gradient won’t be accurate. On the other hand, if you choose it to be too small, the change of the objective function might be too small and you may suffer from numerical noise issues. Therefore, in general, the derivative that you calculate with the finite difference approach will always be approximate, which can be a problem if you need high accuracy gradient information for optimization purposes. As it turns out, there is a very clever way to compute the gradient that does not use the finite difference scheme, called the “adjoint method”. One of the remarkable things about the adjoint method is that no matter how many design parameters you have, computing the gradient of your objective function only requires two full simulations of the device, instead of 2N as required by finite difference. Moreover, this gradient computation generally gives exact gradients without any approximation or need to choose a step size. It follows that this method is therefore very widely used in the current optimizations of devices. In the next lecture we will dive into more details about the adjoint method."
+    }
+  ]
+}

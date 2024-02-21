@@ -1,0 +1,12 @@
+<a
+  class="btn btn-dashed-primary font-size-16 m-0 {% if include.ext_class %} {{include.ext_class}} {%else%} subscribe-btn {%endif%}"
+  id="{%if include.extra_id%}{{include.extra_id}}{%else%} __g_global_tidy3d-sign-up_btn {%endif%}"
+  href="{{site.tidy3d.sign_up}}"
+  target="_blank"
+>
+  {% if include.title %}
+  {{include.title}}
+  {%else%}
+  Sign up Tidy3D
+  {%endif%}
+</a>

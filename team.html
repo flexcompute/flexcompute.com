@@ -1,0 +1,74 @@
+---
+layout: default
+title: Team | Flexcompute
+description: Flexcompute team, talent and technical strength.
+tags:
+- Team
+- talent
+- technology
+- physics
+- Software
+author: Flexcompute
+custom_font: font2
+team_section:
+  enable: true
+  title: Our Team
+  sub_title: Our technical team is laser-focused on creating disruptive technology that can transform the industry
+---
+{% include header.html extra_class="absolute transparent" logo_class="logo fc-logo" container_class="container" %}
+<div class="wrapper bg-opacity-default" style="height: 370px;">
+  <div class="rev_slider_wrapper fullwidth-container dark-spinner">
+    <div id="slider6" class="rev_slider fullwidthbanner light-gallery-wrapper" data-version="5.4.7">
+        <ul>
+          <li data-transition="fade" data-thumb="">
+            {% if page.team_section.title %}
+            <h1
+              class="tp-caption left-45 font-weight-bold color-dark font-strong"
+              data-x="['left','center','center','center']"
+              data-y="middle"
+              data-hoffset="['50','30','0','0']"
+              data-voffset="['-200','-200','-200','-200']"
+              data-fontsize="['40','40','40','40']"
+              data-lineheight="['46','46','46','46']"
+              data-width="['480','400','400','400']"
+              data-textAlign="['left','center','center','center']"
+              data-whitespace="['normal','normal','normal','normal']"
+              data-frames='[{"delay":100,"speed":1200,"frame":"0","from":"y:-50px;opacity:0;","to":"o:1;","ease":"Power3.easeInOut"},{"delay":"wait","speed":300,"frame":"999","to":"auto:auto;","ease":"Power3.easeInOut"}]'
+              data-responsive="on"
+              data-responsive_offset="on"
+              style="z-index: 9;"
+            >
+              {{page.team_section.title}}
+            </h1>
+            <!-- /.tp-caption -->
+            {% endif %}
+            {% if page.team_section.sub_title %}
+            <div
+              class="tp-caption left-45 font-weight-400 color-dark-gray-2"
+              data-x="['left','center','center','center']"
+              data-y="middle"
+              data-hoffset="['50','30','0','0']"
+              data-voffset="['-140','-140','-140','-140']"
+              data-fontsize="['19','19','19','19']"
+              data-lineheight="['29','29','29','29']"
+              data-width="['600','500','650','340']"
+              data-textAlign="['left','center','center','center']"
+              data-whitespace="['normal','normal','normal','normal']"
+              data-frames='[{"delay":200,"speed":1200,"frame":"0","from":"x:-50px;opacity:0;","to":"o:1;","ease":"Power3.easeInOut"},{"delay":"wait","speed":300,"frame":"999","to":"auto:auto;","ease":"Power3.easeInOut"}]'
+              data-responsive="on"
+              data-responsive_offset="on"
+              style="z-index: 9;"
+            >
+              {{page.team_section.sub_title}}
+            </div>
+            <!-- /.tp-caption -->
+            {% endif %}
+          </li>
+        </ul>
+        <div class="tp-bannertimer tp-bottom"></div>
+    </div>
+  </div>
+</div>
+
+{% include team.html %}
+{% include footer_2.html %}

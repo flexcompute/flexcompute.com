@@ -1,0 +1,112 @@
+{
+  "title": "Tidy3D GUI: Tutorial 2",
+  "pages": [
+    {
+      "id": "",
+      "title": "",
+      "transcript": "The precise modeling of materials is a crucial aspect in setting up FDTD simulations. This tutorial focuses on material properties and the various methods for defining materials in FDTD simulations."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "To illustrate material properties and the ways to define them in FDTD simulations, we will build and simulate an organic solar cell using this work as reference."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "When creating a new structure, two main properties need to be defined: a geometry"
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "and a medium, where material properties are specified."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "You can either create new mediums as you insert new structures or include them beforehand, as we will do here."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "To proceed, select the \"Parameter\" tab,"
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "and then add a new medium."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "You need to select the appropriate medium type based on your material characteristics."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "Start by including the silicon dioxide solar cell material. SiO2 is a transparent material in this wavelength range [highlight], as indicated by the null extinction coefficient."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "Since its refractive index remains almost constant across frequencies, we will consider SiO2 as a dispersionless material, so you can model it using Tidy3D's \"Medium\" type."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "Next, choose the refractive index option in the \"Edit Medium\" panel and set the refractive index value to 1.45, leave the default value of 0 for the extinction coefficient."
+    },{
+      "id": "",
+      "title": "",
+      "transcript": "Now, create a new material and name it Silicon or simply \"Si.\" Instead of defining the silicon properties manually, you can use an existing Silicon model. Click on the \"Load from Library\" command."
+    },{
+      "id": "",
+      "title": "",
+      "transcript": "In the Tidy3D Material Library, locate the \"Crystalline Silicon\" material and choose the \"Green2008\" model."
+    },{
+      "id": "",
+      "title": "",
+      "transcript": "On the right panel, observe that Silicon is not transparent in this wavelength range, unlike SiO2. Another important characteristic is its high dispersion for visible wavelengths, as indicated by the significant changes in its refractive index."
+    },{
+      "id": "",
+      "title": "",
+      "transcript": "The properties of Silicon are defined by the \"Pole Residue\" material model, and the model parameters are displayed in the “Edit Medium” panel."
+    },{
+      "id": "",
+      "title": "",
+      "transcript": "The key parameters in the Pole Residue model include the relative permittivity at infinite frequency."
+    },{
+      "id": "",
+      "title": "",
+      "transcript": "Additionally, the complex-valued poles \"a\" and \"c\" are crucial for the model accuracy. You can add as many poles as necessary to manually adjust a Pole Residue model and improve its accuracy, but it comes at the expense of longer simulation times."
+    },{
+      "id": "",
+      "title": "",
+      "transcript": "Various other material models are available to suit different material requirements."
+    },{
+      "id": "",
+      "title": "",
+      "transcript": "To access details about a specific model, select it from the drop-down menu and click on the \"Help\" button to view the model description and its parameters in the Help Center."
+    },{
+      "id": "",
+      "title": "",
+      "transcript": "As an exercise, please load the following mediums from the Material Library. You will utilize them in the solar cell model."
+    },{
+      "id": "",
+      "title": "",
+      "transcript": "Sometimes, it is necessary to include a custom dispersive material in the simulation. In such cases, we can use the Material Fitter tool. For lossless mediums [show], you need to prepare a tab-delimited TXT file or a comma-delimited CSV file containing wavelengths in microns and the refractive index. If the material is lossy, you should add the extinction coefficient in another column."
+    },{
+      "id": "",
+      "title": "",
+      "transcript": "For this simulation, you will prepare two files: one for the organic solar cell active material P3HT and another one for the organic polymer PEDOT. You can download the data for both of them from refractiveindex.info. Once you have the data file ready, simply drag and drop it into this region."
+    },{
+      "id": "",
+      "title": "",
+      "transcript": "Then, set the fit parameters and click the \"Fit\" button. For detailed information on the fit parameters, refer to the Help Center. After the fitting process is complete, the model and data curves will be displayed in the right-side panel. If the accuracy is insufficient for your intended purpose, you can adjust the number of poles, number of tries, or other fit parameters and try again. When you are satisfied with your result, save the new medium to your private library."
+    },{
+      "id": "",
+      "title": "",
+      "transcript": "Now, you can build the organic solar cell structure using the materials created, as shown here. Adjust the simulation size, grid and boundary specifications, include a plane wave source, and set up flux monitors for both reflectance and transmittance measurements. Finally, run the simulation."
+    }
+  ]
+}

@@ -1,0 +1,130 @@
+<!--https://legacydocs.hubspot.com/docs/methods/forms/advanced_form_options -->
+{% include hs-form-loading.html %}
+<div class="hubspot-form-wrapper">
+  <script type="module">
+    import { HbsptUtils, FileListItems } from '/assets/js/hubspot-form-utils.js';
+
+    const CustomHubspotForm = {
+      verifyDate: (form) => {
+        const formDataArray = $(form).serializeArray();
+        const limitDate = HbsptUtils.getDefaultDate(2)
+        const startDate = formDataArray.find(item => item.name === 'starting_date');
+        let verificationStatus = "pass";
+        ["starting_date", "ending_date"].forEach(name => {
+          const value = formDataArray.find(item => item.name === name).value;
+          const verifyFieldElement = $(form).find(`input[name='${name}']`).prev();
+          if ("starting_date" === name && value && HbsptUtils.compareDates(value, limitDate) < 0) {
+            verificationStatus = "error"
+            HbsptUtils.setValidationFailureMsg(verifyFieldElement, `Starting date should be at least 2 days in advance.`);
+          } else if ("ending_date" === name && value && startDate.value && HbsptUtils.compareDates(value, startDate.value) < 0) {
+            verificationStatus = "error"
+            HbsptUtils.setValidationFailureMsg(verifyFieldElement, "Ending date should be higher than Starting date.");
+          } else {
+            verificationStatus = "pass"
+            HbsptUtils.setValidationFailureMsg(verifyFieldElement)
+          }
+        })
+        return verificationStatus === 'pass'
+      },
+      verifyNumberOfStudents: (form) => {
+        const formDataArray = $(form).serializeArray();
+        const {name, value} = formDataArray.find(item => item.name === 'number_of_students');
+        let verifyFieldElement = $(form).find(`input[name='${name}']`);
+        let verificationStatus = "pass"
+        if (value && !Number.isInteger(Number(value))) {
+          verificationStatus = "error"
+          HbsptUtils.setValidationFailureMsg(verifyFieldElement, "Enter an integer value.");
+        } else {
+          verificationStatus = "pass"
+          HbsptUtils.setValidationFailureMsg(verifyFieldElement)
+        }
+        return verificationStatus === 'pass'
+      },
+      validate: (form) => {
+        const verifiedDate = CustomHubspotForm.verifyDate(form);
+        const verifiedNumber = CustomHubspotForm.verifyNumberOfStudents(form);
+        return verifiedDate && verifiedNumber
+      },
+      handleFileUpload: (e, form) => {
+        const target = e.target;
+        const b = e.target.files;
+        if (target.parentElement) {
+          const filedDom = target.parentElement
+          let previewWrapper = filedDom?.parentNode?.querySelector('.hs-form-file-preview')
+          if (previewWrapper) {
+            $(previewWrapper).empty();
+          } else {
+            previewWrapper = document.createElement("div");
+            previewWrapper.setAttribute('class', "hs-form-file-preview");
+          }
+          const dom = HbsptUtils.filePreview(b[0], () => CustomHubspotForm.removeFile(form, []));
+          previewWrapper.append(dom);
+          filedDom.parentNode.append(previewWrapper);
+        }
+      },
+      handleFormSubmit: (e, form) => {
+        const result = CustomHubspotForm.validate(form);
+        HbsptUtils.setSubmittedDate(form);
+        if (!result) {
+          e.preventDefault();
+        }
+      },
+      removeFile: (form, files) => {
+        const fileControl = $(form).find("input[name='course_syllabus']");
+        fileControl[0].files = new FileListItems(files)
+        $(form).find("input[name='course_syllabus']").change()
+      },
+      initialStartingDate: (element) => {
+        if (!element) return;
+        const defaultDate = HbsptUtils.getDefaultDate(2)
+        $(element).prev().val(defaultDate).change();
+      }
+    }
+
+    hbspt.forms.create({
+      region: "na1",
+      portalId: "43542601",
+      cssClass: 'teaching-program-hubspot-form',
+      formId: "4eeb9028-adc1-40d7-9ae9-017ee9550a0b",
+      redirectUrl: '/tidy3d/educational-licenses/teaching-program/thankyou/',
+      onFormReady: $form => {
+        const form = $form[0]
+        if (!form) return;
+        HbsptUtils.removeLoading();
+        HbsptUtils.setInputMaxLength(form, [
+          { name: "firstname", length: 255 },
+          { name: "lastname", length: 255 },
+          { name: "email", length: 255 },
+          { name: "jobtitle", length: 255 },
+          { name: "company", length: 255 },
+          { name: "department", length: 255 },
+          { name: "course_name", length: 255 },
+        ])
+        // number of students
+        $(form).find('input[name="number_of_students"]').change(e => {
+          CustomHubspotForm.verifyNumberOfStudents(form)
+        })
+        const fileUploadDom = form.querySelector('input[name="course_syllabus"]')
+        fileUploadDom.setAttribute('accept', '.pdf')
+        fileUploadDom.setAttribute('multiple', 'false')
+        fileUploadDom?.addEventListener('change', (e) => CustomHubspotForm.handleFileUpload(e, form))
+        const startDateDom = form.querySelector('input[name="starting_date"]')
+        const endDateDom = form.querySelector('input[name="ending_date"]')
+        CustomHubspotForm.initialStartingDate(startDateDom)
+        HbsptUtils.addDateValueChange(startDateDom, () => {
+          CustomHubspotForm.verifyDate(form)
+        })
+        HbsptUtils.addDateValueChange(endDateDom, () => {
+          CustomHubspotForm.verifyDate(form)
+        })
+        const submitBtn = form.querySelector('input[type="submit"]')
+        submitBtn?.addEventListener('click', e => CustomHubspotForm.handleFormSubmit(e, form), false)
+      },
+      onFormSubmit: $form => {
+        const form = $form[0]
+        const submitBtn = form.querySelector('input[type="submit"]')
+        HbsptUtils.setSubmitLoading(submitBtn)
+      }
+    });
+  </script>
+</div>

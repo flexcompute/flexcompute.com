@@ -1,0 +1,32 @@
+
+<div class="wrapper bg-opacity-default">
+  <div class="container">
+    {% if site.data.team.team_section.enable %}
+    {% assign team_section = site.data.team.team_section.list %}
+    {% for teamSection in team_section %}
+    <div>
+      <h2>{{teamSection.title}}</h2>
+      <div class="space40"></div>
+      {% assign team_list = teamSection.list %}
+      <div class="row justify-content-start">
+        {% for user in team_list %}
+        {% if user.enable %}
+        <div class="mb-100 mb-md-30 col-6 col-md-4 col-lg-3 d-flex flex-column align-items-center">
+          <figure class="img-blob box-round mb-30" style="overflow: hidden;">
+            <img width="160" height="160" class="aspect-ratio" src="{{ user.avatar }}" style="width: 8rem" alt="{{ user.name }}">
+          </figure>
+          <div class="desc">
+            <h5 class="mb-0 color-dark">{{user.name}}</h5>
+            <p class="mb-0 font-size-13 color-dark-gray" style="line-height: 20px;">{{user.position}}</p>
+            <p class="mb-0 font-size-13 color-dark-gray font-weight-bold" style="line-height: 20px;">{{user.university}}</p>
+          </div>
+        </div>
+        {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+    <div class="space30"></div>
+    {% endfor %}
+    {% endif %}
+  </div>
+</div>

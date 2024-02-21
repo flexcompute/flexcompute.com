@@ -1,0 +1,22 @@
+{
+    "maxEdgeLength": 0.08,
+    "curvatureResolutionAngle": 10,
+    "growthRate": 1.16,
+    "edges":{
+        "leadingEdge":  {
+            "type": "aniso",
+            "method": "angle",
+            "value": 1
+        },
+        "trailingEdge":  {
+            "type": "aniso",
+            "method": "height",
+            "value": 1e-3
+        }
+    }, 
+    "faces":{
+        "wing": {
+            "maxEdgeLength": 0.04
+        }
+    }
+}

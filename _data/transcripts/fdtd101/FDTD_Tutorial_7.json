@@ -1,0 +1,85 @@
+{
+  "title": "FDTD 101: Lecture 7",
+  "pages": [
+    {
+      "id": "intro-to-fdtd",
+      "title": "",
+      "transcript": "Today we would continue some of the discussion on algorithms in the finite difference time domain code or the FDTD method. I'm Shanhui Fan from Flexcompute."
+    },
+    {
+      "id": "",
+      "title": "How to choose the time step in FDTD?",
+      "transcript": "Today's subject is about the choice of time step $$Δt$$ in FDTD. In the finite difference time domain method, we take Maxwell's equations, and then we convert the differential operator to difference operator. For example, in order to take a temporal derivative of the Ez field, we just take a look at the Ez field at two adjacent times that subtract them and divide by the time step. So in FDTD as it turned out, the choice of this time step has a very strong influence on the behavior of the algorithm."
+    },
+    {
+      "id": "",
+      "title": "What is the impact of the CFL condition in FDTD simulation?",
+      "transcript": "Here's an example. We simulate a system in vacuum using a plane wave source. The plane wave source has a Gaussian waveform. Then we put a monitor point here to look at how the field at the monitor point varies as a function of time. In the middle, it is what a good result will look like. We'll expect to see that the electric field basically has a Gaussian temporal pulse form that passes through the monitor point. Here we chose the $$Δt$$, the time step to be slightly smaller than the spatial discretization divided by speed of light. On the other hand, if you just increase the time step a little bit by 2%. So that the time step now is slightly larger than the discretization size in space divided by <i>c</i>. You can see that the field actually diverges, in other words, you don't get a physical result at all. As you can see from this example, the choice of the spatial temporal time step is actually crucial in getting the FDTD algorithm to behave in the correct way. Here, I would like to provide a simple set of arguments on deriving the condition upon which you can use the true t. This is called the CFL condition."
+    },
+    {
+      "id": "",
+      "title": "Visualizing the time marching process in FDTD algorithm",
+      "transcript": "Let's start with one dimension. We discretize Maxwell’s equations in both space and time, where the space is one dimension. Here is a representation of the time stepping process. At a particular time step, we know the electric field, and then half a time step later, we'll use that to update the magnetic field and repeat the process. The spatial step size is $$\u0394x$$ and the temporal step size is $$\u0394t$$. The updating process, as I described, looks like this."
+    },
+    {
+      "id": "",
+      "transcript": "In the first half time step, we go from E to H."
+    },
+    {
+      "id": "",
+      "transcript": "And then in the second half time step, we go from H to E."
+    },
+    {
+      "id": "",
+      "title": "What is the physical intuition behind the courant number in FDTD?",
+      "transcript": "This is how the data dependency looks like. Over a total time of $$\u0394t$$, the information propagates over a distance of $$\u0394x$$. After we do a time stepping over time $$\u0394t$$, this electric field at the spatial point of Xm+1 now knows about the electric field at Xm. Numerically the fastest speed on this grid that the information can propagate is, just $$\u0394x$$ divided by $$Δt$$. Now a physical wave needs to propagate slower than the speed of this numerical dependency speed. Otherwise, the grid could never capture the correct physics. In other words, the speed of light needs to be smaller than the numerical speed. And that naturally leads to an upper bound on what you can do in choosing the time step, given the space discretization. And in fact, this is the CFL condition in one dimension. And typically we define what's called a courant number, which is simply defined as c times $$\u0394t$$ divided by $$\u0394x$$. And you can see in one dimension, this has to be less than 1."
+    },
+    {
+      "id": "",
+      "title": "The stable condition of the courant number",
+      "transcript": "In our example that I've just shown, when we choose a $$\u0394t$$ to be 0.99 $$\u0394x/c$$, this is a courant number that's below 1 and we get stable behavior. And if it's above 1 as this example on the right, now you see unstable behavior. Similar derivation can be carried out for two and three dimension systems as well."
+    },
+    {
+      "id": "",
+      "title": "How to derive the stable condition for the courant number in 2D and 3D FDTD?",
+      "transcript": "In 2-dimension here is a derivation. As a starting point. This is a single Yee-cell with an electric field easy component at the center surrounded by four magnetic components Hx and Hy component on the edges of a square, and this is used for simulating the TM polarization where the non-zero fields are only easy Hx and Hy. As we have seen in the one-dimensional case, the key point in deriving the CFL condition is to understand the speed over which the information can propagate on the numerical grid.  Therefore, let's illustrate how the data dependency or how the information propagates as we progress in an FDTD simulation."
+    },
+    {
+      "id": "",
+      "title": "Visualize information propagation in 2D FDTD Yee lattice",
+      "transcript": "So suppose at time equal to zero, we have information about the Ez component at the center of one of Yee's cells. At $$ t=\u0394t/2 $$. This information will be used to update all the four H fields as indicated here."
+    },
+    {
+      "id": "",
+      "transcript": "So the information has now propagated to the edge of this single square."
+    },
+    {
+      "id": "",
+      "transcript": "If you continue to the next step, now the information of the four H fields is then used to update the electric field components as indicated by these four red dots here. So then you repeat the process."
+    },
+    {
+      "id": "",
+      "transcript": "So now in the next half-time step now, these are the magnetic field components that get coupled."
+    },
+    {
+      "id": "",
+      "title": "The slowest speed of information propagation is alone the diagonal direction",
+      "transcript": "And finally if you propagate over 2 times that now the red dots here correspond to the electric field component that now knows the information about the electric field component at the center of the grid. So from this illustration, you can see that, for a distance of $$2\u0394t$$, the slowest numerical speed determined by the shortest distance the information has progressed, is from the center of the grid to this point here. And that corresponds to a distance of$$\\sqrt{2}Δx$$. So the slowest numerical speed is $$\\sqrt{2}\u0394x$$, divided by $$2\u0394t$$, which is the time it takes."
+    },
+    {
+      "id": "",
+      "title": "The derivation of CFL condition for 2D FDTD",
+      "transcript": "To derive the CFL condition, you demand that the physical speed which the speed of light needs to be smaller than the slowest numerical speed. So consequently in two-dimension the courant number which is a ratio between $$c\u0394t$$ and $$\u0394x$$, is now $$1/\\sqrt{2}$$. So it is smaller than the case in one dimension. In other words, in two-dimension, if you would like to simulate a system using the same spatial grid size, the time step that you need to use is smaller."
+    },
+    {
+      "id": "",
+      "title": "The derivation of CFL condition for 3D FDTD",
+      "transcript": "This derivation can be straightforwardly generalized for a three-dimensional system. So if you go through the same derivation as we have in 2D, you obtain this CFL condition relating the time step to the discretization along the X, Y, and Z direction as well as the refractive index of the material which controls, of course, the speed of light, the physical speed of light in the system. So knowing the CFL condition is very important in thinking about various aspects of the FDTD simulation."
+    },
+    {
+      "id": "",
+      "title": "How does computing cost scale with the resolution of the grid in FDTD simulation?",
+      "transcript": "Oftentimes we use spatially non-uniform grid when your structure has small features. At the small feature you have finer spatial resolution results. But away from it, you don't have to use fine spatial resolution. Now, in this case, the step size in time is actually determined by the smallest grid size. In other words, one will adjust the time step according to the smallest grid size of the system. Also, this gives an important scaling consideration. When you consider the computational cost, if you use, for example, an uniform isotropic mesh. Now in this case, the number of grit points, scale as one divided by the spatial discretization to the power 3. On the other hand, If you keep the physical simulation time the same. Then your $$\u0394t$$ is related to $$\u0394x$$. And therefore the number of steps that you would take, scale as $$1/\u0394x$$. In other words, the choice of your spatial discretization influences the  total time steps that you take. That gives you a scaling of one over $$\u0394x^4$$. Making the resolution finer by a factor of two actually leads to an increase of total computational cost by 16 times. Out of 16, 8 of it come from simply the fact that the grid point, total number of grid points increased by a fact of 8, but there is also a factor of two coming from the fact that you have to reduce the time step. So the choice of the time step here and the choice of the setup of your spatial resolution strongly influence how you control your temporal dynamics."
+    }
+  ]
+}

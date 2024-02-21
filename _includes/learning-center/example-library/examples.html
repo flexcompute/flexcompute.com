@@ -1,0 +1,11 @@
+{% for example in site.data.learning-center.example-library.examples %}
+<div class="col-12 col-sm-6 col-md-4 text-center" data-example-title="{{example.text}}" data-example-tags="{{example.tags | join: '##'}}">
+  <a id="__pg_tidy3d-learning-center_example-library_{{example.text | downcase | slugify}}_item"
+     href="{{example.link}}">
+    <img style="height:100px; object-fit: scale-down" class="aspect-ratio" src="{{example.img}}"
+         alt="{{example.text}}">
+    <div class="space20"></div>
+    <span class="d-inline-block" style="color: #606266; line-height: 1">{{example.text}}</span>
+  </a>
+</div>
+{% endfor %}

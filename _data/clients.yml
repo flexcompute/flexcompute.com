@@ -1,0 +1,134 @@
+data:
+  - name: "Johns Hopkins University "
+    enable: true
+    logo: "/assets/images/clients/university/Johns-Hopkins.png"
+    width: 170
+  - name: "Princeton University"
+    enable: true
+    logo: "/assets/images/clients/university/Princeton.png"
+    width: 163
+  - name: "Massachusettts Institude of Technology (MIT)"
+    enable: true
+    logo: "/assets/images/clients/university/MIT.png"
+    width: 97
+  - name: "Harvard University"
+    enable: true
+    logo: "/assets/images/clients/university/Harvard.png"
+    width: 170
+  - name: "Stanford University"
+    enable: true
+    logo: "/assets/images/clients/university/Stanford.png"
+    width: 140
+  - name: "University of Chicago"
+    enable: true
+    logo: "/assets/images/clients/university/Chicago.png"
+    width: 171
+  - name: "California Institute of Technology (CalTech)"
+    enable: true
+    logo: "/assets/images/clients/university/California-Institute-of-Technology.png"
+    width: 160
+  - name: "University of Wisconsin-Madison"
+    enable: true
+    logo: "/assets/images/clients/university/Wisconsin-Madison.png"
+    width: 160
+  - name: "University of California, Berkeley (UCB)"
+    enable: true
+    logo: "/assets/images/clients/university/California-Berkeley.png"
+    width: 150
+  - name: "University of California, Santa Barbara (UCSB)"
+    enable: true
+    logo: "/assets/images/clients/university/California-Santa-Barbara.png"
+    width: 120
+  - name: "University of Washington"
+    enable: true
+    logo: "/assets/images/clients/university/Washington.png"
+    width: 120
+  - name: "University of Maryland"
+    enable: true
+    logo: "/assets/images/clients/university/Maryland.png"
+    width: 170
+  - name: "University of Arizona"
+    enable: true
+    logo: "/assets/images/clients/university/Arizona.png"
+    width: 160
+  - name: "Trusted by Leading Companies<br>and Researchers Worldwide"
+    enable: true
+    type: 'txt'
+  - name: "University of Rochester"
+    enable: true
+    logo: "/assets/images/clients/university/Rochester.png"
+    width: 170
+  - name: "Rensselaer Institude of Technology (RIT)"
+    enable: true
+    logo: "/assets/images/clients/university/Rensselaer-Institude-of-Technology.png"
+    width: 160
+  - name: "Columbia University"
+    enable: true
+    logo: "/assets/images/clients/university/Columbia.png"
+    width: 170
+  - name: "University of Pennsylvania"
+    enable: true
+    logo: "/assets/images/clients/university/Pennsylvania.png"
+    width: 150
+  - name: "Northwestern University"
+    enable: true
+    logo: "/assets/images/clients/university/Northwestern.png"
+    width: 170
+  - name: "Brown University"
+    enable: true
+    logo: "/assets/images/clients/university/Brown.png"
+    width: 140
+  - name: "Karlsruhe Institute of Technology"
+    enable: true
+    logo: "/assets/images/clients/university/Karlsruhe-Institute-of-Technology.png"
+    width: 120
+  - name: "Chinese University of Hong Kong, Shenzhen"
+    enable: true
+    logo: "/assets/images/clients/university/Hong-Kong.png"
+    width: 170
+  - name: "University of Chinese Academy of Sciences"
+    enable: ture
+    logo: "/assets/images/clients/university/Academy-of-Sciences.png"
+    width: 170
+  - name: "Huazhong University of Science and Technology"
+    enable: true
+    logo: "/assets/images/clients/university/Science-and-Technology.png"
+    width: 100
+  - name: "Cornell University"
+    enable: true
+    logo: "/assets/images/clients/university/Cornell.png"
+    width: 170
+  - name: "Stony Brook University"
+    enable: true
+    logo: "/assets/images/clients/university/Stony-Brook.png"
+    width: 170
+  - name: "Regent University"
+    enable: true
+    logo: "/assets/images/clients/university/Regent.png"
+    width: 170
+  - name: 'KittyHawk'
+    enable: false
+    logo: "/assets/images/clients/minified/kittyhawk.png"
+    width: 170
+  - name: "Lumotive"
+    enable: false
+    logo: "/assets/images/clients/minified/lumotive.png"
+    width: 170
+  - name: 'Fonex'
+    enable: false
+    logo: "/assets/images/clients/minified/fonex.png"
+    width: 170
+  - name: "Birhle"
+    enable: false
+    logo: "/assets/images/clients/minified/birhle.png"
+    width: 130
+  - name: "Ayar Labs"
+    enable: false
+    logo: "/assets/images/clients/minified/ayarlabs.png"
+    width: 170
+  - name: "memQ"
+    enable: false
+    logo: "/assets/images/clients/minified/memq.png"
+    width: 140
+
+

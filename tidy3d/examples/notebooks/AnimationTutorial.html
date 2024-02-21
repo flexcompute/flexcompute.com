@@ -1,0 +1,1153 @@
+---
+author: Tom Chen
+custom_css:
+- learning-center/fdtd101
+- learning-center/menu
+- learning-center/home
+custom_font: font2
+description: This notebook demonstrates how to create FDTD animations in Tidy3D FDTD.
+layout: learning-center/example-library
+menu_config:
+  collapsed: true
+  selected: Tidy3D Python
+metadata:
+  category: Data Visualization and Postprocessing
+  enable_more_examples: false
+  more_examples:
+  - name: Performing visualization of simulation data
+    path: notebooks/VizData/
+  - name: Advanced monitor data manipulation and visualization
+    path: notebooks/XarrayTutorial/
+  - name: Performing near field to far field projections
+    path: notebooks/FieldProjections/
+  pagination:
+    next:
+      name: Performing near field to far field projections
+      path: notebooks/FieldProjections/
+    previous:
+      name: Advanced monitor data manipulation and visualization
+      path: notebooks/XarrayTutorial/
+  type: python-tutorial
+page_title: Creating FDTD animations
+source_link: https:/docs.flexcompute.com/projects/tidy3d/en/latest/_sources/notebooks/AnimationTutorial.ipynb
+tags:
+- animation
+- movie
+- Tidy3D
+- FDTD
+title: Creating FDTD Animations in Tidy3D | Flexcompute
+---
+
+
+<html lang="en">
+<head><meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="/assets/tidy3d/examples/css/example-notebook.css" rel="stylesheet"/><script>
+(function() {
+  function addWidgetsRenderer() {
+    var mimeElement = document.querySelector('script[type="application/vnd.jupyter.widget-view+json"]');
+    var scriptElement = document.createElement('script');
+    
+    var widgetRendererSrc = 'https://unpkg.com/@jupyter-widgets/html-manager@*/dist/embed-amd.js';
+    
+    var widgetState;
+
+    // Fallback for older version:
+    try {
+      widgetState = mimeElement && JSON.parse(mimeElement.innerHTML);
+
+      if (widgetState && (widgetState.version_major < 2 || !widgetState.version_major)) {
+        
+        var widgetRendererSrc = 'https://unpkg.com/@jupyter-js-widgets@*/dist/embed.js';
+        
+      }
+    } catch(e) {}
+
+    scriptElement.src = widgetRendererSrc;
+    document.body.appendChild(scriptElement);
+  }
+
+  document.addEventListener('DOMContentLoaded', addWidgetsRenderer);
+}());
+</script>
+
+
+
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS_CHTML-full,Safe"> </script>
+
+<script type="text/x-mathjax-config">
+    init_mathjax = function() {
+        if (window.MathJax) {
+        // MathJax loaded
+            MathJax.Hub.Config({
+                TeX: {
+                    equationNumbers: {
+                    autoNumber: "AMS",
+                    useLabelIds: true
+                    }
+                },
+                tex2jax: {
+                    inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+                    displayMath: [ ['$$','$$'], ["\\[","\\]"] ],
+                    processEscapes: true,
+                    processEnvironments: true
+                },
+                displayAlign: 'center',
+                CommonHTML: {
+                    linebreaks: {
+                    automatic: true
+                    }
+                }
+            });
+
+            MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
+        }
+    }
+    init_mathjax();
+    </script>
+<script type="module">
+  document.addEventListener("DOMContentLoaded", async () => {
+    const diagrams = document.querySelectorAll(".jp-Mermaid > pre.mermaid");
+    // do not load mermaidjs if not needed
+    if (!diagrams.length) {
+      return;
+    }
+    const mermaid = (await import("https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.7.0/mermaid.esm.min.mjs")).default;
+    const parser = new DOMParser();
+
+    mermaid.initialize({
+      maxTextSize: 100000,
+      maxEdges: 100000,
+      startOnLoad: false,
+      fontFamily: window
+        .getComputedStyle(document.body)
+        .getPropertyValue("--jp-ui-font-family"),
+      theme: document.querySelector("body[data-jp-theme-light='true']")
+        ? "default"
+        : "dark",
+    });
+
+    let _nextMermaidId = 0;
+
+    function makeMermaidImage(svg) {
+      const img = document.createElement("img");
+      const doc = parser.parseFromString(svg, "image/svg+xml");
+      const svgEl = doc.querySelector("svg");
+      const { maxWidth } = svgEl?.style || {};
+      const firstTitle = doc.querySelector("title");
+      const firstDesc = doc.querySelector("desc");
+
+      img.setAttribute("src", `data:image/svg+xml,${encodeURIComponent(svg)}`);
+      if (maxWidth) {
+        img.width = parseInt(maxWidth);
+      }
+      if (firstTitle) {
+        img.setAttribute("alt", firstTitle.textContent);
+      }
+      if (firstDesc) {
+        const caption = document.createElement("figcaption");
+        caption.className = "sr-only";
+        caption.textContent = firstDesc.textContent;
+        return [img, caption];
+      }
+      return [img];
+    }
+
+    async function makeMermaidError(text) {
+      let errorMessage = "";
+      try {
+        await mermaid.parse(text);
+      } catch (err) {
+        errorMessage = `${err}`;
+      }
+
+      const result = document.createElement("details");
+      result.className = 'jp-RenderedMermaid-Details';
+      const summary = document.createElement("summary");
+      summary.className = 'jp-RenderedMermaid-Summary';
+      const pre = document.createElement("pre");
+      const code = document.createElement("code");
+      code.innerText = text;
+      pre.appendChild(code);
+      summary.appendChild(pre);
+      result.appendChild(summary);
+
+      const warning = document.createElement("pre");
+      warning.innerText = errorMessage;
+      result.appendChild(warning);
+      return [result];
+    }
+
+    async function renderOneMarmaid(src) {
+      const id = `jp-mermaid-${_nextMermaidId++}`;
+      const parent = src.parentNode;
+      let raw = src.textContent.trim();
+      const el = document.createElement("div");
+      el.style.visibility = "hidden";
+      document.body.appendChild(el);
+      let results = null;
+      let output = null;
+      try {
+        let { svg } = await mermaid.render(id, raw, el);
+        svg = cleanMermaidSvg(svg);
+        results = makeMermaidImage(svg);
+        output = document.createElement("figure");
+        results.map(output.appendChild, output);
+      } catch (err) {
+        parent.classList.add("jp-mod-warning");
+        results = await makeMermaidError(raw);
+        output = results[0];
+      } finally {
+        el.remove();
+      }
+      parent.classList.add("jp-RenderedMermaid");
+      parent.appendChild(output);
+    }
+
+
+    /**
+     * Post-process to ensure mermaid diagrams contain only valid SVG and XHTML.
+     */
+    function cleanMermaidSvg(svg) {
+      return svg.replace(RE_VOID_ELEMENT, replaceVoidElement);
+    }
+
+
+    /**
+     * A regular expression for all void elements, which may include attributes and
+     * a slash.
+     *
+     * @see https://developer.mozilla.org/en-US/docs/Glossary/Void_element
+     *
+     * Of these, only `<br>` is generated by Mermaid in place of `\n`,
+     * but _any_ "malformed" tag will break the SVG rendering entirely.
+     */
+    const RE_VOID_ELEMENT =
+      /<\s*(area|base|br|col|embed|hr|img|input|link|meta|param|source|track|wbr)\s*([^>]*?)\s*>/gi;
+
+    /**
+     * Ensure a void element is closed with a slash, preserving any attributes.
+     */
+    function replaceVoidElement(match, tag, rest) {
+      rest = rest.trim();
+      if (!rest.endsWith('/')) {
+        rest = `${rest} /`;
+      }
+      return `<${tag} ${rest}>`;
+    }
+
+    void Promise.all([...diagrams].map(renderOneMarmaid));
+  });
+</script>
+
+</head>
+<body class="jp-Notebook" data-jp-theme-light="true" data-jp-theme-name="JupyterLab Light">
+<main>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=cf3355cf">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=8a694b9a">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>Animations are often created from FDTD simulations to provide a more intuitive understanding of the physical phenomena being modeled. These animations can visualize the evolution of the field distribution over time, showing wave propagation, interactions, and other dynamic effects that static images cannot adequately depict. This can help researchers and engineers better understand the results of their simulations, identify anomalies, and develop or refine their models. Additionally, these animations can serve as effective educational and communication tools, making complex concepts more accessible to non-experts.</p>
+<p>This tutorial demonstrates how to create an animation in a waveguide taper simulation and display the animation directly in a Jupyter Notebook.</p>
+<p>We also provide a conprehensive list of other tutorials such as <a href="https://www.flexcompute.com/tidy3d/examples/notebooks/BoundaryConditions/" target="_blank">how to define boundary conditions</a>, <a href="https://www.flexcompute.com/tidy3d/examples/notebooks/CustomFieldSource/" target="_blank">how to defining spatially-varying sources</a> and <a href="https://www.flexcompute.com/tidy3d/examples/notebooks/CustomMediumTutorial/" target="_blank">structures</a>, <a href="https://www.flexcompute.com/tidy3d/examples/notebooks/Dispersion/" target="_blank">how to model dispersive materials</a>, and <a href="https://www.flexcompute.com/tidy3d/examples/notebooks/VizSimulation/" target="_blank">how to visualize simulation setups</a> and <a href="https://www.flexcompute.com/tidy3d/examples/notebooks/VizData/" target="_blank">results</a>.</p>
+<p>If you are new to the finite-difference time-domain (FDTD) method, we highly recommend going through our <a href="https://www.flexcompute.com/tidy3d/learning-center/" target="_blank">FDTD101</a> tutorials.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=d51bc3f4">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[1]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">matplotlib.animation</span> <span class="k">as</span> <span class="nn">animation</span>
+<span class="kn">from</span> <span class="nn">IPython.display</span> <span class="kn">import</span> <span class="n">HTML</span>
+
+<span class="kn">import</span> <span class="nn">tidy3d</span> <span class="k">as</span> <span class="nn">td</span>
+<span class="kn">import</span> <span class="nn">tidy3d.web</span> <span class="k">as</span> <span class="nn">web</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=b5066bf3">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="Simulation-Setup">Simulation Setup<a class="anchor-link" href="#Simulation-Setup">¶</a></h2>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=c45ca575">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>For this demo, we simply simulate a linear waveguide taper. The simulation setup is directly borrowed from the <a href="https://develop.d3nzcgsw5oo0x1.amplifyapp.com/tidy3d/examples/notebooks/WaveguideSizeConverter/">waveguide size converter</a> case study notebook.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=e81e80a2">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[2]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">lda0</span> <span class="o">=</span> <span class="mf">1.55</span>  <span class="c1"># central wavelength</span>
+<span class="n">freq0</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">C_0</span> <span class="o">/</span> <span class="n">lda0</span>  <span class="c1"># central frequency</span>
+<span class="n">ldas</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">1.5</span><span class="p">,</span> <span class="mf">1.6</span><span class="p">,</span> <span class="mi">101</span><span class="p">)</span>  <span class="c1"># wavelength range</span>
+<span class="n">freqs</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">C_0</span> <span class="o">/</span> <span class="n">ldas</span>  <span class="c1"># frequency range</span>
+<span class="n">fwidth</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">freqs</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">freqs</span><span class="p">))</span>  <span class="c1"># width of the frequency distribution</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=f0118431">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[3]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">n_si</span> <span class="o">=</span> <span class="mf">3.48</span>  <span class="c1"># silicon refractive index</span>
+<span class="n">si</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">Medium</span><span class="p">(</span><span class="n">permittivity</span><span class="o">=</span><span class="n">n_si</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+
+<span class="n">n_sio2</span> <span class="o">=</span> <span class="mf">1.44</span>  <span class="c1"># silicon oxide refractive index</span>
+<span class="n">sio2</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">Medium</span><span class="p">(</span><span class="n">permittivity</span><span class="o">=</span><span class="n">n_sio2</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=8c1ece3c">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[4]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">w_in</span> <span class="o">=</span> <span class="mi">5</span>  <span class="c1"># input waveguide width</span>
+<span class="n">w_out</span> <span class="o">=</span> <span class="mf">0.45</span>  <span class="c1"># output waveguide width</span>
+<span class="n">t_wg</span> <span class="o">=</span> <span class="mf">0.11</span>  <span class="c1"># waveguide thickness</span>
+<span class="n">L_t</span> <span class="o">=</span> <span class="mi">10</span>
+<span class="n">inf_eff</span> <span class="o">=</span> <span class="mf">1e3</span>  <span class="c1"># effective infinity of the model</span>
+
+<span class="c1"># define the substrate structure</span>
+<span class="n">sub</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">Structure</span><span class="p">(</span>
+    <span class="n">geometry</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">Box</span><span class="o">.</span><span class="n">from_bounds</span><span class="p">(</span>
+        <span class="n">rmin</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="n">inf_eff</span><span class="p">,</span> <span class="o">-</span><span class="n">inf_eff</span><span class="p">,</span> <span class="o">-</span><span class="n">inf_eff</span><span class="p">),</span> <span class="n">rmax</span><span class="o">=</span><span class="p">(</span><span class="n">inf_eff</span><span class="p">,</span> <span class="n">inf_eff</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="p">),</span>
+    <span class="n">medium</span><span class="o">=</span><span class="n">sio2</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># vertices of the taper</span>
+<span class="n">vertices</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">[</span><span class="o">-</span><span class="n">inf_eff</span><span class="p">,</span> <span class="n">w_in</span> <span class="o">/</span> <span class="mi">2</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">w_in</span> <span class="o">/</span> <span class="mi">2</span><span class="p">],</span>
+    <span class="p">[</span><span class="n">L_t</span><span class="p">,</span> <span class="n">w_out</span> <span class="o">/</span> <span class="mi">2</span><span class="p">],</span>
+    <span class="p">[</span><span class="n">inf_eff</span><span class="p">,</span> <span class="n">w_out</span> <span class="o">/</span> <span class="mi">2</span><span class="p">],</span>
+    <span class="p">[</span><span class="n">inf_eff</span><span class="p">,</span> <span class="o">-</span><span class="n">w_out</span> <span class="o">/</span> <span class="mi">2</span><span class="p">],</span>
+    <span class="p">[</span><span class="n">L_t</span><span class="p">,</span> <span class="o">-</span><span class="n">w_out</span> <span class="o">/</span> <span class="mi">2</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="n">w_in</span> <span class="o">/</span> <span class="mi">2</span><span class="p">],</span>
+    <span class="p">[</span><span class="o">-</span><span class="n">inf_eff</span><span class="p">,</span> <span class="o">-</span><span class="n">w_in</span> <span class="o">/</span> <span class="mi">2</span><span class="p">],</span>
+<span class="p">]</span>
+
+<span class="c1"># construct the taper structure using a PolySlab</span>
+<span class="n">linear_taper</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">Structure</span><span class="p">(</span>
+    <span class="n">geometry</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">PolySlab</span><span class="p">(</span><span class="n">vertices</span><span class="o">=</span><span class="n">vertices</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">slab_bounds</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">t_wg</span><span class="p">)),</span>
+    <span class="n">medium</span><span class="o">=</span><span class="n">si</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=7e5e3470">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>To create an animation, we need to capture the frames at different time instances of the simulation. This can be done by using a <a href="https://docs.flexcompute.com/projects/tidy3d/en/latest/_autosummary/tidy3d.FieldTimeMonitor.html" target="_blank">FieldTimeMonitor</a>. Usually a FDTD simulation contains a large number of time steps and grid points. Recording the field at every time step and grid point will result in a large dataset. For the purpose of making animations, this is usually unnecessary. In this particular case, we will record one frame every 100 time steps, which is realized by setting <code>interval=100</code> in the <a href="https://docs.flexcompute.com/projects/tidy3d/en/latest/_autosummary/tidy3d.FieldTimeMonitor.html" target="_blank">FieldTimeMonitor</a>. Similarly, we set <code>interval_space=(3,3,1)</code> such that the field is recorded every 3 grid points. To further reduce dataset size, we will only be recording the z-component of the magnetic field.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=60ab5fcd">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[5]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">run_time</span> <span class="o">=</span> <span class="mf">5e-13</span>  <span class="c1"># run time of the simulation</span>
+
+<span class="c1"># define a mode source</span>
+<span class="n">mode_source</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">ModeSource</span><span class="p">(</span>
+    <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="n">lda0</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">t_wg</span> <span class="o">/</span> <span class="mi">2</span><span class="p">),</span>
+    <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">1.2</span> <span class="o">*</span> <span class="n">w_in</span><span class="p">,</span> <span class="mi">6</span> <span class="o">*</span> <span class="n">t_wg</span><span class="p">),</span>
+    <span class="n">source_time</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">GaussianPulse</span><span class="p">(</span><span class="n">freq0</span><span class="o">=</span><span class="n">freq0</span><span class="p">,</span> <span class="n">fwidth</span><span class="o">=</span><span class="n">fwidth</span><span class="p">),</span>
+    <span class="n">direction</span><span class="o">=</span><span class="s2">"+"</span><span class="p">,</span>
+    <span class="n">mode_spec</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">ModeSpec</span><span class="p">(</span><span class="n">num_modes</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">target_neff</span><span class="o">=</span><span class="n">n_si</span><span class="p">),</span>
+    <span class="n">mode_index</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># define a field time monitor to record animation frames</span>
+<span class="n">monitor</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">FieldTimeMonitor</span><span class="p">(</span>
+    <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">t_wg</span><span class="o">/</span><span class="mi">2</span><span class="p">),</span>
+    <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">td</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">td</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+    <span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s1">'Hz'</span><span class="p">],</span>
+    <span class="n">start</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="n">stop</span><span class="o">=</span><span class="n">run_time</span><span class="p">,</span>
+    <span class="n">interval</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+    <span class="n">interval_space</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span>
+    <span class="n">name</span><span class="o">=</span><span class="s1">'movie_monitor'</span>
+<span class="p">)</span>
+
+<span class="c1"># define simulation domain size</span>
+<span class="n">Lx</span> <span class="o">=</span> <span class="n">L_t</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">lda0</span>
+<span class="n">Ly</span> <span class="o">=</span> <span class="n">w_in</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">lda0</span>
+<span class="n">Lz</span> <span class="o">=</span> <span class="n">t_wg</span> <span class="o">+</span> <span class="mf">1.5</span> <span class="o">*</span> <span class="n">lda0</span>
+<span class="n">sim_size</span> <span class="o">=</span> <span class="p">(</span><span class="n">Lx</span><span class="p">,</span> <span class="n">Ly</span><span class="p">,</span> <span class="n">Lz</span><span class="p">)</span>
+
+<span class="c1"># define simulation</span>
+<span class="n">sim</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">Simulation</span><span class="p">(</span>
+    <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="n">L_t</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">t_wg</span><span class="p">),</span>
+    <span class="n">size</span><span class="o">=</span><span class="n">sim_size</span><span class="p">,</span>
+    <span class="n">grid_spec</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">GridSpec</span><span class="o">.</span><span class="n">auto</span><span class="p">(</span><span class="n">min_steps_per_wvl</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span> <span class="n">wavelength</span><span class="o">=</span><span class="n">lda0</span><span class="p">),</span>
+    <span class="n">structures</span><span class="o">=</span><span class="p">[</span><span class="n">linear_taper</span><span class="p">,</span> <span class="n">sub</span><span class="p">],</span>
+    <span class="n">sources</span><span class="o">=</span><span class="p">[</span><span class="n">mode_source</span><span class="p">],</span>
+    <span class="n">monitors</span><span class="o">=</span><span class="p">[</span><span class="n">monitor</span><span class="p">],</span>
+    <span class="n">run_time</span><span class="o">=</span><span class="n">run_time</span><span class="p">,</span>
+    <span class="n">boundary_spec</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">BoundarySpec</span><span class="o">.</span><span class="n">all_sides</span><span class="p">(</span>
+        <span class="n">boundary</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">PML</span><span class="p">()</span>
+    <span class="p">),</span>  <span class="c1"># pml is used in all boundaries</span>
+    <span class="n">symmetry</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+<span class="p">)</span>  <span class="c1"># a pec symmetry plane at y=0 can be used to reduce the grid points of the simulation</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">[10:05:08] </span><span style="color: #800000; text-decoration-color: #800000">WARNING: Default value for the field monitor          </span> <a href="file:///home/momchil/Drive/flexcompute/tidy3d-docs/tidy3d/tidy3d/components/monitor.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">monitor.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file:///home/momchil/Drive/flexcompute/tidy3d-docs/tidy3d/tidy3d/components/monitor.py#261" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">261</span></a>
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span><span style="color: #008000; text-decoration-color: #008000">'colocate'</span><span style="color: #800000; text-decoration-color: #800000"> setting has changed to </span><span style="color: #008000; text-decoration-color: #008000">'True'</span><span style="color: #800000; text-decoration-color: #800000"> in Tidy3D    </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">              </span>
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span><span style="color: #008080; text-decoration-color: #008080; font-weight: bold">2.4</span><span style="color: #800000; text-decoration-color: #800000">.</span><span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0</span><span style="color: #800000; text-decoration-color: #800000">. All field components will be colocated to the  </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">              </span>
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span><span style="color: #800000; text-decoration-color: #800000">grid boundaries. Set to </span><span style="color: #008000; text-decoration-color: #008000">'False'</span><span style="color: #800000; text-decoration-color: #800000"> to get the raw fields </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">              </span>
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span><span style="color: #800000; text-decoration-color: #800000">on the Yee grid instead.                              </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">              </span>
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=ae1091cb">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>Visualize the simulation.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=b72358aa">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[6]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">sim</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">z</span><span class="o">=</span><span class="n">t_wg</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedImage jp-OutputArea-output" tabindex="0">
+<img alt="No description has been provided for this image" class="" src="/assets/tidy3d/examples/image/AnimationTutorial/AnimationTutorial_1.png"/>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=881fb0c0">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>Submit the simulation.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=00d87870">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[7]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">sim_data</span> <span class="o">=</span> <span class="n">web</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">simulation</span><span class="o">=</span><span class="n">sim</span><span class="p">,</span> <span class="n">task_name</span><span class="o">=</span><span class="s2">"taper"</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="s2">"data/simulation_data.hdf5"</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span>Created task <span style="color: #008000; text-decoration-color: #008000">'taper'</span> with task_id                       <a href="file:///home/momchil/Drive/flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">webapi.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file:///home/momchil/Drive/flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py#188" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">188</span></a>
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span><span style="color: #008000; text-decoration-color: #008000">'fdve-8aa4d764-5d7d-4d1e-bc01-3ecde39a647bv1'</span>.          <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">             </span>
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span>View task using web UI at                               <a href="file:///home/momchil/Drive/flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">webapi.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file:///home/momchil/Drive/flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py#190" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">190</span></a>
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span><a href="https://tidy3d.simulation.cloud/workbench?taskId=fdve-8aa4d764-5d7d-4d1e-bc01-3ecde39a647bv1" target="_blank"><span style="color: #008000; text-decoration-color: #008000">'https://tidy3d.simulation.cloud/workbench?taskId=fdve-</span></a> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">             </span>
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span><a href="https://tidy3d.simulation.cloud/workbench?taskId=fdve-8aa4d764-5d7d-4d1e-bc01-3ecde39a647bv1" target="_blank"><span style="color: #008000; text-decoration-color: #008000">8aa4d764-5d7d-4d1e-bc01-3ecde39a647bv1'</span></a>.                <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">             </span>
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jupyter-widgets jp-OutputArea-output" id="d7118350-1420-49de-b0ce-f8e770ae135e" tabindex="0">
+<script type="text/javascript">
+var element = document.getElementById('d7118350-1420-49de-b0ce-f8e770ae135e');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id": "0b25163996ef405184ff84f3d11890f0", "version_major": 2, "version_minor": 0}
+</script>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">[10:05:14] </span>status = queued                                         <a href="file:///home/momchil/Drive/flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">webapi.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file:///home/momchil/Drive/flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py#361" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">361</span></a>
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jupyter-widgets jp-OutputArea-output" id="415a25a9-f09f-4c14-993b-112729248250" tabindex="0">
+<script type="text/javascript">
+var element = document.getElementById('415a25a9-f09f-4c14-993b-112729248250');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id": "6bbe2fb9843b41f8b12c9a066b607f1d", "version_major": 2, "version_minor": 0}
+</script>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">[10:05:23] </span>status = preprocess                                     <a href="file:///home/momchil/Drive/flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">webapi.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file:///home/momchil/Drive/flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py#355" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">355</span></a>
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">[10:05:27] </span>Maximum FlexCredit cost: <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0.025</span>. Use                     <a href="file:///home/momchil/Drive/flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">webapi.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file:///home/momchil/Drive/flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py#341" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">341</span></a>
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span><span style="color: #008000; text-decoration-color: #008000">'web.real_cost(task_id)'</span> to get the billed FlexCredit   <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">             </span>
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span>cost after a simulation run.                            <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">             </span>
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span>starting up solver                                      <a href="file:///home/momchil/Drive/flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">webapi.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file:///home/momchil/Drive/flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py#377" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">377</span></a>
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span>running solver                                          <a href="file:///home/momchil/Drive/flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">webapi.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file:///home/momchil/Drive/flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py#386" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">386</span></a>
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span>To cancel the simulation, use <span style="color: #008000; text-decoration-color: #008000">'web.abort(task_id)'</span> or   <a href="file:///home/momchil/Drive/flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">webapi.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file:///home/momchil/Drive/flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py#387" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">387</span></a>
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span><span style="color: #008000; text-decoration-color: #008000">'web.delete(task_id)'</span> or abort/delete the task in the   <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">             </span>
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span>web UI. Terminating the Python script will not stop the <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">             </span>
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span>job running on the cloud.                               <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">             </span>
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jupyter-widgets jp-OutputArea-output" id="11565286-194d-4fca-9e62-170039e0ad6c" tabindex="0">
+<script type="text/javascript">
+var element = document.getElementById('11565286-194d-4fca-9e62-170039e0ad6c');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id": "6e2867c6fb0e4dde93c852e5e70df90b", "version_major": 2, "version_minor": 0}
+</script>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">[10:05:40] </span>early shutoff detected, exiting.                        <a href="file:///home/momchil/Drive/flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">webapi.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file:///home/momchil/Drive/flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py#404" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">404</span></a>
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span>status = postprocess                                    <a href="file:///home/momchil/Drive/flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">webapi.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file:///home/momchil/Drive/flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py#419" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">419</span></a>
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jupyter-widgets jp-OutputArea-output" id="b5f1b7c6-7946-49ce-8f15-0a161a06ae3c" tabindex="0">
+<script type="text/javascript">
+var element = document.getElementById('b5f1b7c6-7946-49ce-8f15-0a161a06ae3c');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id": "e579534d73f646a9a68583e7c41478a1", "version_major": 2, "version_minor": 0}
+</script>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">[10:05:44] </span>status = success                                        <a href="file:///home/momchil/Drive/flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">webapi.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file:///home/momchil/Drive/flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py#426" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">426</span></a>
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jupyter-widgets jp-OutputArea-output" id="0c45607e-396d-470b-baa9-8f9bc837f3eb" tabindex="0">
+<script type="text/javascript">
+var element = document.getElementById('0c45607e-396d-470b-baa9-8f9bc837f3eb');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id": "67476b8e4e7f45af9cde1a98a77a8620", "version_major": 2, "version_minor": 0}
+</script>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">[10:05:46] </span>loading SimulationData from data/simulation_data.hdf5   <a href="file:///home/momchil/Drive/flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">webapi.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file:///home/momchil/Drive/flexcompute/tidy3d-docs/tidy3d/tidy3d/web/webapi.py#590" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">590</span></a>
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=3bb86ac7">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="Creating-Animation">Creating Animation<a class="anchor-link" href="#Creating-Animation">¶</a></h2>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=d907d1aa">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>Before creating the animation, we can inspect the field distribution at a few time instances.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=bf93d4ee">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[8]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="mi">5</span><span class="p">),</span> <span class="n">tight_layout</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="n">sim_data</span><span class="p">[</span><span class="s1">'movie_monitor'</span><span class="p">]</span><span class="o">.</span><span class="n">Hz</span><span class="o">.</span><span class="n">sel</span><span class="p">(</span><span class="n">t</span><span class="o">=</span><span class="mf">1e-13</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">'nearest'</span><span class="p">)</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="s1">'x'</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s1">'y'</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+<span class="n">sim_data</span><span class="p">[</span><span class="s1">'movie_monitor'</span><span class="p">]</span><span class="o">.</span><span class="n">Hz</span><span class="o">.</span><span class="n">sel</span><span class="p">(</span><span class="n">t</span><span class="o">=</span><span class="mf">2e-13</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">'nearest'</span><span class="p">)</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="s1">'x'</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s1">'y'</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedImage jp-OutputArea-output" tabindex="0">
+<img alt="No description has been provided for this image" class="" src="/assets/tidy3d/examples/image/AnimationTutorial/AnimationTutorial_2.png"/>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=498a0b61">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>To create an animation, we need to define a function that plots each frame. Then we use <code>matplotlib</code>'s <code>FuncAnimation</code> to create the animation. For this particular animation, we use 50 frames. For detail on <code>FuncAnimation</code>, please reference the <a href="https://matplotlib.org/stable/api/_as_gen/matplotlib.animation.FuncAnimation.html" target="_blank">documentation</a>.</p>
+<p>After the animation is created, we can display it directly in the notebook environment by using <code>HTML</code>. Here we see the incident pulse from the wider waveguide is squeezed into the narrower waveguide through the taper. Some field is reflected back or leaked out of the waveguide, leading to some insertion loss, which can be minimized by using a longer taper.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=56a8024b">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[9]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">t_end</span> <span class="o">=</span> <span class="n">sim_data</span><span class="p">[</span><span class="s1">'movie_monitor'</span><span class="p">]</span><span class="o">.</span><span class="n">Hz</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="s1">'t'</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>  <span class="c1"># end time of the animation</span>
+<span class="n">frames</span> <span class="o">=</span> <span class="mi">50</span>  <span class="c1"># number of frames</span>
+
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
+
+<span class="k">def</span> <span class="nf">animate</span><span class="p">(</span><span class="n">i</span><span class="p">):</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="n">t_end</span><span class="o">*</span><span class="n">i</span><span class="o">/</span><span class="n">frames</span> <span class="c1"># time at each frame</span>
+    <span class="n">sim_data</span><span class="p">[</span><span class="s1">'movie_monitor'</span><span class="p">]</span><span class="o">.</span><span class="n">Hz</span><span class="o">.</span><span class="n">sel</span><span class="p">(</span><span class="n">t</span><span class="o">=</span><span class="n">t</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">'nearest'</span><span class="p">)</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="s1">'x'</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s1">'y'</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=-</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">add_colorbar</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">'seismic'</span><span class="p">)</span>
+
+<span class="c1"># create animation</span>
+<span class="n">ani</span> <span class="o">=</span> <span class="n">animation</span><span class="o">.</span><span class="n">FuncAnimation</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="n">animate</span><span class="p">,</span> <span class="n">frames</span><span class="o">=</span><span class="n">frames</span><span class="p">);</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+<span class="c1"># display the animation</span>
+<span class="n">HTML</span><span class="p">(</span><span class="n">ani</span><span class="o">.</span><span class="n">to_jshtml</span><span class="p">())</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child jp-OutputArea-executeResult">
+<div class="jp-OutputPrompt jp-OutputArea-prompt">[9]:</div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/html" tabindex="0">
+<link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css" rel="stylesheet"/>
+<script language="javascript">
+  function isInternetExplorer() {
+    ua = navigator.userAgent;
+    /* MSIE used to detect old browsers and Trident used to newer ones*/
+    return ua.indexOf("MSIE ") > -1 || ua.indexOf("Trident/") > -1;
+  }
+
+  /* Define the Animation class */
+  function Animation(frames, img_id, slider_id, interval, loop_select_id){
+    this.img_id = img_id;
+    this.slider_id = slider_id;
+    this.loop_select_id = loop_select_id;
+    this.interval = interval;
+    this.current_frame = 0;
+    this.direction = 0;
+    this.timer = null;
+    this.frames = new Array(frames.length);
+
+    for (var i=0; i<frames.length; i++)
+    {
+     this.frames[i] = new Image();
+     this.frames[i].src = frames[i];
+    }
+    var slider = document.getElementById(this.slider_id);
+    slider.max = this.frames.length - 1;
+    if (isInternetExplorer()) {
+        // switch from oninput to onchange because IE <= 11 does not conform
+        // with W3C specification. It ignores oninput and onchange behaves
+        // like oninput. In contrast, Microsoft Edge behaves correctly.
+        slider.setAttribute('onchange', slider.getAttribute('oninput'));
+        slider.setAttribute('oninput', null);
+    }
+    this.set_frame(this.current_frame);
+  }
+
+  Animation.prototype.get_loop_state = function(){
+    var button_group = document[this.loop_select_id].state;
+    for (var i = 0; i < button_group.length; i++) {
+        var button = button_group[i];
+        if (button.checked) {
+            return button.value;
+        }
+    }
+    return undefined;
+  }
+
+  Animation.prototype.set_frame = function(frame){
+    this.current_frame = frame;
+    document.getElementById(this.img_id).src =
+            this.frames[this.current_frame].src;
+    document.getElementById(this.slider_id).value = this.current_frame;
+  }
+
+  Animation.prototype.next_frame = function()
+  {
+    this.set_frame(Math.min(this.frames.length - 1, this.current_frame + 1));
+  }
+
+  Animation.prototype.previous_frame = function()
+  {
+    this.set_frame(Math.max(0, this.current_frame - 1));
+  }
+
+  Animation.prototype.first_frame = function()
+  {
+    this.set_frame(0);
+  }
+
+  Animation.prototype.last_frame = function()
+  {
+    this.set_frame(this.frames.length - 1);
+  }
+
+  Animation.prototype.slower = function()
+  {
+    this.interval /= 0.7;
+    if(this.direction > 0){this.play_animation();}
+    else if(this.direction < 0){this.reverse_animation();}
+  }
+
+  Animation.prototype.faster = function()
+  {
+    this.interval *= 0.7;
+    if(this.direction > 0){this.play_animation();}
+    else if(this.direction < 0){this.reverse_animation();}
+  }
+
+  Animation.prototype.anim_step_forward = function()
+  {
+    this.current_frame += 1;
+    if(this.current_frame < this.frames.length){
+      this.set_frame(this.current_frame);
+    }else{
+      var loop_state = this.get_loop_state();
+      if(loop_state == "loop"){
+        this.first_frame();
+      }else if(loop_state == "reflect"){
+        this.last_frame();
+        this.reverse_animation();
+      }else{
+        this.pause_animation();
+        this.last_frame();
+      }
+    }
+  }
+
+  Animation.prototype.anim_step_reverse = function()
+  {
+    this.current_frame -= 1;
+    if(this.current_frame >= 0){
+      this.set_frame(this.current_frame);
+    }else{
+      var loop_state = this.get_loop_state();
+      if(loop_state == "loop"){
+        this.last_frame();
+      }else if(loop_state == "reflect"){
+        this.first_frame();
+        this.play_animation();
+      }else{
+        this.pause_animation();
+        this.first_frame();
+      }
+    }
+  }
+
+  Animation.prototype.pause_animation = function()
+  {
+    this.direction = 0;
+    if (this.timer){
+      clearInterval(this.timer);
+      this.timer = null;
+    }
+  }
+
+  Animation.prototype.play_animation = function()
+  {
+    this.pause_animation();
+    this.direction = 1;
+    var t = this;
+    if (!this.timer) this.timer = setInterval(function() {
+        t.anim_step_forward();
+    }, this.interval);
+  }
+
+  Animation.prototype.reverse_animation = function()
+  {
+    this.pause_animation();
+    this.direction = -1;
+    var t = this;
+    if (!this.timer) this.timer = setInterval(function() {
+        t.anim_step_reverse();
+    }, this.interval);
+  }
+</script>
+<style>
+.animation {
+    display: inline-block;
+    text-align: center;
+}
+input[type=range].anim-slider {
+    width: 374px;
+    margin-left: auto;
+    margin-right: auto;
+}
+.anim-buttons {
+    margin: 8px 0px;
+}
+.anim-buttons button {
+    padding: 0;
+    width: 36px;
+}
+.anim-state label {
+    margin-right: 8px;
+}
+.anim-state input {
+    margin: 0;
+    vertical-align: middle;
+}
+</style>
+<div class="animation">
+<img alt="No description has been provided for this image" id="_anim_img0b73d7513e2c43e19ee1a366b42d4b79"/>
+<div class="anim-controls">
+<input class="anim-slider" id="_anim_slider0b73d7513e2c43e19ee1a366b42d4b79" max="1" min="0" name="points" oninput="anim0b73d7513e2c43e19ee1a366b42d4b79.set_frame(parseInt(this.value));" step="1" type="range" value="0"/>
+<div class="anim-buttons">
+<button aria-label="Decrease speed" onclick="anim0b73d7513e2c43e19ee1a366b42d4b79.slower()" title="Decrease speed">
+<i class="fa fa-minus"></i></button>
+<button aria-label="First frame" onclick="anim0b73d7513e2c43e19ee1a366b42d4b79.first_frame()" title="First frame">
+<i class="fa fa-fast-backward"></i></button>
+<button aria-label="Previous frame" onclick="anim0b73d7513e2c43e19ee1a366b42d4b79.previous_frame()" title="Previous frame">
+<i class="fa fa-step-backward"></i></button>
+<button aria-label="Play backwards" onclick="anim0b73d7513e2c43e19ee1a366b42d4b79.reverse_animation()" title="Play backwards">
+<i class="fa fa-play fa-flip-horizontal"></i></button>
+<button aria-label="Pause" onclick="anim0b73d7513e2c43e19ee1a366b42d4b79.pause_animation()" title="Pause">
+<i class="fa fa-pause"></i></button>
+<button aria-label="Play" onclick="anim0b73d7513e2c43e19ee1a366b42d4b79.play_animation()" title="Play">
+<i class="fa fa-play"></i></button>
+<button aria-label="Next frame" onclick="anim0b73d7513e2c43e19ee1a366b42d4b79.next_frame()" title="Next frame">
+<i class="fa fa-step-forward"></i></button>
+<button aria-label="Last frame" onclick="anim0b73d7513e2c43e19ee1a366b42d4b79.last_frame()" title="Last frame">
+<i class="fa fa-fast-forward"></i></button>
+<button aria-label="Increase speed" onclick="anim0b73d7513e2c43e19ee1a366b42d4b79.faster()" title="Increase speed">
+<i class="fa fa-plus"></i></button>
+</div>
+<form action="#n" aria-label="Repetition mode" class="anim-state" name="_anim_loop_select0b73d7513e2c43e19ee1a366b42d4b79" title="Repetition mode">
+<input id="_anim_radio1_0b73d7513e2c43e19ee1a366b42d4b79" name="state" type="radio" value="once"/>
+<label for="_anim_radio1_0b73d7513e2c43e19ee1a366b42d4b79">Once</label>
+<input checked="" id="_anim_radio2_0b73d7513e2c43e19ee1a366b42d4b79" name="state" type="radio" value="loop"/>
+<label for="_anim_radio2_0b73d7513e2c43e19ee1a366b42d4b79">Loop</label>
+<input id="_anim_radio3_0b73d7513e2c43e19ee1a366b42d4b79" name="state" type="radio" value="reflect"/>
+<label for="_anim_radio3_0b73d7513e2c43e19ee1a366b42d4b79">Reflect</label>
+</form>
+</div>
+</div>
+<script language="javascript">
+  /* Instantiate the Animation class. */
+  /* The IDs given should match those used in the template above. */
+  (function() {
+    var img_id = "_anim_img0b73d7513e2c43e19ee1a366b42d4b79";
+    var slider_id = "_anim_slider0b73d7513e2c43e19ee1a366b42d4b79";
+    var loop_select_id = "_anim_loop_select0b73d7513e2c43e19ee1a366b42d4b79";
+    var frames = new Array(50);
+    
+  frames[0] = "/assets/tidy3d/examples/image/AnimationTutorial_extra/AnimationTutorial_extra_1.png"
+  frames[1] = "/assets/tidy3d/examples/image/AnimationTutorial_extra/AnimationTutorial_extra_2.png"
+  frames[2] = "/assets/tidy3d/examples/image/AnimationTutorial_extra/AnimationTutorial_extra_3.png"
+  frames[3] = "/assets/tidy3d/examples/image/AnimationTutorial_extra/AnimationTutorial_extra_4.png"
+  frames[4] = "/assets/tidy3d/examples/image/AnimationTutorial_extra/AnimationTutorial_extra_5.png"
+  frames[5] = "/assets/tidy3d/examples/image/AnimationTutorial_extra/AnimationTutorial_extra_6.png"
+  frames[6] = "/assets/tidy3d/examples/image/AnimationTutorial_extra/AnimationTutorial_extra_7.png"
+  frames[7] = "/assets/tidy3d/examples/image/AnimationTutorial_extra/AnimationTutorial_extra_8.png"
+  frames[8] = "/assets/tidy3d/examples/image/AnimationTutorial_extra/AnimationTutorial_extra_9.png"
+  frames[9] = "/assets/tidy3d/examples/image/AnimationTutorial_extra/AnimationTutorial_extra_10.png"
+  frames[10] = "/assets/tidy3d/examples/image/AnimationTutorial_extra/AnimationTutorial_extra_11.png"
+  frames[11] = "/assets/tidy3d/examples/image/AnimationTutorial_extra/AnimationTutorial_extra_12.png"
+  frames[12] = "/assets/tidy3d/examples/image/AnimationTutorial_extra/AnimationTutorial_extra_13.png"
+  frames[13] = "/assets/tidy3d/examples/image/AnimationTutorial_extra/AnimationTutorial_extra_14.png"
+  frames[14] = "/assets/tidy3d/examples/image/AnimationTutorial_extra/AnimationTutorial_extra_15.png"
+  frames[15] = "/assets/tidy3d/examples/image/AnimationTutorial_extra/AnimationTutorial_extra_16.png"
+  frames[16] = "/assets/tidy3d/examples/image/AnimationTutorial_extra/AnimationTutorial_extra_17.png"
+  frames[17] = "/assets/tidy3d/examples/image/AnimationTutorial_extra/AnimationTutorial_extra_18.png"
+  frames[18] = "/assets/tidy3d/examples/image/AnimationTutorial_extra/AnimationTutorial_extra_19.png"
+  frames[19] = "/assets/tidy3d/examples/image/AnimationTutorial_extra/AnimationTutorial_extra_20.png"
+  frames[20] = "/assets/tidy3d/examples/image/AnimationTutorial_extra/AnimationTutorial_extra_21.png"
+  frames[21] = "/assets/tidy3d/examples/image/AnimationTutorial_extra/AnimationTutorial_extra_22.png"
+  frames[22] = "/assets/tidy3d/examples/image/AnimationTutorial_extra/AnimationTutorial_extra_23.png"
+  frames[23] = "/assets/tidy3d/examples/image/AnimationTutorial_extra/AnimationTutorial_extra_24.png"
+  frames[24] = "/assets/tidy3d/examples/image/AnimationTutorial_extra/AnimationTutorial_extra_25.png"
+  frames[25] = "/assets/tidy3d/examples/image/AnimationTutorial_extra/AnimationTutorial_extra_26.png"
+  frames[26] = "/assets/tidy3d/examples/image/AnimationTutorial_extra/AnimationTutorial_extra_27.png"
+  frames[27] = "/assets/tidy3d/examples/image/AnimationTutorial_extra/AnimationTutorial_extra_28.png"
+  frames[28] = "/assets/tidy3d/examples/image/AnimationTutorial_extra/AnimationTutorial_extra_29.png"
+  frames[29] = "/assets/tidy3d/examples/image/AnimationTutorial_extra/AnimationTutorial_extra_30.png"
+  frames[30] = "/assets/tidy3d/examples/image/AnimationTutorial_extra/AnimationTutorial_extra_31.png"
+  frames[31] = "/assets/tidy3d/examples/image/AnimationTutorial_extra/AnimationTutorial_extra_32.png"
+  frames[32] = "/assets/tidy3d/examples/image/AnimationTutorial_extra/AnimationTutorial_extra_33.png"
+  frames[33] = "/assets/tidy3d/examples/image/AnimationTutorial_extra/AnimationTutorial_extra_34.png"
+  frames[34] = "/assets/tidy3d/examples/image/AnimationTutorial_extra/AnimationTutorial_extra_35.png"
+  frames[35] = "/assets/tidy3d/examples/image/AnimationTutorial_extra/AnimationTutorial_extra_36.png"
+  frames[36] = "/assets/tidy3d/examples/image/AnimationTutorial_extra/AnimationTutorial_extra_37.png"
+  frames[37] = "/assets/tidy3d/examples/image/AnimationTutorial_extra/AnimationTutorial_extra_38.png"
+  frames[38] = "/assets/tidy3d/examples/image/AnimationTutorial_extra/AnimationTutorial_extra_39.png"
+  frames[39] = "/assets/tidy3d/examples/image/AnimationTutorial_extra/AnimationTutorial_extra_40.png"
+  frames[40] = "/assets/tidy3d/examples/image/AnimationTutorial_extra/AnimationTutorial_extra_41.png"
+  frames[41] = "/assets/tidy3d/examples/image/AnimationTutorial_extra/AnimationTutorial_extra_42.png"
+  frames[42] = "/assets/tidy3d/examples/image/AnimationTutorial_extra/AnimationTutorial_extra_43.png"
+  frames[43] = "/assets/tidy3d/examples/image/AnimationTutorial_extra/AnimationTutorial_extra_44.png"
+  frames[44] = "/assets/tidy3d/examples/image/AnimationTutorial_extra/AnimationTutorial_extra_45.png"
+  frames[45] = "/assets/tidy3d/examples/image/AnimationTutorial_extra/AnimationTutorial_extra_46.png"
+  frames[46] = "/assets/tidy3d/examples/image/AnimationTutorial_extra/AnimationTutorial_extra_47.png"
+  frames[47] = "/assets/tidy3d/examples/image/AnimationTutorial_extra/AnimationTutorial_extra_48.png"
+  frames[48] = "/assets/tidy3d/examples/image/AnimationTutorial_extra/AnimationTutorial_extra_49.png"
+  frames[49] = "/assets/tidy3d/examples/image/AnimationTutorial_extra/AnimationTutorial_extra_50.png"
+
+
+    /* set a timeout to make sure all the above elements are created before
+       the object is initialized. */
+    setTimeout(function() {
+        anim0b73d7513e2c43e19ee1a366b42d4b79 = new Animation(frames, img_id, slider_id, 200.0,
+                                 loop_select_id);
+    }, 0);
+  })()
+</script>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=e1018b96">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[ ]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body>
+<script type="application/vnd.jupyter.widget-state+json">
+{"state": {"0b25163996ef405184ff84f3d11890f0": {"model_module": "@jupyter-widgets\/output", "model_module_version": "1.0.0", "model_name": "OutputModel", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets\/output", "_model_module_version": "1.0.0", "_model_name": "OutputModel", "_view_count": null, "_view_module": "@jupyter-widgets\/output", "_view_module_version": "1.0.0", "_view_name": "OutputView", "layout": "IPY_MODEL_7867589bc52740fe8b8bf75006788d5c", "msg_id": "", "outputs": [{"data": {"text\/html": "<pre style=\"white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace\"><span style=\"color: #800000; text-decoration-color: #800000; font-weight: bold\">\u2191<\/span> <span style=\"color: #000080; text-decoration-color: #000080; font-weight: bold\">simulation.hdf5.gz<\/span> <span style=\"color: #729c1f; text-decoration-color: #729c1f\">\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501<\/span> <span style=\"color: #800080; text-decoration-color: #800080\">100.0%<\/span> \u2022 <span style=\"color: #008000; text-decoration-color: #008000\">1.5\/1.5 kB<\/span> \u2022 <span style=\"color: #800000; text-decoration-color: #800000\">?<\/span> \u2022 <span style=\"color: #008080; text-decoration-color: #008080\">0:00:00<\/span>\n<\/pre>\n", "text\/plain": "\u001b[1;31m\u2191\u001b[0m \u001b[1;34msimulation.hdf5.gz\u001b[0m \u001b[38;2;114;156;31m\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u001b[0m \u001b[35m100.0%\u001b[0m \u2022 \u001b[32m1.5\/1.5 kB\u001b[0m \u2022 \u001b[31m?\u001b[0m \u2022 \u001b[36m0:00:00\u001b[0m\n"}, "metadata": {}, "output_type": "display_data"}], "tabbable": null, "tooltip": null}}, "30537401f9eb4c94821059e82a0d88f9": {"model_module": "@jupyter-widgets\/base", "model_module_version": "2.0.0", "model_name": "LayoutModel", "state": {"_model_module": "@jupyter-widgets\/base", "_model_module_version": "2.0.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets\/base", "_view_module_version": "2.0.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border_bottom": null, "border_left": null, "border_right": null, "border_top": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}, "32b1dc55a2934d1f866d924ab1f6a942": {"model_module": "@jupyter-widgets\/base", "model_module_version": "2.0.0", "model_name": "LayoutModel", "state": {"_model_module": "@jupyter-widgets\/base", "_model_module_version": "2.0.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets\/base", "_view_module_version": "2.0.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border_bottom": null, "border_left": null, "border_right": null, "border_top": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}, "5bdcc30b1ad843db9f82b2e150738b5c": {"model_module": "@jupyter-widgets\/base", "model_module_version": "2.0.0", "model_name": "LayoutModel", "state": {"_model_module": "@jupyter-widgets\/base", "_model_module_version": "2.0.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets\/base", "_view_module_version": "2.0.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border_bottom": null, "border_left": null, "border_right": null, "border_top": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}, "67476b8e4e7f45af9cde1a98a77a8620": {"model_module": "@jupyter-widgets\/output", "model_module_version": "1.0.0", "model_name": "OutputModel", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets\/output", "_model_module_version": "1.0.0", "_model_name": "OutputModel", "_view_count": null, "_view_module": "@jupyter-widgets\/output", "_view_module_version": "1.0.0", "_view_name": "OutputView", "layout": "IPY_MODEL_faef8bac8c4742eba5ecce53f1e0b9f0", "msg_id": "", "outputs": [{"data": {"text\/html": "<pre style=\"white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace\"><span style=\"color: #008000; text-decoration-color: #008000; font-weight: bold\">\u2193<\/span> <span style=\"color: #000080; text-decoration-color: #000080; font-weight: bold\">monitor_data.hdf5<\/span> <span style=\"color: #729c1f; text-decoration-color: #729c1f\">\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501<\/span> <span style=\"color: #800080; text-decoration-color: #800080\">100.0%<\/span> \u2022 <span style=\"color: #008000; text-decoration-color: #008000\">4.0\/4.0 MB<\/span> \u2022 <span style=\"color: #800000; text-decoration-color: #800000\">28.8 MB\/s<\/span> \u2022 <span style=\"color: #008080; text-decoration-color: #008080\">0:00:00<\/span>\n<\/pre>\n", "text\/plain": "\u001b[1;32m\u2193\u001b[0m \u001b[1;34mmonitor_data.hdf5\u001b[0m \u001b[38;2;114;156;31m\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u001b[0m \u001b[35m100.0%\u001b[0m \u2022 \u001b[32m4.0\/4.0 MB\u001b[0m \u2022 \u001b[31m28.8 MB\/s\u001b[0m \u2022 \u001b[36m0:00:00\u001b[0m\n"}, "metadata": {}, "output_type": "display_data"}], "tabbable": null, "tooltip": null}}, "6bbe2fb9843b41f8b12c9a066b607f1d": {"model_module": "@jupyter-widgets\/output", "model_module_version": "1.0.0", "model_name": "OutputModel", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets\/output", "_model_module_version": "1.0.0", "_model_name": "OutputModel", "_view_count": null, "_view_module": "@jupyter-widgets\/output", "_view_module_version": "1.0.0", "_view_name": "OutputView", "layout": "IPY_MODEL_30537401f9eb4c94821059e82a0d88f9", "msg_id": "", "outputs": [{"data": {"text\/html": "<pre style=\"white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace\"><span style=\"color: #008000; text-decoration-color: #008000\">\ud83d\udeb6 <\/span> <span style=\"color: #008000; text-decoration-color: #008000; font-weight: bold\">Starting 'taper'...<\/span>\n<\/pre>\n", "text\/plain": "\u001b[32m\ud83d\udeb6 \u001b[0m \u001b[1;32mStarting 'taper'...\u001b[0m\n"}, "metadata": {}, "output_type": "display_data"}], "tabbable": null, "tooltip": null}}, "6e2867c6fb0e4dde93c852e5e70df90b": {"model_module": "@jupyter-widgets\/output", "model_module_version": "1.0.0", "model_name": "OutputModel", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets\/output", "_model_module_version": "1.0.0", "_model_name": "OutputModel", "_view_count": null, "_view_module": "@jupyter-widgets\/output", "_view_module_version": "1.0.0", "_view_name": "OutputView", "layout": "IPY_MODEL_32b1dc55a2934d1f866d924ab1f6a942", "msg_id": "", "outputs": [{"data": {"text\/html": "<pre style=\"white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace\">solver progress (field decay = 5.18e-06) <span style=\"color: #729c1f; text-decoration-color: #729c1f\">\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501<\/span> <span style=\"color: #800080; text-decoration-color: #800080\">100%<\/span> <span style=\"color: #008080; text-decoration-color: #008080\">0:00:00<\/span>\n<\/pre>\n", "text\/plain": "solver progress (field decay = 5.18e-06) \u001b[38;2;114;156;31m\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u001b[0m \u001b[35m100%\u001b[0m \u001b[36m0:00:00\u001b[0m\n"}, "metadata": {}, "output_type": "display_data"}], "tabbable": null, "tooltip": null}}, "7867589bc52740fe8b8bf75006788d5c": {"model_module": "@jupyter-widgets\/base", "model_module_version": "2.0.0", "model_name": "LayoutModel", "state": {"_model_module": "@jupyter-widgets\/base", "_model_module_version": "2.0.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets\/base", "_view_module_version": "2.0.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border_bottom": null, "border_left": null, "border_right": null, "border_top": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}, "e579534d73f646a9a68583e7c41478a1": {"model_module": "@jupyter-widgets\/output", "model_module_version": "1.0.0", "model_name": "OutputModel", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets\/output", "_model_module_version": "1.0.0", "_model_name": "OutputModel", "_view_count": null, "_view_module": "@jupyter-widgets\/output", "_view_module_version": "1.0.0", "_view_name": "OutputView", "layout": "IPY_MODEL_5bdcc30b1ad843db9f82b2e150738b5c", "msg_id": "", "outputs": [{"data": {"text\/html": "<pre style=\"white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace\"><span style=\"color: #008000; text-decoration-color: #008000\">\ud83d\udeb6 <\/span> <span style=\"color: #008000; text-decoration-color: #008000; font-weight: bold\">Finishing 'taper'...<\/span>\n<\/pre>\n", "text\/plain": "\u001b[32m\ud83d\udeb6 \u001b[0m \u001b[1;32mFinishing 'taper'...\u001b[0m\n"}, "metadata": {}, "output_type": "display_data"}], "tabbable": null, "tooltip": null}}, "faef8bac8c4742eba5ecce53f1e0b9f0": {"model_module": "@jupyter-widgets\/base", "model_module_version": "2.0.0", "model_name": "LayoutModel", "state": {"_model_module": "@jupyter-widgets\/base", "_model_module_version": "2.0.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets\/base", "_view_module_version": "2.0.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border_bottom": null, "border_left": null, "border_right": null, "border_top": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}}, "version_major": 2, "version_minor": 0}
+</script>
+</html>

@@ -1,0 +1,255 @@
+---
+layout: default
+title: "Free FDTD Licenses for Students and Instructors: Tidy3D | Flexcompute"
+custom_font: font2
+custom_css:
+  - educational-programs
+  - unit-css
+description: Earn free credits for FDTD simulations and enjoy significant discounts upon purchase.
+tags:
+  - free fdtd licenses
+  - free fdtd for students
+  - free fdtd for research
+  - fdtd education plan
+  - free fdtd
+  - fdtd low price
+  - FDTD
+  - FDTD software
+  - FDTD lecture
+  - Free FDTD license
+  - FDTD student
+  - FDTD professor
+  - FDTD Python
+  - Tidy3D
+  - Educational program
+  - education licenses
+  - teaching program
+
+author: Flexcompute
+hero_section:
+  enable: true
+  title: Educational Licenses
+  sub_title: "We have a strong commitment in supporting academic research and education of the next generation of scientists and engineers. Apply now to access high performance computing through a simple API!"
+  logo: "/assets/svg-icon/tidy3d-logo.svg"
+  bright_spot:
+    - text: "Cloud-based solver"
+    - text: "No special hardware needed"
+    - text: "100 - 1000x Larger"
+    - text: "10 - 100x Faster"
+    - text: "Python scripting"
+    - text: "Graphical user interface"
+    - text: "First-class support"
+    - text: "Easy to share and collaborate"
+
+teaching_section:
+  enable: true
+  title: Teaching
+  image: /assets/images/product/tidy3D/tidy3d-using.png
+  btn:
+    enable: true
+    text: Apply
+    id: "__pg_tidy3d-educational-license_teaching_apply_btn"
+    link: "/tidy3d/educational-licenses/teaching-program/"
+    target: "_self"
+  list:
+    - text: "FREE licenses for instructors and students"
+    - text: "Set up and run FDTD simulations from anywhere"
+    - text: "No need for complex license management systems"
+    - text: "Case studies, tutorials, and lectures are available in our <a class='color-primary-hover' id='__pg_tidy3d-educational-license_teaching_learning-center_link' href='/tidy3d/learning-center'>Learning Center</a>"
+    - text: "Ideal to STEM courses in Physics, Electromagnetics, Optics, Photonics, or related fields (online courses and workshops included)"
+
+education_section:
+  enable: true
+  title: Education
+  btn:
+    enable: true
+    text: Apply
+    id: "__pg_tidy3d-educational-license_teaching_apply_btn"
+    link: "https://tidy3d.simulation.cloud/account?tab=plan"
+    target: "_blank"
+  list:
+    - text: "Earn free credits every month to use Tidy3D"
+    - text: "Purchase licenses and additional credits at deeply discounted rates"
+    - text: "Boost academic research by orders of magnitude at your university"
+    - text: "Perform fast and accurate simulations of large electromagnetic devices"
+    - text: "Easily model complex 3D structures, set up parameter sweeps, optimizations, and inverse designs"
+  customer:
+    name: Yale University
+    said: "It’s amazing how fast the Flexcompute numerical solver runs,” she said. “Some simulations that we expect would take days to do, it can do in just 30 minutes. This allows us to simulate many different random configurations, different system sizes, and different structural parameters to see whether we can get three-dimensional localization of light.”"
+    link:
+      address: https://physics.yale.edu/news/hui-cao-trapped-waves-researchers-resolve-longstanding-debate
+      id: "__pg_tidy3d-educational-license_education_yale-university_ready-more_btn"
+      target: "_blank"
+    logo: "/assets/images/clients/university-badge/yale-university.png"
+  education_types:
+    - name: Education
+      type: Individual
+      feature_list:
+        - text: "10 FlexCredits every month for free"
+    - name: Education Plus
+      type: Individual
+      description: "Everything in Education Plus, and:"
+      feature_list:
+        - text: Tidy3D 365
+          list:
+            - text: "20 Simulations per day for 365 days"
+            - text: "Maximum size: 100 million grid"
+            - text: "Maximum time steps: 50,000"
+            - text: "No concurrent runs"
+        - text: Purchase additional FlexCredits
+    - name: Education Group
+      type: Team
+      description: "Everything in Education Group, and:"
+      feature_list:
+        - text: "1000 FlexCredits shared by the group"
+        - text: "Up to 10 Education Plus users"
+        - text: "Advanced group features including"
+          list:
+            - text: "User management"
+            - text: "License management"
+            - text: "Data management and collaboration"
+---
+{% include header.html extra_class="absolute transparent" logo_class="logo fc-logo" container_class="container" %}
+<div class="wrapper bg-opacity-default">
+  <div class="container inner pt-100 pt-md-10 pb-0">
+    {%if page.hero_section.enable%}
+    {%assign hero_section = page.hero_section%}
+    {% if hero_section.title %}
+    <h1 class="font-size-32 color-dark-3 line-height-56">{{hero_section.title}}</h1>
+    {%endif%}
+    {% if hero_section.sub_title %}
+    <p class="color-dark-5 font-size-20 line-height-29 mb-10">{{hero_section.sub_title}}</p>
+    {%endif%}
+    {%if hero_section.bright_spot %}
+    <div class="shadow-box background-linear-white bright-spot-wrapper d-flex align-items-center p-20 column-gap-32">
+      <div class="d-flex bright-spot row-gap-8 column-gap-32 flex-wrap">
+        {%for item in hero_section.bright_spot %}
+        <span class="color-dark-gray">
+          <i class="icofont-check-alt color-dark font-size-20"></i>
+          {{item.text}}
+        </span>
+        {%endfor%}
+      </div>
+      <div class="tidy3d-logo">
+        {% svg "{{ site.baseurl }}{{hero_section.logo}}" width=154 height=64 %}
+      </div>
+    </div>
+    {%endif%}
+    {%endif%}
+    <div class="space40"></div>
+    {% if page.teaching_section.enable%}
+    {%assign teaching = page.teaching_section%}
+    <div class="teaching-section row">
+      <div class="col-12 col-lg-7">
+        <div class="d-flex justify-content-start align-items-center flex-wrap column-gap-32">
+          {% if teaching.title %}
+          <h2 class="m-0 color-dark-3 font-size-32">{{teaching.title}}</h2>
+          {%endif%}
+          {% if teaching.btn %}
+          <a id="{{teaching.btn.id}}" class="btn btn-md btn-fc-primary m-0 font-weight-600" target="{{teaching.btn.target}}" href="{{teaching.btn.link}}">
+            {{teaching.btn.text}}
+          </a>
+          {%endif%}
+        </div>
+        {% if teaching.list %}
+        <div class="pt-30">
+          {%for item in teaching.list%}
+          <div class="d-flex justify-content-start align-items-center feature-box pl-15 pr-10 mb-15 column-gap-16">
+            <span class="index">{{forloop.index}}</span>
+            <span class="color-dark-3 font-weight-500 line-height-18">{{item.text}}</span>
+          </div>
+          {%endfor%}
+        </div>
+        {%endif%}
+      </div>
+      {%if teaching.image%}
+      <div class="col-12 col-lg-5">
+        <img width="481" height="499" class="aspect-ratio" src="{{teaching.image}}" alt="{{teaching.title}}">
+      </div>
+      {%endif%}
+    </div>
+    {%endif%}
+
+    <div class="space40"></div>
+    {% if page.education_section.enable %}
+    {%assign education = page.education_section%}
+    <div class="education-section">
+      <div class="d-flex justify-content-start align-items-center flex-wrap column-gap-32">
+        {% if education.title %}
+        <h2 class="m-0 color-dark-3 font-size-32">{{education.title}}</h2>
+        {%endif%}
+        {% if education.btn %}
+        <a id="{{education.btn.id}}" class="btn btn-md btn-fc-primary m-0 font-weight-600" target="{{education.btn.target}}" href="{{education.btn.link}}">
+          {{education.btn.text}}
+        </a>
+        {%endif%}
+      </div>
+      <div class="education-wrapper pt-30">
+        <div class="licenses-plan">
+          {% for license in education.education_types %}
+          <div class="license-box">
+            <div class="mb-8">
+              {%if license.name%}
+              <h3 class="mb-0 font-size-28 line-height-30 color-black-1">{{license.name}}</h3>
+              {%endif%}
+              {%if license.type%}
+              <span class="mb-0 line-height-18 color-black-1 font-weight-500">{{license.type}}</span>
+              {%endif%}
+            </div>
+            {%if license.description%}
+            <p class="mb-8 font-size-14 color-black-1">{{license.description}}</p>
+            {%endif%}
+            <ul class="list-unstyled mb-0">
+              {% for item in license.feature_list %}
+                <li class="mb-0 font-size-14 line-height-30 color-black-1 d-flex align-items-center column-gap-8">
+                  {% svg "{{ site.baseurl }}/assets/svg-icon/checked-circle.svg" width=12 %}
+                  {{item.text}}
+                </li>
+                {% if item.list %}
+                <ul class="list-unstyled mb-0 pl-24" style="flex-basis: 100%; flex-shrink: 0">
+                  {% for _item in item.list %}
+                  <li class="mb-0 font-size-14 line-height-20 color-black-1">
+                    <span class="line-height-20">&bull;</span>
+                    {{_item.text}}
+                  </li>
+                  {%endfor%}
+                </ul>
+                {%endif%}
+              {% endfor %}
+            </ul>
+          </div>
+          {%endfor%}
+        </div>
+        <div class="feature-list">
+          <div>
+            {%for item in education.list%}
+            <div class="d-flex justify-content-start align-items-center feature-box pl-15 pr-10 mb-15 column-gap-16">
+              <span class="index">{{forloop.index}}</span>
+              <span class="color-dark-3 font-weight-500 line-height-18">{{item.text}}</span>
+            </div>
+            {%endfor%}
+          </div>
+          <div class="space40"></div>
+          {%if education.customer %}
+          <div class="customer-box d-flex align-items-start column-gap-32" style="flex-wrap:wrap">
+            <img src="{{education.customer.logo}}" alt="{{education.customer.name}}" style="flex-shrink: 0">
+            {%if education.customer.said%}
+            <p class="m-0 font-size-20 line-height-32 color-dark-5" style="flex: 1;min-width: 230px;">{{education.customer.said}}</p>
+            {%endif%}
+            {% if education.customer.link %}
+            <div class="link-mask">
+              <a id="{{education.customer.link.id}}" class="color-white" aria-label="Read more about customer success story" href="{{education.customer.link.address}}" target="{{education.customer.link.target}}">
+                <i class="jam jam-arrow-right"></i>
+              </a>
+            </div>
+            {% endif %}
+          </div>
+          {%endif%}
+        </div>
+      </div>
+    </div>
+    {%endif%}
+  </div>
+</div>
+<div class="space80"></div>
+{% include footer_2.html %}

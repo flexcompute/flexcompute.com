@@ -1,0 +1,70 @@
+<div id="viewer-container" class="position-absolute">
+  <!--"pdfViewer" is an internal class name, please do not modify or delete it !-->
+  <div class="pdf-pages pdfViewer"></div>
+</div>
+<script type="module">
+  (function () {
+    const url = '{{include.pdf}}'
+
+    const devicePixelRatio = window.devicePixelRatio || 1
+    const outputScale = devicePixelRatio > 2 ? 2 : devicePixelRatio;
+
+    const lazyLoadScript = async (url) => {
+      return new Promise((resolve)=>{
+        const script = window.document.createElement('script');
+        script.src = url;
+        window.document.body.appendChild(script);
+        script.onload = function(){
+          resolve()
+        }
+      }).catch(e=>{
+        console.log(e)
+      })
+    }
+
+    const renderPdf = () => {
+      const container = document.getElementById("viewer-container");
+      const eventBus = new pdfjsViewer.EventBus();
+
+      const linkService = new pdfjsViewer.PDFLinkService({ eventBus });
+      const findController = new pdfjsViewer.PDFFindController({
+        eventBus,
+        linkService,
+      });
+      const transform = outputScale !== 1
+        ? [outputScale, 0, 0, outputScale, 0, 0]
+        : null;
+      const newViewer = new pdfjsViewer.PDFViewer({
+        container,
+        linkService,
+        eventBus,
+        useOnlyCssZoom: true,
+        textLayerMode: 1,
+        findController,
+      });
+      linkService.setViewer(newViewer);
+      newViewer.currentScaleValue = 1;
+
+      const loadingTask = pdfjsLib.getDocument({ url });
+
+      loadingTask.promise.then(pdf => {
+        if (pdf) {
+          newViewer.setDocument(pdf);
+          linkService.setDocument(pdf);
+          // 判断是否已经渲染完毕
+        }
+      })
+    }
+
+
+    document.addEventListener('DOMContentLoaded', async ()=>{
+      await lazyLoadScript("/assets/js/pdf-build/pdf.js")
+      await lazyLoadScript("/assets/js/pdf-build/pdf_viewer.min.js")
+      if (!pdfjsLib.getDocument || !pdfjsViewer.PDFPageView) {
+        console.log("Please build the pdfjs-dist library using\n  `gulp dist-install`");
+      }
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc = '/assets/js/pdf-build/pdf.worker.js';
+      renderPdf();
+    })
+  }())
+</script>

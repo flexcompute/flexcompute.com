@@ -1,0 +1,170 @@
+---
+layout: default
+custom_font: font2
+author: Flexcompute
+---
+{% include header.html extra_class="absolute transparent" logo_class="logo fc-logo" container_class="container" %}
+<div class="wrapper bg-opacity-default">
+  <div class="container inner pt-60 pb-0">
+    <div class="header p-2 p-sm-3 pl-0 d-flex flex-column flex-md-row justify-content-between align-items-start">
+      <h2 class="m-0 font-size-32 color-dark-3">
+        <i id="learning-center-menu-shortcut-key" class="d-inline d-lg-none jam jam-align-justify" style="vertical-align: middle; cursor: pointer"></i>
+        <a href="/tidy3d/learning-center/" class="text-reset color-dark-3">Learning Center</a>
+      </h2>
+      {% if enable_sign_up %}
+      <div class="d-block d-md-none space30"></div>
+      <a id="__pg_tidy3d-learning-center_sign-up-for-free_btn" class="btn btn-sm btn-fc-primary font-weight-600" target="_blank" href="{{site.tidy3d.sign_up}}">
+        Sign up for free
+      </a>
+      {% endif %}
+    </div>
+    <div id="learning-center-container" class="knowledge-container {%unless page.skill_section.enable%} no-column-gap {%endunless%}">
+      <div class="left {% if page.skill_section.enable %} min-width {%endif%}">
+        <div class="menus position-relative clearfix">
+          <div id="learning-center-menu-container" class="left-menu position-absolute {% if page.menu_config.disabled_fixed %} not-fixed {% endif %}" style="z-index: 1;left: 0; top: 0; width: fit-content">
+            {% include learning-center/menu.html %}
+          </div>
+        </div>
+      </div>
+      <div class="right">
+        {{content}}
+      </div>
+    </div>
+
+  </div>
+</div>
+<div class="space80"></div>
+{% include footer_2.html %}
+
+<script>
+  (function () {
+    let menuShortcutKey = null;
+    let menuContainer = null;
+    let menuDom = null;
+    let containerDom = null;
+
+    const setCloseIcon = element =>{
+      if (!element.classList.contains('jam-close')){
+        element.classList.add('jam-close')
+        element.classList.remove('jam-align-justify')
+      }
+    }
+
+    const setJustifyIcon = element => {
+      if (!element.classList.contains('jam-align-justify')){
+        element.classList.remove('jam-close')
+        element.classList.add('jam-align-justify')
+      }
+    }
+
+    const listenerShortcutKeyClick = () => {
+      if (!menuShortcutKey || !menuDom) return;
+      menuShortcutKey.addEventListener('click', e => {
+        e.stopPropagation()
+        if (!menuContainer.classList.contains("move-to-right")){
+          menuContainer.classList.add('move-to-right');
+          setCloseIcon(menuShortcutKey)
+          menuDom.classList.add("expand");
+          menuDom.classList.remove("collapsed");
+        }else {
+          menuContainer.classList.remove('move-to-right');
+          setJustifyIcon(menuShortcutKey)
+        }
+      })
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      menuShortcutKey = document.getElementById("learning-center-menu-shortcut-key");
+      menuContainer = document.getElementById("learning-center-menu-container");
+      menuDom = document.getElementById("learning-center-menus");
+      containerDom = document.getElementById("learning-center-container");
+      listenerShortcutKeyClick()
+    })
+
+    document.addEventListener('click', event=>{
+      if (
+          menuContainer &&
+          event.target !== menuContainer &&
+          !menuContainer.contains(event.target) &&
+          menuContainer.classList.contains('move-to-right')
+      ) {
+        menuContainer.classList.remove("move-to-right")
+        setJustifyIcon(menuShortcutKey)
+      }
+    })
+
+    window.addEventListener('scroll', e => {
+      if (menuContainer && containerDom && !menuContainer.classList.contains('not-fixed')) {
+        const rect = containerDom.getBoundingClientRect();
+        const menuRect = menuContainer.getBoundingClientRect();
+        if (rect.top <= 70) {
+          menuContainer.classList.add('fixed-top');
+          menuContainer.style.left = `${rect.left}px`;
+          if (70 + menuRect.height >= rect.bottom) {
+            menuContainer.style.setProperty('top', `${rect.bottom - menuRect.height}px`, 'important');
+          } else {
+            menuContainer.style.setProperty('top', 0);
+          }
+        } else {
+          menuContainer.classList.remove('fixed-top');
+          menuContainer.style.left = 0;
+        }
+      }
+    })
+
+    window.addEventListener('resize', e => {
+      const collapsed = "{{page.menu_config.collapsed}}"
+      if (collapsed && menuDom && window.innerWidth >=992 && menuDom.classList.contains('expand')){
+        menuDom.classList.add("collapsed")
+        menuDom.classList.remove("expand")
+      }
+    })
+  })()
+
+  function handleDownload(link) {
+    const download = (url) => {
+      const elink = document.createElement('a')
+      elink.href = url
+      elink.download = ""
+      elink.style.display = 'none'
+      document.body.appendChild(elink)
+      elink.click()
+      setTimeout(() => {
+        document.body.removeChild(elink)
+      }, 5 * 1000)
+    }
+    if (link.indexOf("#&#") > -1) {
+      const links = link.split("#&#");
+      links.forEach(item => download(item))
+    } else {
+      download(link)
+    }
+  }
+
+  function stopPropagation(event){
+    event.stopPropagation()
+  }
+
+  function downloadAll(links) {
+    const allLinks = links.split("##");
+    allLinks.forEach(link => {
+      handleDownload(link)
+    })
+  }
+
+  document.addEventListener("DOMContentLoaded", ()=>{
+    if (LearnCenterBreadcrumbs) {
+      const lectureName = "{{page.lecture_title | slugify}}"
+      const category = "{{page.metadata.category | slugify}}"
+      const tutorialName = "{{page.page_title | slugify}}"
+      if (lectureName) {
+        LearnCenterBreadcrumbs.expandSubmenuByLectureName(lectureName)
+      }else if (category) {
+        LearnCenterBreadcrumbs.expandSubmenuByLectureName(category)
+      }
+      if (tutorialName) {
+        LearnCenterBreadcrumbs.highlightTutorial(tutorialName)
+      }
+    }
+  })
+</script>

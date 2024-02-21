@@ -1,0 +1,13 @@
+<div class="form-footer text-center">
+  {% if form_footer.email %}
+  <span class="font-size-14 color-dark-9 line-height-17 d-inline-block">
+              Email <br>
+              <a class="font-size-14 color-dark-9 line-height-17 text-decoration-underline" href="mailto:{{form_footer.email}}">{{ form_footer.email }}</a>
+            </span>
+  {% endif %}
+  {% if form_footer.logo %}
+  <div class="space10"></div>
+  <img width="180" src="{{form_footer.logo}}" class="logo fc-logo logo-dark  " alt="{{form_footer.logo_alt}}">
+  <div class="space30"></div>
+  {% endif %}
+</div>

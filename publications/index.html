@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="refresh" content="0.1;url=/flow360/publications/">
+  <meta name="robots" content="noindex">
+  <title>Redirect</title>
+</head>
+<body>
+
+</body>
+<script type="application/javascript">
+  const redirectJson = {
+    "/publications/#an-analysis-of-modeling-sensitivity-effects-for-high-lift-predictions-using-the-flow360-cfd-solver": "/flow360/publications/#an-analysis-of-modeling-sensitivity-effects-for-high-lift-predictions-using-the-flow360-cfd-solver",
+    "/publications/#impact-of-the-propulsion-modeling-approach-on-high-lift-force-predictions-of-propeller-blown-wings": "/flow360/publications/#impact-of-the-propulsion-modeling-approach-on-high-lift-force-predictions-of-propeller-blown-wings",
+    "/publications/#rotor5:-rotor-analysis-under-5-hours-using-ultra-fast-and-high-fidelity-cfd-simulation-and-automatic-meshing": "/flow360/publications/#rotor5:-rotor-analysis-under-5-hours-using-ultra-fast-and-high-fidelity-cfd-simulation-and-automatic-meshing",
+    "/publications/#assessment-of-detached-eddy-simulation-and-sliding-mesh-interface-in-predicting-tiltrotor-performance-in-helicopter-and-airplane-modes": "/flow360/publications/#assessment-of-detached-eddy-simulation-and-sliding-mesh-interface-in-predicting-tiltrotor-performance-in-helicopter-and-airplane-modes",
+    "/publications/#aerodynamic-risk-assessment-using-parametric-three-dimensional-unstructured-high-fidelity-cfd-and-adaptive-sampling": "/flow360/publications/#aerodynamic-risk-assessment-using-parametric-three-dimensional-unstructured-high-fidelity-cfd-and-adaptive-sampling",
+    "/publications/#anderson-localization-of-electromagnetic-waves-in-three-dimensions": "/tidy3d/learning-center/publications/#anderson-localization-of-electromagnetic-waves-in-three-dimensions",
+    "/publications/#a-perspective-on-the-pathway-toward-full-wave-simulation-of-large-area-metalenses": "/tidy3d/learning-center/publications/#a-perspective-on-the-pathway-toward-full-wave-simulation-of-large-area-metalenses",
+  }
+  const {href, origin} = location
+  const from = href.replaceAll(origin, "")
+  const element = document.querySelector('meta[http-equiv="refresh"]')
+  const to = redirectJson[from]
+  if (element && to) {
+    element.setAttribute("content",`0.1;url=${to}`)
+    // window.location.replace(origin + to)
+  }
+</script>
+</html>

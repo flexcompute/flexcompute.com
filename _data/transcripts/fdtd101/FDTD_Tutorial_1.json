@@ -1,0 +1,55 @@
+{
+  "title": "FDTD 101: Lecture 1",
+  "pages": [
+    {
+      "id": "intro-to-fdtd",
+      "title": "",
+      "transcript": "Today, I would like to give a short introduction to the finite difference time domain method or with the acronym FDTD. I'm Shanhui Fan from Flexcompute."
+    },
+    {
+      "id": "",
+      "title": "What is FDTD?",
+      "transcript": "The finite difference time domain method or FDTD is a method for simulating interaction of light with structures and materials. It is widely used as a general purpose method for solving Maxwell’s equations and is very widely used in photonics and electromagnetics. It allows you to simulate a white range of phenomena in photonics. So below, I have a few images of some of the structures that people have simulated using FDTD method that range from Photonic Crystal Nanocavity to Grading Coupler in silicon photonics to Ring Resonators to Metasurface."
+    },
+    {
+      "id": "",
+      "title": "Overview of the FDTD course",
+      "transcript": "The purpose of this course is to give you a broad understanding of the finite difference time domain method (FDTD). What it is used for even though we're not going to go into great details of the algorithm itself. We would like to give you a sense of how it works, what the algorithm looks like at a high conceptual level and the ultimate goal is to get you to start to use it. So the course would go through a number of examples in increasing complexity, so that you will get a sense of how to use this method. And all these examples are implemented using Flexcompute Tidy3D FDTD solver and will provide links with the input files for each of these examples so you can try them out yourself."
+    },
+    {
+      "id": "maxwell's-equations",
+      "title": "What equations does FDTD solve?",
+      "transcript": "If you are using FDTD, you are solving Maxwell’s Equations and therefore I assume that you know something about Maxwell’s Equations already. But just as a very brief overview, Maxwell’s Equations describe the dynamics of electrical the E field and magnetic field, the H field. These are how the equations look like, and the dynamics of the E and H field in a structure is described by a primitivity distribution epsilon here. The structure is then excited by a current source, usually a time oscillating current. This equation is a time domain equation that describes the evolution of electric and magnetic fields as a function of time."
+    },
+    {
+      "id": "solving-maxwell's-equations",
+      "title": "What is the general process of FDTD simulations?",
+      "transcript": "In FDTD method, the TD stands for time domain. It's exactly a time domain method that allows you to directly compute such time evolution. In the FDTD method the input to the solver is the primitivity distribution and that describes how the device looks as well as the source of the excitation.  These information are then provided to a FDTD solver that allows you to determine the time dynamics of the electric and magnetic field and from these time dynamics one extracts information that is important for physics study and device design."
+    },
+    {
+      "id": "example-dipole-in-a-vacuum",
+      "title": "Using FDTD to simulate a dipole in vacuum",
+      "transcript": "As the first illustration of the FDTD method, we're going to solve an example that you probably have all learned in your electromagnetic class. And that is to simulate the emission pattern of a dipole in a vacuum. We would like to compute the electric field that's generated out of an oscillating dipole. In this setup, we're going to set up so that the relative permittivity is one everywhere.  So it's vacuum and we choose the dipole source to be oscillating harmonically as a function of time and the oscillation frequency corresponds to a free space wavelength of one micron. So in setting up the FDTD method, one of the first things that you need to do is to choose the computational domain. In our case it turned out that the dipole source would go through as you move away from the dipole source. The field will go from the near field zone to the far field zone and we would like to set up that will capture this transition. And therefore we choose a relatively large computational cell computational domain with a cube with a side length of nine micron corresponding to nine wavelengths and perhaps as a general comment. \nAll these computational setups are closely related to the physics or the device characteristic that you are interested in understanding and so in this case the choice of the computational domain size definitely reflects that."
+    },
+    {
+      "id": "discretization",
+      "title": "How to set up resolution in the Yee lattice of FDTD simulation",
+      "transcript": "The finite difference time domain method, the first two words are “finite difference”. And that means that you would take the computational domain and then discretize it by a little cube and then so that you would describe the fields on a discrete lattice formed by this cube. In the FDTD method the cube is called the Yee Cell. So a little cube inside the computational domain when you blow it up will look something like this. The electric fields are distributed on the edge of the Yee cell and the magnetic fields are distributed on the surface of the Yee cell. And the way this distribution is set up, in fact very closely reflects the underlying geometry of Maxwell’s equations. An important parameter is the discretization. So a typical rule of thumb is to choose the discretization to be about wavelengths over 20. Given that we're using a one micron wavelength this corresponds to a 50 nanometer digitization in the examples that I'm going to show you. However, in order to generate perhaps a nicer looking movie we have chosen a finer discretization with a dedication of 20 nanometers. And with 9 micron computational domain size this translates already to be about half a billion unknowns.  So it is really the magic of more computing power -- that one in fact is able to do these kinds of problems with billions of unknowns."
+    },
+    {
+      "id": "boundary-conditions",
+      "title": "How to set up the boundary condition of FDTD simulation",
+      "transcript": "The other aspect of the simulation is the boundary condition. So we have a computational domain setup like this, but we would like the field emitted from the dipole to go out of the computational domain without coming back to interfere with it. We can generate the radiating pattern of a dipole radiating industry space. For this purpose in FDTD it is very common to surround the computational domain by a specially designed absorber called the perfectly matched layer. The thickness of these layers is about the typical 10’s of the Yee cells."
+    },
+    {
+      "id": "vacuum",
+      "title": "Examining the results of FDTD simulation",
+      "transcript": "So with this now we can put the whole thing together. And as I mentioned this is the computational domain. This is where the dipole sources and we're going to generate the movie showing how the Z component of the electric field varies on the plant as highlighted by gray here. And that's the movie on the right. You see the dipole oscillating in the middle and you can see that the wavelength is about one micron. The red and blue here correspond to large positive and negative fields.  And also you see that in the far field zone when you are sufficiently far from the dipole, there's very little emission in the vertical direction. And that's a very characteristic of the far fields of a dipole radiation. In this example, I've shown you something that you probably have seen in your textbook of a dipole radiation pattern. And this is something that you can compute analytically. One of the key strengths of FDTD, however, is that we’ve shown you can simulate vacuum, but you can also simulate complex structure that you put in with essentially the same setup."
+    },
+    {
+      "id": "complex-structures",
+      "title": "Summary",
+      "transcript": "So as the last example of this tutorial, we will put a dipole source again, the same computational cell, but we'll also put 3 dielectric blocks. And here is the movie of the electric field distribution and you can see how the fields now are very strongly perturbed by the presence of these blocks.\nTo  summarize this first video, what we’ve shown here is the general concept of FDTD, and show you a virtual example that you can generate a nice-looking movie associated with the variation of the field as a function of time. In the next lecture, we are going to build upon this and show you how you can use this capability to get useful information about real devices."
+    }
+  ]
+}

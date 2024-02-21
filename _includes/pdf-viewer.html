@@ -1,0 +1,168 @@
+{% assign transcript = include.transcript %}
+
+<div id="slider">
+  <p id="slider-title">{{transcript.title}}</p>
+  <div id="pdf-canvas">
+    {% for item in transcript.pages %}
+    {% assign page_id = item.id %}
+    {% assign page_id_length = item.id | size %}
+    {% if page_id_length <= 0 %}
+    {% assign page_id = item.title | split: ' ' | join: '-' %}
+    {% endif %}
+    <div class="pdf-page" data-page-number="{{forloop.index}}" id="{{page_id}}">
+      <canvas></canvas>
+      <div class="transcript-txt">
+        {% if item.paragraphs %}
+        {% for paragraph in item.paragraphs %}
+        {% assign title_length = paragraph.title | size %}
+        {% if title_length > 0 %}
+        <h2 class="pdf-page-transcript-header font-size-16 font-weight-700 mb-0 p-5">{{paragraph.title}}</h2>
+        {% endif %}
+        {% if paragraph.list %}
+        <p class="pdf-page-transcript font-size-14 text-justify mb-0 p-5" >
+          {{paragraph.transcript}}
+        </p>
+        <ul class="list-unstyled font-size-14">
+        {% for li in paragraph.list %}
+          <li class="align-items-start">
+            <span class="sphere line-height-24 font-size-18">&bull;</span>
+            <span style="line-height: 26px !important;">{{li.sentence}}</span>
+          </li>
+        {% endfor %}
+        </ul>
+        {% else %}
+        <p class="pdf-page-transcript font-size-14 text-justify mb-20 pl-5 pr-5" >
+          {{paragraph.transcript}}
+        </p>
+        {% endif %}
+        {% endfor %}
+        {% else %}
+        {% assign title_length = item.title | size %}
+        {% if title_length > 0 %}
+        <h2 class="pdf-page-transcript-header font-size-16 font-weight-700 mb-0 p-5">{{item.title}}</h2>
+        {% endif %}
+        {% if item.list %}
+        <p class="pdf-page-transcript font-size-14 text-justify mb-0 p-5" >
+          {{item.transcript}}
+        </p>
+        <ul class="list-unstyled font-size-14">
+          {% for li in item.list %}
+          <li class="align-items-start">
+            <span class="sphere line-height-24 font-size-18">&bull;</span>
+            <span style="line-height: 26px !important;">{{li.sentence}}</span>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="pdf-page-transcript font-size-14 text-justify mb-20 pl-5 pr-5" >
+          {{item.transcript}}
+        </p>
+        {% endif %}
+
+        {% endif %}
+      </div>
+
+    </div>
+    {% endfor %}
+  </div>
+  {% if transcript.footNotes %}
+  <div id="foot-note">
+    {% for note in transcript.footNotes %}
+    <p id="{{note.id}}" class="font-size-12">
+      <span class="font-weight-700">{{note.referenceNum}}</span>
+      <span>{{note.note}}</span>
+    </p>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+</div>
+<script>
+  (function (){
+    const url = "{{page.pdf_url}}"
+    const pdfjsLib = window['pdfjs-dist/build/pdf'];
+    const devicePixelRatio = window.devicePixelRatio || 1
+    const desiredWidth = window.innerWidth
+
+    let pdfDoc = null
+    const canvasOutput = document.querySelector("#pdf-canvas");
+
+    const outputScale = devicePixelRatio > 2 ? 2 : devicePixelRatio;
+
+    const lazyLoadScript = async (url) => {
+      return new Promise((resolve)=>{
+        const script = window.document.createElement('script');
+        // script.type = 'module';
+        // script.async = true;
+        script.src = url;
+        window.document.body.appendChild(script);
+        script.onload = function(){
+          resolve()
+        }
+      }).catch(e=>{
+        console.log(e)
+      })
+    }
+
+    const createPdfCanvas = (viewport, canvas) => {
+      canvas.width = Math.floor(viewport.width * outputScale);
+      canvas.height = Math.floor(viewport.height * outputScale);
+      return canvas.getContext('2d')
+    }
+
+    const renderPage = () => {
+      const pages = canvasOutput.children
+      for (let i = 0; i < pages.length; i ++) {
+        const page = pages[i];
+        const canvas = page.querySelector('canvas')
+        const pageNum = page.getAttribute('data-page-number');
+        pdfDoc.getPage(Number(pageNum))
+          .then(page => {
+            const default_viewport = page.getViewport({scale: 1});
+            const new_scale = desiredWidth / default_viewport.width
+            const viewport = page.getViewport({scale: new_scale})
+            const ctx = createPdfCanvas(viewport,canvas)
+
+            const transform = outputScale !== 1
+              ? [outputScale, 0, 0, outputScale, 0, 0]
+              : null;
+            const renderContext = {
+              canvasContext: ctx,
+              transform,
+              viewport,
+            }
+
+            page.render(renderContext)
+              .promise
+              .then()
+              .catch((e) => {
+                console.log(e.message)
+              })
+          })
+          .catch(e => {
+            console.log(e.message)
+          })
+      }
+
+    }
+
+    const pdfLoaded = () =>{
+      // The workerSrc property shall be specified.
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc = '/assets/js/pdf-build/pdf.worker.js';
+      const loadingTask = window.pdfjsLib.getDocument(url);
+      loadingTask.promise
+        .then(async _pdf => {
+          pdfDoc = _pdf
+          renderPage()
+        })
+        .catch(e => {
+          console.log("render error", e.message)
+        })
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      await lazyLoadScript("/assets/js/pdf-build/pdf.js")
+      pdfLoaded()
+    })
+  })()
+</script>

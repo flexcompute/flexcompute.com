@@ -1,0 +1,147 @@
+news_highlight:
+  enable: true
+  title: News Highlight
+  enable_blog: false
+  enable_publication: true
+  blog: >-
+    _posts/2022-12-28-tidy3d-helps-mit-researchers-design-a-highly-efficient-spatial-light-modulator.md
+  publication: >-
+    _publications/Anderson localization of electromagnetic waves in three
+    dimensions.md
+news_by_category:
+  enable: true
+  title: News By Category
+  social:
+    enable: true
+    list:
+      - name: LinkedIn
+        thumbnail: /assets/svg-icon/linkedin.svg
+        link: https://www.linkedin.com/company/flexcompute-inc
+      - name: YouTube
+        thumbnail: /assets/svg-icon/youtube.svg
+        link: https://www.youtube.com/channel/UCEyjOHwd21D72i8aST0Z1sw
+      - name: Twitter
+        thumbnail: /assets/svg-icon/twitter.svg
+        link: https://twitter.com/intent/tweet
+  flexcompute:
+    enable: true
+    logo: /assets/images/logo.png
+    menus:
+      - name: News
+        link: /blog/category/news/
+      - name: Conference & Webinar
+        link: /blog/category/conference-webinar/
+      - name: Careers
+        link: /careers/
+  tidy3d:
+    enable: true
+    logo: /assets/images/Tidy3D-logo.svg
+    menus:
+      - name: Software Releases
+        menus:
+          - name: Python Client
+            link: >-
+              https://docs.flexcompute.com/projects/tidy3d/en/latest/changelog.html
+            target: _blank
+          - name: Web Client
+            link: /tidy3d/release-notes/
+      - name: Publications
+        link: /tidy3d/learning-center/publications/
+  flow360:
+    enable: true
+    logo: /assets/images/Flow360-logo.svg
+    menus:
+      - name: Software Releases
+        link: /flow360/release-notes/
+      - name: Publications
+        link: /flow360/publications/
+social_platforms:
+  enable: true
+  title: Social Platforms
+  list:
+    - name: linkedin
+      title: The integration of inverse design with circuit simulation
+      date: 2023-11-27 00:00:00
+      authors:
+        - Tyler W. Hughes
+      thumbnail: /uploads/the-integration-of-inverse-design-with-circuit-simulation.jpeg
+      social_icon: /assets/svg-icon/linkedin-active.svg
+      link: >-
+        https://www.linkedin.com/posts/flexcompute-inc_pic-fdtd-inversedesign-activity-7128385874353893376-vP2D?utm_source=share&utm_medium=member_desktop
+    - name: youtube
+      title: 'Inverse Design Lecture 6: Level Set Parameterization'
+      date: 2023-06-15 00:00:00
+      authors:
+      thumbnail: /uploads/download.png
+      social_icon: /assets/svg-icon/youtube-active.svg
+      link: https://www.youtube.com/watch?v=MeuG1CDsjFM
+feature_blog:
+  enable: true
+  title: Feature Blog
+  content: _posts/2023-07-11-waveguide-crosstalk-reduction-exceptional-coupling.md
+feature_publication:
+  enable: true
+  title: Feature Publication
+  content: _publications/regent-seaglider-cfd-analysis-with-flow360.md
+_inputs:
+  enable:
+    type: switch
+  logo:
+    type: image
+  social_icon:
+    type: image
+  news_by_category.social:
+    options:
+      preview:
+        text: Social Platform
+  news_by_category.flexcompute:
+    options:
+      preview:
+        text: Flexcompute
+        image:
+          - key: logo
+  news_by_category.tidy3d:
+    options:
+      preview:
+        text: Tidy3d
+        image:
+          - key: logo
+  news_by_category.flow360:
+    options:
+      preview:
+        text: Flow360
+        image:
+          - key: logo
+  social_platforms.list[*]:
+    options:
+      preview:
+        text:
+          - key: name
+        image:
+          - key: social_icon
+  news_highlight.blog:
+    type: select
+    options:
+      values: collections.posts
+      value_key: path
+      preview:
+        text:
+          - key: post_title
+  news_highlight.publication:
+    type: select
+    options:
+      values: collections.Publications
+      value_key: path
+  feature_blog.content:
+    type: select
+    options:
+      values: collections.posts
+      value_key: path
+      preview:
+        text:
+          - key: post_title
+  feature_publication.content:
+    type: select
+    options:
+      values: collections.Publications
+      value_key: path

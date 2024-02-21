@@ -1,0 +1,1149 @@
+---
+author: Tom Chen
+custom_css:
+- learning-center/fdtd101
+- learning-center/menu
+- learning-center/home
+custom_font: font2
+description: This notebook demonstrates how to use automatic nonuniform meshing in
+  Tidy3D FDTD.
+layout: learning-center/example-library
+menu_config:
+  collapsed: true
+  selected: Tidy3D Python
+metadata:
+  category: Grid Specification
+  enable_more_examples: false
+  more_examples:
+  - name: Defining fully anisotropic materials
+    path: notebooks/FullyAnisotropic/
+  - name: Heat solver
+    path: notebooks/HeatSolver/
+  - name: Multi-objective adjoint optimization
+    path: notebooks/AdjointPlugin4MultiObjective/
+  pagination:
+    next:
+      name: Defining and using symmetries
+      path: notebooks/Symmetry/
+    previous:
+      name: Defining complex geometries using trimesh
+      path: notebooks/CreatingGeometryUsingTrimesh/
+  type: python-tutorial
+page_title: Using automatic nonuniform meshing
+source_link: https:/docs.flexcompute.com/projects/tidy3d/en/latest/_sources/notebooks/AutoGrid.ipynb
+tags:
+- automatic nonuniform meshing
+- automatic nonuniform grid
+- Tidy3D
+- FDTD
+title: Automatic Nonuniform Meshing in Tidy3D | Flexcompute
+---
+
+
+<html lang="en">
+<head><meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="/assets/tidy3d/examples/css/example-notebook.css" rel="stylesheet"/>
+
+
+
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS_CHTML-full,Safe"> </script>
+
+<script type="text/x-mathjax-config">
+    init_mathjax = function() {
+        if (window.MathJax) {
+        // MathJax loaded
+            MathJax.Hub.Config({
+                TeX: {
+                    equationNumbers: {
+                    autoNumber: "AMS",
+                    useLabelIds: true
+                    }
+                },
+                tex2jax: {
+                    inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+                    displayMath: [ ['$$','$$'], ["\\[","\\]"] ],
+                    processEscapes: true,
+                    processEnvironments: true
+                },
+                displayAlign: 'center',
+                CommonHTML: {
+                    linebreaks: {
+                    automatic: true
+                    }
+                }
+            });
+
+            MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
+        }
+    }
+    init_mathjax();
+    </script>
+<script type="module">
+  document.addEventListener("DOMContentLoaded", async () => {
+    const diagrams = document.querySelectorAll(".jp-Mermaid > pre.mermaid");
+    // do not load mermaidjs if not needed
+    if (!diagrams.length) {
+      return;
+    }
+    const mermaid = (await import("https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.7.0/mermaid.esm.min.mjs")).default;
+    const parser = new DOMParser();
+
+    mermaid.initialize({
+      maxTextSize: 100000,
+      maxEdges: 100000,
+      startOnLoad: false,
+      fontFamily: window
+        .getComputedStyle(document.body)
+        .getPropertyValue("--jp-ui-font-family"),
+      theme: document.querySelector("body[data-jp-theme-light='true']")
+        ? "default"
+        : "dark",
+    });
+
+    let _nextMermaidId = 0;
+
+    function makeMermaidImage(svg) {
+      const img = document.createElement("img");
+      const doc = parser.parseFromString(svg, "image/svg+xml");
+      const svgEl = doc.querySelector("svg");
+      const { maxWidth } = svgEl?.style || {};
+      const firstTitle = doc.querySelector("title");
+      const firstDesc = doc.querySelector("desc");
+
+      img.setAttribute("src", `data:image/svg+xml,${encodeURIComponent(svg)}`);
+      if (maxWidth) {
+        img.width = parseInt(maxWidth);
+      }
+      if (firstTitle) {
+        img.setAttribute("alt", firstTitle.textContent);
+      }
+      if (firstDesc) {
+        const caption = document.createElement("figcaption");
+        caption.className = "sr-only";
+        caption.textContent = firstDesc.textContent;
+        return [img, caption];
+      }
+      return [img];
+    }
+
+    async function makeMermaidError(text) {
+      let errorMessage = "";
+      try {
+        await mermaid.parse(text);
+      } catch (err) {
+        errorMessage = `${err}`;
+      }
+
+      const result = document.createElement("details");
+      result.className = 'jp-RenderedMermaid-Details';
+      const summary = document.createElement("summary");
+      summary.className = 'jp-RenderedMermaid-Summary';
+      const pre = document.createElement("pre");
+      const code = document.createElement("code");
+      code.innerText = text;
+      pre.appendChild(code);
+      summary.appendChild(pre);
+      result.appendChild(summary);
+
+      const warning = document.createElement("pre");
+      warning.innerText = errorMessage;
+      result.appendChild(warning);
+      return [result];
+    }
+
+    async function renderOneMarmaid(src) {
+      const id = `jp-mermaid-${_nextMermaidId++}`;
+      const parent = src.parentNode;
+      let raw = src.textContent.trim();
+      const el = document.createElement("div");
+      el.style.visibility = "hidden";
+      document.body.appendChild(el);
+      let results = null;
+      let output = null;
+      try {
+        let { svg } = await mermaid.render(id, raw, el);
+        svg = cleanMermaidSvg(svg);
+        results = makeMermaidImage(svg);
+        output = document.createElement("figure");
+        results.map(output.appendChild, output);
+      } catch (err) {
+        parent.classList.add("jp-mod-warning");
+        results = await makeMermaidError(raw);
+        output = results[0];
+      } finally {
+        el.remove();
+      }
+      parent.classList.add("jp-RenderedMermaid");
+      parent.appendChild(output);
+    }
+
+
+    /**
+     * Post-process to ensure mermaid diagrams contain only valid SVG and XHTML.
+     */
+    function cleanMermaidSvg(svg) {
+      return svg.replace(RE_VOID_ELEMENT, replaceVoidElement);
+    }
+
+
+    /**
+     * A regular expression for all void elements, which may include attributes and
+     * a slash.
+     *
+     * @see https://developer.mozilla.org/en-US/docs/Glossary/Void_element
+     *
+     * Of these, only `<br>` is generated by Mermaid in place of `\n`,
+     * but _any_ "malformed" tag will break the SVG rendering entirely.
+     */
+    const RE_VOID_ELEMENT =
+      /<\s*(area|base|br|col|embed|hr|img|input|link|meta|param|source|track|wbr)\s*([^>]*?)\s*>/gi;
+
+    /**
+     * Ensure a void element is closed with a slash, preserving any attributes.
+     */
+    function replaceVoidElement(match, tag, rest) {
+      rest = rest.trim();
+      if (!rest.endsWith('/')) {
+        rest = `${rest} /`;
+      }
+      return `<${tag} ${rest}>`;
+    }
+
+    void Promise.all([...diagrams].map(renderOneMarmaid));
+  });
+</script>
+
+</head>
+<body class="jp-Notebook" data-jp-theme-light="true" data-jp-theme-name="JupyterLab Light">
+<main>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>Here we demonstrate how to use the automatic nonuniform grid generation available in <code>Tidy3D</code>. We show different possible ways to discretize the air-slot waveguide first introduced in <a href="https://opg.optica.org/ol/abstract.cfm?uri=ol-29-11-1209" target="_blank">this reference</a>.</p>
+<p>If you are new to the finite-difference time-domain (FDTD) method, we highly recommend going through our <a href="https://www.flexcompute.com/tidy3d/learning-center/" target="_blank">FDTD101</a> tutorials.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[1]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># basic imports</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pylab</span> <span class="k">as</span> <span class="nn">plt</span>
+
+<span class="c1"># tidy3d imports</span>
+<span class="kn">import</span> <span class="nn">tidy3d</span> <span class="k">as</span> <span class="nn">td</span>
+<span class="kn">from</span> <span class="nn">tidy3d.plugins.mode</span> <span class="kn">import</span> <span class="n">ModeSolver</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[2]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># basic parameters (note, all length units are microns)</span>
+<span class="n">nm</span> <span class="o">=</span> <span class="mf">1e-3</span>
+<span class="n">wavelength</span> <span class="o">=</span> <span class="mi">1550</span> <span class="o">*</span> <span class="n">nm</span>
+<span class="n">freq0</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">C_0</span> <span class="o">/</span> <span class="n">wavelength</span>
+
+<span class="c1"># waveguide parameters</span>
+<span class="n">slot_width</span> <span class="o">=</span> <span class="mi">50</span> <span class="o">*</span> <span class="n">nm</span>
+<span class="n">box_length</span> <span class="o">=</span> <span class="mi">300</span> <span class="o">*</span> <span class="n">nm</span>
+<span class="n">box_height</span> <span class="o">=</span> <span class="mi">180</span> <span class="o">*</span> <span class="n">nm</span>
+
+<span class="c1"># materials</span>
+<span class="n">si_med</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">Medium</span><span class="p">(</span><span class="n">permittivity</span><span class="o">=</span><span class="mf">3.48</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">sub_med</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">Medium</span><span class="p">(</span><span class="n">permittivity</span><span class="o">=</span><span class="mf">1.46</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+
+<span class="c1"># structures</span>
+<span class="n">box1</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">Structure</span><span class="p">(</span>
+    <span class="n">geometry</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">Box</span><span class="p">(</span>
+        <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="n">box_length</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">-</span> <span class="n">slot_width</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+        <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">td</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">box_length</span><span class="p">,</span> <span class="n">box_height</span><span class="p">),</span>
+    <span class="p">),</span>
+    <span class="n">medium</span><span class="o">=</span><span class="n">si_med</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">box2</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">Structure</span><span class="p">(</span>
+    <span class="n">geometry</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">Box</span><span class="p">(</span>
+        <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">box_length</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">slot_width</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+        <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">td</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">box_length</span><span class="p">,</span> <span class="n">box_height</span><span class="p">),</span>
+    <span class="p">),</span>
+    <span class="n">medium</span><span class="o">=</span><span class="n">si_med</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># boundaries</span>
+<span class="n">boundary_spec</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">BoundarySpec</span><span class="o">.</span><span class="n">all_sides</span><span class="p">(</span><span class="n">boundary</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">PML</span><span class="p">())</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>Define a helper function to show us the various grids as we go along this exmaple.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[3]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Plot simulation and overlay grid in the yz and xy planes</span>
+<span class="k">def</span> <span class="nf">plot_sim_grid</span><span class="p">(</span><span class="n">sim</span><span class="p">):</span>
+    <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+    <span class="n">sim</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">sim</span><span class="o">.</span><span class="n">plot_grid</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">lw</span><span class="o">=</span><span class="mf">0.4</span><span class="p">,</span> <span class="n">colors</span><span class="o">=</span><span class="s2">"r"</span><span class="p">)</span>
+    <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="o">-</span><span class="mf">0.6</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">)</span>
+    <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="o">-</span><span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">)</span>
+    <span class="n">sim</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">z</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">sim</span><span class="o">.</span><span class="n">plot_grid</span><span class="p">(</span><span class="n">z</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">lw</span><span class="o">=</span><span class="mf">0.4</span><span class="p">,</span> <span class="n">colors</span><span class="o">=</span><span class="s2">"r"</span><span class="p">)</span>
+    <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="o">-</span><span class="mf">0.6</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">)</span>
+    <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="o">-</span><span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Total number of grid points (millions): </span><span class="si">{</span><span class="n">sim</span><span class="o">.</span><span class="n">num_cells</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mf">1e6</span><span class="si">:</span><span class="s2">1.2</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">ax</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="Uniform-grid">Uniform grid<a class="anchor-link" href="#Uniform-grid">¶</a></h2><p>The most standard way to define a simulation is to use a constant grid size in each of the three directions. This can be achieved simply using <code>td.GridSpec.uniform(dl=...)</code> as shown below.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[4]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">sim_uniform</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">Simulation</span><span class="p">(</span>
+    <span class="n">size</span><span class="o">=</span><span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span>
+    <span class="n">grid_spec</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">GridSpec</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">dl</span><span class="o">=</span><span class="mi">20</span> <span class="o">*</span> <span class="n">nm</span><span class="p">),</span>
+    <span class="n">medium</span><span class="o">=</span><span class="n">sub_med</span><span class="p">,</span>
+    <span class="n">structures</span><span class="o">=</span><span class="p">[</span><span class="n">box1</span><span class="p">,</span> <span class="n">box2</span><span class="p">],</span>
+    <span class="n">boundary_spec</span><span class="o">=</span><span class="n">boundary_spec</span><span class="p">,</span>
+    <span class="n">run_time</span><span class="o">=</span><span class="mf">1e-12</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">ax</span> <span class="o">=</span> <span class="n">plot_sim_grid</span><span class="p">(</span><span class="n">sim_uniform</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Total number of grid points (millions): 8.3
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedImage jp-OutputArea-output" tabindex="0">
+<img alt="No description has been provided for this image" class="" src="/assets/tidy3d/examples/image/AutoGrid/AutoGrid_1.png"/>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>Note: <code>Tidy3D</code> is warning us that our Simulation does not contain sources. In this case, since we are using the simulation as a demonstration of the meshing process and are not running any simulations, we may safely ignore this warning throughout this notebook.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="Automatic-nonuniform-grid">Automatic nonuniform grid<a class="anchor-link" href="#Automatic-nonuniform-grid">¶</a></h2><p>By default, <code>Tidy3D</code> uses a more advanced meshing, using an algorithm to automatically define a nonuniform grid in all three directions. The resolution of this grid is specified using the desired minimum steps per wavelength in each material (<code>min_steps_per_wvl = 10</code> by default). This specification therefore requires a target wavelength, which can be either provided directly to <code>grid_spec</code>, or inferred from any sources present in the simulation. The two simulations below will have the same grid.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[5]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># provide wavelength directly</span>
+<span class="n">sim_nonuniform_10</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">Simulation</span><span class="p">(</span>
+    <span class="n">size</span><span class="o">=</span><span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span>
+    <span class="n">grid_spec</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">GridSpec</span><span class="o">.</span><span class="n">auto</span><span class="p">(</span><span class="n">wavelength</span><span class="o">=</span><span class="n">wavelength</span><span class="p">),</span>
+    <span class="n">medium</span><span class="o">=</span><span class="n">sub_med</span><span class="p">,</span>
+    <span class="n">structures</span><span class="o">=</span><span class="p">[</span><span class="n">box1</span><span class="p">,</span> <span class="n">box2</span><span class="p">],</span>
+    <span class="n">boundary_spec</span><span class="o">=</span><span class="n">boundary_spec</span><span class="p">,</span>
+    <span class="n">run_time</span><span class="o">=</span><span class="mf">1e-12</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># no grid_spec defined; using default with wavelength taken from source</span>
+<span class="n">source</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">ModeSource</span><span class="p">(</span>
+    <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+    <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
+    <span class="n">mode_index</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="n">direction</span><span class="o">=</span><span class="s2">"+"</span><span class="p">,</span>
+    <span class="n">source_time</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">GaussianPulse</span><span class="p">(</span><span class="n">freq0</span><span class="o">=</span><span class="n">freq0</span><span class="p">,</span> <span class="n">fwidth</span><span class="o">=</span><span class="n">freq0</span> <span class="o">/</span> <span class="mi">10</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="n">sim_nonuniform_10</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">Simulation</span><span class="p">(</span>
+    <span class="n">size</span><span class="o">=</span><span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span>
+    <span class="n">medium</span><span class="o">=</span><span class="n">sub_med</span><span class="p">,</span>
+    <span class="n">structures</span><span class="o">=</span><span class="p">[</span><span class="n">box1</span><span class="p">,</span> <span class="n">box2</span><span class="p">],</span>
+    <span class="n">boundary_spec</span><span class="o">=</span><span class="n">boundary_spec</span><span class="p">,</span>
+    <span class="n">run_time</span><span class="o">=</span><span class="mf">1e-12</span><span class="p">,</span>
+    <span class="n">sources</span><span class="o">=</span><span class="p">[</span><span class="n">source</span><span class="p">],</span>
+<span class="p">)</span>
+
+<span class="n">ax</span> <span class="o">=</span> <span class="n">plot_sim_grid</span><span class="p">(</span><span class="n">sim_nonuniform_10</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Total number of grid points (millions): 0.53
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedImage jp-OutputArea-output" tabindex="0">
+<img alt="No description has been provided for this image" class="" src="/assets/tidy3d/examples/image/AutoGrid/AutoGrid_2.png"/>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>The default grid is somewhat coarse, but it is often good for initial simulations. We can easily refine it by requiring a higher number of steps per wavelength:</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[6]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">sim_nonuniform_20</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">Simulation</span><span class="p">(</span>
+    <span class="n">size</span><span class="o">=</span><span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span>
+    <span class="n">grid_spec</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">GridSpec</span><span class="o">.</span><span class="n">auto</span><span class="p">(</span>
+        <span class="n">wavelength</span><span class="o">=</span><span class="n">wavelength</span><span class="p">,</span>
+        <span class="n">min_steps_per_wvl</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="n">medium</span><span class="o">=</span><span class="n">sub_med</span><span class="p">,</span>
+    <span class="n">structures</span><span class="o">=</span><span class="p">[</span><span class="n">box1</span><span class="p">,</span> <span class="n">box2</span><span class="p">],</span>
+    <span class="n">boundary_spec</span><span class="o">=</span><span class="n">boundary_spec</span><span class="p">,</span>
+    <span class="n">run_time</span><span class="o">=</span><span class="mf">1e-12</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">ax</span> <span class="o">=</span> <span class="n">plot_sim_grid</span><span class="p">(</span><span class="n">sim_nonuniform_20</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Total number of grid points (millions): 2.3
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedImage jp-OutputArea-output" tabindex="0">
+<img alt="No description has been provided for this image" class="" src="/assets/tidy3d/examples/image/AutoGrid/AutoGrid_3.png"/>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>Notice how the automatic grid conforms to the structures in the simulation, and the grid steps are high in the high-index regions.</p>
+<h3 id="Lower-bound-of-grid-size">Lower bound of grid size<a class="anchor-link" href="#Lower-bound-of-grid-size">¶</a></h3><p>Sometimes the grid size in the automatically generated mesh is too small. A lower bound <code>dl_min</code> can be set to increase the minimal grid size. Note that the bound is soft, meaning that the actual grid size might be slightly smaller.</p>
+<p>The minimal step size along y-direction in the previous setup is,</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[7]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="nb">print</span><span class="p">(</span>
+    <span class="sa">f</span><span class="s2">"Minimal grid size along y-direction = </span><span class="si">{</span><span class="nb">min</span><span class="p">(</span><span class="n">sim_nonuniform_20</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">sizes</span><span class="o">.</span><span class="n">y</span><span class="p">)</span><span class="o">*</span><span class="mf">1e3</span><span class="si">:</span><span class="s2">1.2f</span><span class="si">}</span><span class="s2">nm"</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Minimal grid size along y-direction = 16.67nm
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>Now let's set a lower bound of 25nm.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[8]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">sim_nonuniform_20</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">Simulation</span><span class="p">(</span>
+    <span class="n">size</span><span class="o">=</span><span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span>
+    <span class="n">grid_spec</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">GridSpec</span><span class="o">.</span><span class="n">auto</span><span class="p">(</span>
+        <span class="n">wavelength</span><span class="o">=</span><span class="n">wavelength</span><span class="p">,</span>
+        <span class="n">min_steps_per_wvl</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
+        <span class="n">dl_min</span><span class="o">=</span><span class="mi">25</span> <span class="o">*</span> <span class="n">nm</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="n">medium</span><span class="o">=</span><span class="n">sub_med</span><span class="p">,</span>
+    <span class="n">structures</span><span class="o">=</span><span class="p">[</span><span class="n">box1</span><span class="p">,</span> <span class="n">box2</span><span class="p">],</span>
+    <span class="n">boundary_spec</span><span class="o">=</span><span class="n">boundary_spec</span><span class="p">,</span>
+    <span class="n">run_time</span><span class="o">=</span><span class="mf">1e-12</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">ax</span> <span class="o">=</span> <span class="n">plot_sim_grid</span><span class="p">(</span><span class="n">sim_nonuniform_20</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span>
+    <span class="sa">f</span><span class="s2">"Minimal grid size along y-direction = </span><span class="si">{</span><span class="nb">min</span><span class="p">(</span><span class="n">sim_nonuniform_20</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">sizes</span><span class="o">.</span><span class="n">y</span><span class="p">)</span><span class="o">*</span><span class="mf">1e3</span><span class="si">:</span><span class="s2">1.2f</span><span class="si">}</span><span class="s2">nm"</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Total number of grid points (millions): 1.9
+Minimal grid size along y-direction = 24.57nm
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedImage jp-OutputArea-output" tabindex="0">
+<img alt="No description has been provided for this image" class="" src="/assets/tidy3d/examples/image/AutoGrid/AutoGrid_4.png"/>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>The actual minimal grid size along y-direction is 24.57nm, greater than 16.67nm when <code>dl_min</code> is not set.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h3 id="Mesh-override-structures">Mesh override structures<a class="anchor-link" href="#Mesh-override-structures">¶</a></h3><p>For this particular problem, we may want to do a final refinement around the slot, where we expect the fields to be strongest. This can be achieved by adding <code>override_structures</code> to the simulation <code>grid_spec</code>.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p><code>override_structures</code> is a list of <code>Tidy3D</code> structures each with an arbitrary geometry which are used exclusively for the meshing, added on top of any physical simulation structures.</p>
+<p>There are two types of <code>Tidy3D</code> structures that can be added the <code>override_structures</code> list. The first type defines a fictitious medium inside the override structure so that the grid size is decided by the minimum steps per wavelength in the medium; The second type is more straightforward: one can directly define the grid size along each axis inside the override structures.</p>
+<h4 id="Override-Structure----option-1">Override Structure -- option 1<a class="anchor-link" href="#Override-Structure----option-1">¶</a></h4><p>The first type is identical to the <a href="https://docs.flexcompute.com/projects/tidy3d/en/latest/_autosummary/tidy3d.Structure.html" target="_blank">Structure</a> object that consists of a <a href="https://docs.flexcompute.com/projects/tidy3d/en/latest/api.html#geometry" target="_blank">Geometry</a> and a <a href="https://docs.flexcompute.com/projects/tidy3d/en/latest/api.html#mediums" target="_blank">Medium</a>. The grid step in the override_structure region is decided by the minimum steps per wavelength in this <code>medium</code>.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[9]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Define a "dummy" box with refractive index 5 around the central location of the waveguide</span>
+<span class="n">refine_box</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">Structure</span><span class="p">(</span>
+    <span class="n">geometry</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">Box</span><span class="p">(</span><span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">td</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">)),</span>
+    <span class="n">medium</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">Medium</span><span class="p">(</span><span class="n">permittivity</span><span class="o">=</span><span class="mi">5</span><span class="o">**</span><span class="mi">2</span><span class="p">),</span>
+<span class="p">)</span>
+
+<span class="c1"># Use the box as a grid refinement structure</span>
+<span class="n">sim_nonuniform_20_refine</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">Simulation</span><span class="p">(</span>
+    <span class="n">size</span><span class="o">=</span><span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span>
+    <span class="n">grid_spec</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">GridSpec</span><span class="o">.</span><span class="n">auto</span><span class="p">(</span>
+        <span class="n">wavelength</span><span class="o">=</span><span class="n">wavelength</span><span class="p">,</span>
+        <span class="n">min_steps_per_wvl</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
+        <span class="n">override_structures</span><span class="o">=</span><span class="p">[</span><span class="n">refine_box</span><span class="p">],</span>
+    <span class="p">),</span>
+    <span class="n">medium</span><span class="o">=</span><span class="n">sub_med</span><span class="p">,</span>
+    <span class="n">structures</span><span class="o">=</span><span class="p">[</span><span class="n">box1</span><span class="p">,</span> <span class="n">box2</span><span class="p">],</span>
+    <span class="n">boundary_spec</span><span class="o">=</span><span class="n">boundary_spec</span><span class="p">,</span>
+    <span class="n">run_time</span><span class="o">=</span><span class="mf">1e-12</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">ax</span> <span class="o">=</span> <span class="n">plot_sim_grid</span><span class="p">(</span><span class="n">sim_nonuniform_20_refine</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Total number of grid points (millions): 4.0
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedImage jp-OutputArea-output" tabindex="0">
+<img alt="No description has been provided for this image" class="" src="/assets/tidy3d/examples/image/AutoGrid/AutoGrid_5.png"/>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>Note that the override region is highlighted in the grid plotting. Now this looks pretty good - the grid size of the points around the slot region is <code>1550 / 20 / 5 = 15.5</code> nanometers, while overall the simulation has twice fewer total number of grid points (<code>4.0M</code>) compared to the simulation with a uniform mesh step of <code>20</code> nanometers (<code>8.3M</code>). One thing to note, however, is that the override structure made the grid along the x-dimension small, which may not be necessary. To avoid this, we can change that structure to have <code>size = 0</code> along that dimension. This would force the non-uniform grid to place a grid boundary at the <code>center</code> of the override structure along <code>x</code>, but apart from that it will not refine the grid step along <code>x</code>.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[10]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Redefine the box with size 0 along x</span>
+<span class="n">refine_box</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">Structure</span><span class="p">(</span>
+    <span class="n">geometry</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">Box</span><span class="p">(</span><span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">)),</span>
+    <span class="n">medium</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">Medium</span><span class="p">(</span><span class="n">permittivity</span><span class="o">=</span><span class="mi">5</span><span class="o">**</span><span class="mi">2</span><span class="p">),</span>
+<span class="p">)</span>
+
+<span class="c1"># Use the box as a grid refinement structure</span>
+<span class="n">sim_nonuniform_20_refine</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">Simulation</span><span class="p">(</span>
+    <span class="n">size</span><span class="o">=</span><span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span>
+    <span class="n">grid_spec</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">GridSpec</span><span class="o">.</span><span class="n">auto</span><span class="p">(</span>
+        <span class="n">wavelength</span><span class="o">=</span><span class="n">wavelength</span><span class="p">,</span>
+        <span class="n">min_steps_per_wvl</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
+        <span class="n">override_structures</span><span class="o">=</span><span class="p">[</span><span class="n">refine_box</span><span class="p">],</span>
+    <span class="p">),</span>
+    <span class="n">medium</span><span class="o">=</span><span class="n">sub_med</span><span class="p">,</span>
+    <span class="n">structures</span><span class="o">=</span><span class="p">[</span><span class="n">box1</span><span class="p">,</span> <span class="n">box2</span><span class="p">],</span>
+    <span class="n">boundary_spec</span><span class="o">=</span><span class="n">boundary_spec</span><span class="p">,</span>
+    <span class="n">run_time</span><span class="o">=</span><span class="mf">1e-12</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">ax</span> <span class="o">=</span> <span class="n">plot_sim_grid</span><span class="p">(</span><span class="n">sim_nonuniform_20_refine</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Total number of grid points (millions): 3.0
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedImage jp-OutputArea-output" tabindex="0">
+<img alt="No description has been provided for this image" class="" src="/assets/tidy3d/examples/image/AutoGrid/AutoGrid_6.png"/>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h4 id="Override-Structure----option-2">Override Structure -- option 2<a class="anchor-link" href="#Override-Structure----option-2">¶</a></h4><p>The second type is the <a href="https://docs.flexcompute.com/projects/tidy3d/en/latest/_autosummary/tidy3d.MeshOverrideStructure.html" target="_blank">MeshOverrideStructure</a> object that consists of a <a href="https://docs.flexcompute.com/projects/tidy3d/en/latest/api.html#geometry" target="_blank">Geometry</a>, and a tuple <code>dl</code> specifying the grid sizes along x,y,z directions. We can override the grid sizes just along a few selected directions by setting the value to be <code>None</code> in the <code>dl</code> tuple along the other directions. E.g. if we only plan to refine the grid size along x-direction with grid size 0.01 micron, we can apply <code>dl=(0.01, None, None)</code>. In the following, we override the grid size along <code>y</code> and <code>z</code> to be 15.5nm.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[11]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">refine_box</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">MeshOverrideStructure</span><span class="p">(</span>
+    <span class="n">geometry</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">Box</span><span class="p">(</span><span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">td</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">)),</span>
+    <span class="n">dl</span><span class="o">=</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="mf">15.5</span> <span class="o">*</span> <span class="n">nm</span><span class="p">,</span> <span class="mf">15.5</span> <span class="o">*</span> <span class="n">nm</span><span class="p">],</span>
+<span class="p">)</span>
+
+<span class="c1"># Use the box as a grid refinement structure</span>
+<span class="n">sim_nonuniform_20_refine</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">Simulation</span><span class="p">(</span>
+    <span class="n">size</span><span class="o">=</span><span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span>
+    <span class="n">grid_spec</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">GridSpec</span><span class="o">.</span><span class="n">auto</span><span class="p">(</span>
+        <span class="n">wavelength</span><span class="o">=</span><span class="n">wavelength</span><span class="p">,</span>
+        <span class="n">min_steps_per_wvl</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
+        <span class="n">override_structures</span><span class="o">=</span><span class="p">[</span><span class="n">refine_box</span><span class="p">],</span>
+    <span class="p">),</span>
+    <span class="n">medium</span><span class="o">=</span><span class="n">sub_med</span><span class="p">,</span>
+    <span class="n">structures</span><span class="o">=</span><span class="p">[</span><span class="n">box1</span><span class="p">,</span> <span class="n">box2</span><span class="p">],</span>
+    <span class="n">boundary_spec</span><span class="o">=</span><span class="n">boundary_spec</span><span class="p">,</span>
+    <span class="n">run_time</span><span class="o">=</span><span class="mf">1e-12</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">ax</span> <span class="o">=</span> <span class="n">plot_sim_grid</span><span class="p">(</span><span class="n">sim_nonuniform_20_refine</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Total number of grid points (millions): 2.9
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedImage jp-OutputArea-output" tabindex="0">
+<img alt="No description has been provided for this image" class="" src="/assets/tidy3d/examples/image/AutoGrid/AutoGrid_7.png"/>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>Just for fun, we can also have a look at the modes of this structure.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[12]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">num_modes</span> <span class="o">=</span> <span class="mi">3</span>
+<span class="n">plane</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">Box</span><span class="p">(</span><span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+<span class="n">mode_spec</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">ModeSpec</span><span class="p">(</span><span class="n">num_modes</span><span class="o">=</span><span class="n">num_modes</span><span class="p">)</span>
+<span class="n">ms</span> <span class="o">=</span> <span class="n">ModeSolver</span><span class="p">(</span>
+    <span class="n">simulation</span><span class="o">=</span><span class="n">sim_nonuniform_20_refine</span><span class="p">,</span> <span class="n">plane</span><span class="o">=</span><span class="n">plane</span><span class="p">,</span> <span class="n">mode_spec</span><span class="o">=</span><span class="n">mode_spec</span><span class="p">,</span> <span class="n">freqs</span><span class="o">=</span><span class="p">[</span><span class="n">freq0</span><span class="p">]</span>
+<span class="p">)</span>
+<span class="n">modes</span> <span class="o">=</span> <span class="n">ms</span><span class="o">.</span><span class="n">solve</span><span class="p">()</span>
+<span class="n">fig</span><span class="p">,</span> <span class="n">axs</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">num_modes</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">14</span><span class="p">))</span>
+<span class="k">for</span> <span class="n">mode_ind</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_modes</span><span class="p">):</span>
+    <span class="n">ms</span><span class="o">.</span><span class="n">plot_field</span><span class="p">(</span>
+        <span class="s2">"Ey"</span><span class="p">,</span> <span class="s2">"abs"</span><span class="p">,</span> <span class="n">f</span><span class="o">=</span><span class="n">freq0</span><span class="p">,</span> <span class="n">mode_index</span><span class="o">=</span><span class="n">mode_ind</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">axs</span><span class="p">[</span><span class="n">mode_ind</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">robust</span><span class="o">=</span><span class="kc">False</span>
+    <span class="p">)</span>
+    <span class="n">ms</span><span class="o">.</span><span class="n">plot_field</span><span class="p">(</span>
+        <span class="s2">"Ez"</span><span class="p">,</span> <span class="s2">"abs"</span><span class="p">,</span> <span class="n">f</span><span class="o">=</span><span class="n">freq0</span><span class="p">,</span> <span class="n">mode_index</span><span class="o">=</span><span class="n">mode_ind</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">axs</span><span class="p">[</span><span class="n">mode_ind</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">robust</span><span class="o">=</span><span class="kc">False</span>
+    <span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">[10:06:08] </span><span style="color: #800000; text-decoration-color: #800000">WARNING: Use the remote mode solver with subpixel </span> <a href="file:///home/momchil/Drive/flexcompute/tidy3d-docs/tidy3d/tidy3d/plugins/mode/mode_solver.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">mode_solver.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file:///home/momchil/Drive/flexcompute/tidy3d-docs/tidy3d/tidy3d/plugins/mode/mode_solver.py#141" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">141</span></a>
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span><span style="color: #800000; text-decoration-color: #800000">averaging for better accuracy through             </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">                  </span>
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span><span style="color: #008000; text-decoration-color: #008000">'tidy3d.plugins.mode.web.run(...)'</span><span style="color: #800000; text-decoration-color: #800000">.               </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">                  </span>
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedImage jp-OutputArea-output" tabindex="0">
+<img alt="No description has been provided for this image" class="" src="/assets/tidy3d/examples/image/AutoGrid/AutoGrid_8.png"/>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h4 id="Mesh-override-with-coarser-grid-size">Mesh override with coarser grid size<a class="anchor-link" href="#Mesh-override-with-coarser-grid-size">¶</a></h4><p>Sometimes, instead of refinement, we want to override a region with a coarser mesh. This can be achieved by setting <code>enforce=True</code> in <a href="https://docs.flexcompute.com/projects/tidy3d/en/latest/_autosummary/tidy3d.MeshOverrideStructure.html" target="_blank">MeshOverrideStructure</a>.</p>
+<p>First, let's see the default behavior where <code>enforce=False</code> so that the override structure with coarser mesh will be ignored unless it fully covers the structure of fine mesh. In the following example, we try to override the mesh along x-direction be to 40nm.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[13]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">refine_box</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">MeshOverrideStructure</span><span class="p">(</span>
+    <span class="n">geometry</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">Box</span><span class="p">(</span><span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">td</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">)),</span>
+    <span class="n">dl</span><span class="o">=</span><span class="p">[</span><span class="mi">50</span> <span class="o">*</span> <span class="n">nm</span><span class="p">,</span> <span class="mf">15.5</span> <span class="o">*</span> <span class="n">nm</span><span class="p">,</span> <span class="mf">15.5</span> <span class="o">*</span> <span class="n">nm</span><span class="p">],</span>
+<span class="p">)</span>
+
+<span class="c1"># Use the box as a grid refinement structure</span>
+<span class="n">sim_nonuniform_20_coarser</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">Simulation</span><span class="p">(</span>
+    <span class="n">size</span><span class="o">=</span><span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span>
+    <span class="n">grid_spec</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">GridSpec</span><span class="o">.</span><span class="n">auto</span><span class="p">(</span>
+        <span class="n">wavelength</span><span class="o">=</span><span class="n">wavelength</span><span class="p">,</span>
+        <span class="n">min_steps_per_wvl</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
+        <span class="n">override_structures</span><span class="o">=</span><span class="p">[</span><span class="n">refine_box</span><span class="p">],</span>
+    <span class="p">),</span>
+    <span class="n">medium</span><span class="o">=</span><span class="n">sub_med</span><span class="p">,</span>
+    <span class="n">structures</span><span class="o">=</span><span class="p">[</span><span class="n">box1</span><span class="p">,</span> <span class="n">box2</span><span class="p">],</span>
+    <span class="n">boundary_spec</span><span class="o">=</span><span class="n">boundary_spec</span><span class="p">,</span>
+    <span class="n">run_time</span><span class="o">=</span><span class="mf">1e-12</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">ax</span> <span class="o">=</span> <span class="n">plot_sim_grid</span><span class="p">(</span><span class="n">sim_nonuniform_20_coarser</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span>
+    <span class="sa">f</span><span class="s2">"Minimal grid size along x-direction = </span><span class="si">{</span><span class="nb">min</span><span class="p">(</span><span class="n">sim_nonuniform_20_coarser</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">sizes</span><span class="o">.</span><span class="n">x</span><span class="p">)</span><span class="o">*</span><span class="mf">1e3</span><span class="si">:</span><span class="s2">1.2f</span><span class="si">}</span><span class="s2">nm"</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Total number of grid points (millions): 2.9
+Minimal grid size along x-direction = 22.22nm
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedImage jp-OutputArea-output" tabindex="0">
+<img alt="No description has been provided for this image" class="" src="/assets/tidy3d/examples/image/AutoGrid/AutoGrid_9.png"/>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>The minimal grid size along x-direction is still 22nm, so the <code>override_structures</code> doesn't take effect. This is because, by default, the meshing chooses the step size based on the highest-index structure (real or override) at any given cross-section. However, this behavior can be overridden if we set <code>enforce=True</code> in an <code>MeshOverrideStructure</code>, in which case other structures are ignored.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[14]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">refine_box</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">MeshOverrideStructure</span><span class="p">(</span>
+    <span class="n">geometry</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">Box</span><span class="p">(</span><span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">td</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">)),</span>
+    <span class="n">dl</span><span class="o">=</span><span class="p">[</span><span class="mi">40</span> <span class="o">*</span> <span class="n">nm</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">],</span>
+    <span class="n">enforce</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># Use the box as a grid refinement structure</span>
+<span class="n">sim_nonuniform_20_coarser</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">Simulation</span><span class="p">(</span>
+    <span class="n">size</span><span class="o">=</span><span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span>
+    <span class="n">grid_spec</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">GridSpec</span><span class="o">.</span><span class="n">auto</span><span class="p">(</span>
+        <span class="n">wavelength</span><span class="o">=</span><span class="n">wavelength</span><span class="p">,</span>
+        <span class="n">min_steps_per_wvl</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
+        <span class="n">override_structures</span><span class="o">=</span><span class="p">[</span><span class="n">refine_box</span><span class="p">],</span>
+    <span class="p">),</span>
+    <span class="n">medium</span><span class="o">=</span><span class="n">sub_med</span><span class="p">,</span>
+    <span class="n">structures</span><span class="o">=</span><span class="p">[</span><span class="n">box1</span><span class="p">,</span> <span class="n">box2</span><span class="p">],</span>
+    <span class="n">boundary_spec</span><span class="o">=</span><span class="n">boundary_spec</span><span class="p">,</span>
+    <span class="n">run_time</span><span class="o">=</span><span class="mf">1e-12</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">ax</span> <span class="o">=</span> <span class="n">plot_sim_grid</span><span class="p">(</span><span class="n">sim_nonuniform_20_coarser</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span>
+    <span class="sa">f</span><span class="s2">"Minimal grid size along x-direction = </span><span class="si">{</span><span class="nb">min</span><span class="p">(</span><span class="n">sim_nonuniform_20_coarser</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">sizes</span><span class="o">.</span><span class="n">x</span><span class="p">)</span><span class="o">*</span><span class="mf">1e3</span><span class="si">:</span><span class="s2">1.2f</span><span class="si">}</span><span class="s2">nm"</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Total number of grid points (millions): 1.4
+Minimal grid size along x-direction = 40.00nm
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedImage jp-OutputArea-output" tabindex="0">
+<img alt="No description has been provided for this image" class="" src="/assets/tidy3d/examples/image/AutoGrid/AutoGrid_10.png"/>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>Now the minimal grid size along x-direction is target 40nm. When multiple override structures with <code>enforce=True</code> overlap, the grid size in the intersection region is decided by the last such structure in the list.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="Combination-of-uniform-and-nonuiform-grid">Combination of uniform and nonuiform grid<a class="anchor-link" href="#Combination-of-uniform-and-nonuiform-grid">¶</a></h2><p>Finally, we note that <code>Tidy3D</code> allows another easy way to handle the <code>x</code> direction in our example, namely applying different grid specifications along each of the three simulation directions. For example, we can set a fixed grid size of <code>40nm</code> along the propagation direction, where we expect the field dependence to be smooth, while still using the refined nonuniform mesh in the other two directions. This achieves the same effect as in the plot above.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[15]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">grid_spec</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">GridSpec</span><span class="p">(</span>
+    <span class="n">grid_x</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">UniformGrid</span><span class="p">(</span><span class="n">dl</span><span class="o">=</span><span class="mf">0.04</span><span class="p">),</span>
+    <span class="n">grid_y</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">AutoGrid</span><span class="p">(</span><span class="n">min_steps_per_wvl</span><span class="o">=</span><span class="mi">20</span><span class="p">),</span>
+    <span class="n">grid_z</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">AutoGrid</span><span class="p">(</span><span class="n">min_steps_per_wvl</span><span class="o">=</span><span class="mi">20</span><span class="p">),</span>
+    <span class="n">wavelength</span><span class="o">=</span><span class="n">wavelength</span><span class="p">,</span>
+    <span class="n">override_structures</span><span class="o">=</span><span class="p">[</span><span class="n">refine_box</span><span class="p">],</span>
+<span class="p">)</span>
+
+<span class="n">sim_nonuniform_yz_uniform_x</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">Simulation</span><span class="p">(</span>
+    <span class="n">size</span><span class="o">=</span><span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span>
+    <span class="n">grid_spec</span><span class="o">=</span><span class="n">grid_spec</span><span class="p">,</span>
+    <span class="n">medium</span><span class="o">=</span><span class="n">sub_med</span><span class="p">,</span>
+    <span class="n">structures</span><span class="o">=</span><span class="p">[</span><span class="n">box1</span><span class="p">,</span> <span class="n">box2</span><span class="p">],</span>
+    <span class="n">boundary_spec</span><span class="o">=</span><span class="n">boundary_spec</span><span class="p">,</span>
+    <span class="n">run_time</span><span class="o">=</span><span class="mf">1e-12</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">ax</span> <span class="o">=</span> <span class="n">plot_sim_grid</span><span class="p">(</span><span class="n">sim_nonuniform_yz_uniform_x</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">[10:06:11] </span><span style="color: #800000; text-decoration-color: #800000">WARNING: Override structures take no effect along   </span> <a href="file:///home/momchil/Drive/flexcompute/tidy3d-docs/tidy3d/tidy3d/components/grid/grid_spec.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">grid_spec.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file:///home/momchil/Drive/flexcompute/tidy3d-docs/tidy3d/tidy3d/components/grid/grid_spec.py#555" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">555</span></a>
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span><span style="color: #800000; text-decoration-color: #800000">x-axis. If intending to apply override structures to</span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">                </span>
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span><span style="color: #800000; text-decoration-color: #800000">this axis, use </span><span style="color: #008000; text-decoration-color: #008000">'AutoGrid'</span><span style="color: #800000; text-decoration-color: #800000">.                          </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">                </span>
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Total number of grid points (millions): 1.4
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedImage jp-OutputArea-output" tabindex="0">
+<img alt="No description has been provided for this image" class="" src="/assets/tidy3d/examples/image/AutoGrid/AutoGrid_11.png"/>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>Note: the 2nd warning is just letting us know that we are using uniform grid along x-axis even though the override structures have some extent in these dimensions. We can ignore as this is intended.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[ ]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body>
+</html>

@@ -1,0 +1,240 @@
+{
+  "title": "FDTD 101: Lecture 12",
+  "pages": [
+    {
+      "id": "",
+      "title": "",
+      "transcript": "This is the second lecture on inverse design in photonics where will we go into the mathematical details of the adjoint variable method."
+    },
+    {
+      "id": "",
+      "title": "",
+      "paragraphs": [
+        {
+          "title": "",
+          "transcript": "As a brief review of the last lecture:"
+        },{
+          "title": "",
+          "transcript": "In an optimization, one would like to adjust the parameters of a device such that it eventually operates in a desired fashion. For example, in the design of a metasurface, one may want to adjust the geometric parameters of each of the metasurface elements until an incident plane wave is focused onto a point on the other side. In this case, one can define a cost function that quantifies the device performance as the intensity of light at the focal region."
+        },{
+          "title": "",
+          "transcript": "Then, the goal of the computational design is to maximize the intensity of light at the focal point. To accomplish this, you may compute the derivative of this intensity at the focal point with respect to your design parameters. For example, the gradient of the focused intensity with respect to the radius of the cylindrical meta atoms in the diagram above."
+        },{
+          "title": "",
+          "transcript": "Once you know this gradient, then you may move in the parameter space along the gradient direction until you reach an optimum of the device. As discussed, the key step in the in this optimization process is computing the gradient."
+        },{
+          "title": "",
+          "transcript": "In the last lecture, we talked about a naive way to compute the gradient through finite difference derives, where the number of computation that you need to do scales linearly with the number of parameters that you need to consider. Today we're going to talk about the adjoint method, which is a remarkable method in which the amount of computation needed to compute the gradient is practically independent of the number of parameters that you are trying to adjust."
+        }
+      ]
+    },
+    {
+      "id": "",
+      "title": "",
+      "paragraphs": [
+        {
+          "title": "",
+          "transcript": "Let’s start by reviewing how to perform an EM simulation in general. We will present it in the frequency domain as it is easier to understand. Imagine that you are solving Maxwell’s equations at a single frequency."
+        }, {
+          "title": "",
+          "transcript": "You can write Maxwell’s equations as a linear system of equations where “E(r)” is the electric field, “epsilon_r(r)” is a permittivity distribution, and “P(r)” here denotes the current source. Thus, this is the equation takes a particular primitivistic distribution as well as a source, and generates the resulting electric field."
+        }, {
+          "title": "",
+          "transcript": "After discretizing, this can be written as a linear system of equations where the term in the bracket is a matrix “A”, operating on the electric field vector “e”, to give a vector “b” representing the current sources. This linear system can be solved in a variety of different ways. Formally you can write a solution in terms of the inverse of “A” times the right hand side “b”. In reality, very rarely want to explicitly form the inverse of the matrix so we use this notation only to denote that we are solving this linear system in some way."
+        }, {
+          "title": "",
+          "transcript": "As an example, let's say you your system contains a square dielectric a point source on the left hand side as indicated by the point “b” in the diagram. Then if you set up and solve this system of equations, you would get the electric field distribution as indicated by the bottom diagram. From this plot, you can see where the point source is and how the field spreads out into the rest of the cell, as expected."
+        }
+      ]
+    },
+    {
+      "id": "",
+      "title": "",
+      "paragraphs": [
+        {
+          "title": "",
+          "transcript": "Within this framework, you would then like to construct some objective function that depends on the design parameters of your system through the solution of Maxwell’s equations. As a simple example, let’s say the design problem requires us to maximize the intensity at a given point in the system “m”. We can write down an objective function that represents the electric intensity evaluated at the measurement  point “m”."
+        }, {
+          "title": "",
+          "transcript": "In general, the objective function is written as a function of the electric field and perhaps it's a complex conjugate. For example, to form the intensity, one needs to take the product of both the electric field and its complex conjugate."
+        }, {
+          "title": "",
+          "transcript": "For our example, you can write the objective function as the total electric field projected onto the vector “m” that is constructed to have a single non-zero only at the measurement point, and then multiply that quantity by its complex conjugate."
+        }
+      ],
+      "transcript": "Within this framework, you would then like to construct some objective function that depends on the design parameters of your system through the solution of Maxwell’s equations. As a simple example, let’s say the design problem requires us to maximize the intensity at a given point in the system “m”. We can write down an objective function that represents the electric intensity evaluated at the measurement  point “m”. In general, the objective function is written as a function of the electric field and perhaps it's a complex conjugate. For example, to form the intensity, one needs to take the product of both the electric field and its complex conjugate. For our example, you can write the objective function as the total electric field projected onto the vector “m” that is constructed to have a single non-zero only at the measurement point, and then multiply that quantity by its complex conjugate. "
+    },
+    {
+      "id": "",
+      "title": "",
+      "paragraphs": [
+        {
+          "title": "",
+          "transcript": "Once you have this objective function, then you would like to compute the derivative of it with respect to respect to some parameter that you would like to tune. For example, in our case, this parameter could be the permittivity at certain point inside the square region. As a starting point, you may just apply the chain rule to your objective function."
+        },{
+          "title": "",
+          "transcript": "For example, to compute the derivative of the objective function with respect to a parameter “p”, we know the objective function depends on the electric field “e”, which itself depends on “p”. So to use the chain rule, we first form the derivative of the objective with respect to the electric field and then multiply that by the derivative of the electric field with respect to the parameter."
+        },{
+          "title": "",
+          "transcript": "We must take care of this for the electric field itself as well as its complex conjugate, adding them together and making use of the fact that both the objective function and the parameter are real-valued quantities, we obtain an equation for the derivative."
+        }, {
+          "title": "",
+          "transcript": "This equation has two parts:",
+          "list": [
+            {
+              "title": "",
+              "sentence": "The derivative of the objective function with respect to the field."
+            },
+            {
+              "title": "",
+              "sentence": "The derivative of the field to the parameter."
+            }
+          ]
+        },{
+          "title": "",
+          "transcript": "Next we will consider evaluating each of these parts separately."
+        }
+      ]
+    },
+    {
+      "id": "",
+      "title": "",
+      "paragraphs": [
+        {
+          "title": "",
+          "transcript": "First, let's consider the first term, containing the derivative of the objective function with respect to the electric field. As discussed, in our example, this is just a simple product of the electric field and its complex conjugate."
+        }, {
+          "title": "",
+          "transcript": "So if you take the derivative with respect to only the electric field, you end up with only the complex conjugate of the field corresponding to the original simulation evaluated at the position “m” and with a spatial dependence that is only non-zero at position “m”."
+        }
+      ]
+    },
+    {
+      "id": "",
+      "title": "",
+      "paragraphs": [
+        {
+          "title": "",
+          "transcript": "Next, one can compute the derivative of the electric field with respect to the design parameter. For this, we take our original system of equations. We take derivative with respect to the parameter on both sides of the equation."
+        }, {
+          "title": "",
+          "transcript": "For simplicity, we assume that the excitation source (“b”) doesn't depend on these parameters, so the derivative and right hand side is zero. The left hand side is a product so we use the product rule to get two terms."
+        }, {
+          "title": "",
+          "transcript": "We need the de/dp term for our gradient, so we solve for that term and can simply write it using the inverse of the system matrix times another quantity."
+        }, {
+          "title": "",
+          "transcript": "We plug this into our derivative equation and recover a more general formula for the derivative. Next we will discuss each term one by one to develop an efficient way to evaluate the gradient."
+        }
+      ]
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "Inside our derivative information there are four terms.",
+      "list": [
+        {
+          "title": "",
+          "sentence": "The derivative of our objective function with respect to the electric field. As mentioned in our example, this is just a point at “m” with amplitude given by the complex conjugate of our measured field at that point."
+        },
+        {
+          "title": "",
+          "sentence": "Next we have the inverse of the system matrix “A”."
+        },
+        {
+          "title": "",
+          "sentence": "Then, we have the derivative of our system matrix with respect to the parameter “p”"
+        },
+        {
+          "title": "",
+          "sentence": "And finally, we have the “original” electric field solution, which are the fields corresponding to our system with source “b”"
+        }
+      ]
+    },
+    {
+      "id": "",
+      "title": "",
+      "paragraphs": [
+        {
+          "title": "",
+          "transcript": "Now we want to evaluate this product efficiently. The essence of the adjoint variable method is to realize that one can solve the first two terms first using a single linear system solution. If we define the product of the first two terms as a an “adjoint” electric field “e_adj”, you can write this vector as the solution to a linear system where the matrix is the same as your original system but the source is now given by the derivative of your objective function with respect to the electric field."
+        }, {
+          "title": "",
+          "transcript": "As we mentioned, this happens to just be the complex conjugate of the electric field at the monitor position. Therefore, solving for this adjoint field can be done in the exact same way as the original solution, just with a difference source that depends on your forward solution and the objective function."
+        }, {
+          "title": "",
+          "transcript": "As seen in the diagram, the adjoint fields emanate from the point “m” and have a phase and amplitude dependent on the original solution “e”."
+        }
+      ]
+    }, {
+      "id": "",
+      "title": "",
+      "paragraphs": [
+        {
+          "title": "",
+          "transcript": "Now that we have the adjoint field, the gradient calculation become simply a field overlap calculation. You take the original field “e” and the adjoint field “e_adj” and you form an overlap calculation over the matrix that is the derivative of the system matrix with respect to parameter “p”."
+        }, {
+          "title": "",
+          "transcript": "We note that the two fields themselves have no “p” dependence as it is all contained in this matrix. In the next slides we will talk about the interpretation of this term."
+        }
+      ]
+    }, {
+      "id": "",
+      "title": "",
+      "paragraphs": [
+        {
+          "title": "",
+          "transcript": "To interpret this matrix dA/dp, let’s consider the definition of matrix A from Maxwell’s equations. The matrix has a term containing curl operations minus a term that involves the relative permittivity along the diagonal. As the parameters only affect the system through the relative permitivity distribution, the derivative dA/dp only depends on the second term and we can ignore the curl term."
+        }, {
+          "title": "",
+          "transcript": "We can further rearrange terms and see that the dA/dp matrix is proportional to a diagonal matrix where each diagonal element describes how the relative permittivity at that point depends on parameter “p”."
+        }
+      ]
+    }, {
+      "id": "",
+      "title": "",
+      "paragraphs": [
+        {
+          "title": "",
+          "transcript": "As an example, let's say that your parameter “p” described the relative permittivity within the entire central box. As the relative permittivity distribution only depends on parameter “p” within the box, the derivative is non-zero only within box regions. We can therefore write this diagonal matrix as a delta function."
+        }, {
+          "title": "",
+          "transcript": "Plugging this into our derivative equation, the we see that the gradient can be finally obtained by summing the field overlap over the box region."
+        }
+      ]
+    }, {
+      "id": "",
+      "title": "",
+      "transcript": "Therefore, the general procedure for the adjoint variable method consists of three main steps:",
+      "list": [
+        {
+          "title": "",
+          "sentence": "First, you compute the original field pattern, sometimes called the “forward” field, which corresponds to the original simulation problem of interest. In our case, this was the field sourced by the point “b” to the left of the box."
+        },
+        {
+          "title": "",
+          "sentence": "Then, you perform the adjoint simulation. Using the objective function, you generate the source distribution corresponding to the derivative of the objective function with respect to the original field pattern and solve for the corresponding fields. In our case, the adjoint source was a point dipole at position “m” with amplitude and phase given by the complex conjugate of the forward field evaluated at “m”."
+        },
+        {
+          "title": "",
+          "sentence": "Finally, you take the overlap between the original and adjoint fields over the region corresponding to the influence of your parameter of interest “p”. The result is the gradient of your figure of merit with respect to “p”."
+        }
+      ]
+    },{
+      "id": "",
+      "title": "",
+      "paragraphs": [
+        {
+          "title": "",
+          "transcript": "To see the power of this method, consider performing this gradient computation now for several parameters. The forward and adjoint simulation are both completely independent of the design parameters, so they may be computed once and saved for later. The dA/dp term used in the overlap integral is the only term that depends on parameters. Therefore, using the stored original and adjoint fields one may just perform the overlap integral step for each parameter of interest to compute the full gradient."
+        },{
+          "title": "",
+          "transcript": "For a concrete example, consider four parameters a, b, c, d corresponding to the relative permittivity of each quadrant of the box. The gradient with respect to the permittivity of each quadrant can be found by computing original and adjoint fields once, and then summing the overlap of these quantities over each quadrant independently. The expensive part of this process is the solving of the system of equations, which only needs to be done twice, no matter how many parameters we extend this to. In fact, this is what enables inverse design where you may have thousands or maybe millions of parameters."
+        }, {
+          "title": "",
+          "transcript": "Using the adjoint method, the gradient of the objective function with respect to the parameters can be solved in roughly the same amount of time as the original simulation. This concludes a brief introduction to the mathematics of the adjoint variable method. Next time we will show how to apply this to an actual optimization problem."
+        }
+      ]
+    }
+  ]
+}

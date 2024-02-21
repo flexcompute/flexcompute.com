@@ -1,0 +1,340 @@
+---
+layout: default
+
+custom_font: font2
+---
+{% include header.html extra_class="absolute transparent" logo_class="logo fc-logo" container_class="container" %}
+<div class="wrapper bg-opacity-default">
+    <!-- Hero Section -->
+    {% if page.hero_section.enable %}
+    {% assign hero = page.hero_section %}
+    <div class="container inner pt-200 pt-md-10 pb-0 text-center d-flex flex-column align-items-center">
+        {%if hero.small_title%}
+        <p class="font-size-19 color-dark-5 mb-0">{{hero.small_title}}</p>
+        <div class="space40"></div>
+        {%endif%}
+        {% if hero.title %}
+        <h1 class="font-size-46 line-height-50 {% if hero.title_class %}{{hero.title_class}}{%else%}width-560{%endif%} m-0 color-dark">
+            {{hero.title}}</h1>
+        {% endif %}
+        <div class="space50"></div>
+        {% if hero.description %}
+        <p class="position-relative font-size-19 line-height-32 mb-0 color-dark-5 width-max-950 pl-20 pr-0"
+           style="word-break: break-word;z-index: 2">{{hero.description}}</p>
+        {% endif %}
+        <div class="space60"></div>
+        <div class="position-relative product-action d-flex flex-md-row flex-column justify-content-center"
+             style="width: 100%;z-index: 2">
+            {% if hero.enable_demo %}
+            {% include get_demo.html link="/contact/" extra_id="__pg_flow360_btn_get-a-demo" %}
+            {% endif %}
+            {% if hero.enable_contact %}
+            {% include contact_btn_dashed.html extra_id="__pg_flow360_btn_contact-us" %}
+            {% endif %}
+            {% if hero.enable_techBrief %}
+            <!-- <button id="{{hero.techBrief_click_id}}" onclick="downloadTechnicalBrief('{{hero.techBrief_link}}')" class="btn btn-dashed-primary font-size-16 m-0" style="padding-top: 16px">
+                Tech Brief
+            </button> -->
+            <a id="{{hero.techBrief_click_id}}" href="{{hero.techBrief_link}}" target="_blank" class="btn btn-dashed-primary font-size-16 m-0" style="padding-top: 16px">
+                Tech Brief
+            </a>
+            {% endif %}
+        </div>
+        {% if hero.image_space %}
+        <div class="{{hero.image_space}}"></div>
+        {% endif %}
+        {% if hero.bg_image_class %}
+        <div class="position-relative left-0 {%if hero.bg_image_class%}{{hero.bg_image_class}}{%endif%}"
+             style="z-index: 1;">
+            {%if hero.bg_image%}
+            <img width="{{hero.width}}" height="{{hero.height}}" class="aspect-ratio" src="{{hero.bg_image}}"
+                 alt="{{hero.title}}">
+            {%endif%}
+        </div>
+        {% else %}
+        <div class="position-relative left-0" style="z-index: 1;">
+            {%if hero.bg_image%}
+            <img width="{{hero.width}}" height="{{hero.height}}" class="aspect-ratio" src="{{hero.bg_image}}"
+                 alt="{{hero.title}}" style="max-width: 751px">
+            {%endif%}
+        </div>
+        <div class="space130"></div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Feature Section -->
+    {% if page.featured_section.enable %}
+    {% assign featured = page.featured_section %}
+    <div class="container inner pt-0 pb-0 {% if featured.class %}{{featured.class}}{%endif%}">
+        {% if featured.lists %}
+        {% for item in featured.lists %}
+        {% if item.enable %}
+        <div class="row align-items-center justify-content-center">
+            <div class="{%if item.left_class%}{{item.left_class}}{%else%}col-lg-6{%endif%} {%if item.float=='right'%} {{pr}} pr-sm-0 order-md-1 {% else %} order-md-2 {%endif%}">
+                {% if item.title %}
+                <h2 class="color-dark-3 font-size-30 pr-20 pr-sm-0 {% if item.title_class %} {{item.title_class}} {%endif%}">
+                    {{item.title}}</h2>
+                {% endif %}
+                {% if item.description %}
+                <p class="font-size-19 color-dark-5 line-height-24 {%if item.description_class%}{{item.description_class}}{%endif%}">
+                    {{item.description}}
+                </p>
+                {% endif %}
+                {% if item.scenarios %}
+                <ul class="special_point list-unstyled font-size-19 color-dark-5">
+                    {% for scenario in item.scenarios %}
+                    {%if scenario.enable%}
+                    <li class="line-height-32 align-items-start">
+                        <span class="sphere line-height-24"></span>
+                        {{scenario.text}}
+                    </li>
+                    {%endif%}
+                    {%endfor%}
+                </ul>
+                {%endif%}
+                {%if item.description_end%}
+                <p class="font-size-19 color-dark-5 line-height-24 {%if item.description_end_class%}{{item.description_end_class}}{%endif%}">
+                    {{item.description_end}}</p>
+                {%endif%}
+                {% if item.btn_link %}
+                {% if item.btn_for_download%}
+                <button id="{{item.btn_click_id}}"
+                    onclick="downloadTechnicalBrief('{{item.btn_link}}')"
+                   class="btn btn-dashed-primary font-size-16 mb-5 font-weight-400" style="padding-top: 16px">
+                    {{item.btn_text}}
+                </button>
+                {% else %}
+                <a id="{{item.btn_click_id}}" href="{{item.btn_link}}"
+                   class="btn btn-dashed-primary font-size-16 mb-5 font-weight-400" style="padding-top: 16px">
+                    {{item.btn_text}}
+                </a>
+                {%endif%}
+                {%endif%}
+                {% if item.small_description %}
+                <div class="space20"></div>
+                <p class="font-size-14 color-dark-5 mb-0 {%if item.small_description_class%}{{item.small_description_class}}{%endif%}">
+                    {{item.small_description}}</p>
+                {%endif%}
+
+            </div>
+            <div class="{%if item.right_class%}{{item.right_class}}{%else%}col-lg-6{%endif%} {%if item.float=='right'%} order-md-2 {% else %} {{pr}} pr-sm-0 order-md-1 {%endif%}">
+                {% if item.type == 'image' %}
+                <img width="2048" height="1725" class="aspect-ratio" src="{{ item.image }}" alt="{{item.title}}"
+                     style="{{item.style}}">
+                {% endif %}
+                {% if item.type == 'video' %}
+                <button id="{{item.btn_iframe_id}}" class="hide-element">Play</button>
+                <div class='embed-container {{item.video_class}}'>
+                    <iframe
+                        id="{{item.iframe_id}}"
+                        allow="autoplay; fullscreen; accelerometer; encrypted-media; gyroscope; picture-in-picture"
+                        allowfullscreen=""
+                        data-ready="true"
+                        src='{{ item.video }}' frameborder='0'></iframe>
+
+                </div>
+                {%endif%}
+                {% if item.type == 'video-lite' %}
+                <lite-vimeo id="{{item.video_element_id}}" videoid="{{ item.video }}"></lite-vimeo>
+                {%endif%}
+                {% if item.type == 'webm_image' %}
+                <video autoplay loop muted playsinline style="width: 100%">
+                    <source src="{{item.image_webm}}" type="video/webm">
+                    <source src="{{item.image_mp4}}" type="video/mp4">
+                </video>
+                {% endif %}
+            </div>
+        </div>
+        <div class="space130"></div>
+        {% endif %}
+        {% endfor %}
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <!--Special Section -->
+    {% if page.special_section.enable%}
+    {% assign special = page.special_section %}
+    <div class="container inner pt-0 pb-0">
+        {% if featured.lists %}
+        {% for item in special.lists %}
+        {% if item.enable %}
+        <div class="row align-items-center justify-content-center">
+            {%if item.title%}
+            <h2 class="color-dark-3 text-center font-size-30 mb-0 {% if item.title_class %} {{item.title_class}} {%endif%}"
+                style="width:100%;max-width: 1100px">{{item.title}}</h2>
+            <div class="space40"></div>
+            {% endif %}
+            <div class="row">
+                {%if item.float == 'bottom'%}
+                <div class="col-12">
+                    {% if item.description %}
+                    <p class="font-size-19 color-dark-5 mb-0 line-height-24 text-center {%if item.description_class%}{{item.description_class}}{%endif%}">
+                        {{item.description}}</p>
+                    {% endif %}
+                </div>
+                <div class="space30"></div>
+                <div class="col-12">
+                    {%if item.type == 'image'%}
+                    <img width="2048" height="1725" class="aspect-ratio" src="{{ item.image }}" alt="{{item.title}}"
+                         style="{{item.style}}">
+                    {%endif%}
+                </div>
+                {% if item.btn_space %}
+                <div class="{{item.btn_space}}"></div>
+                {%endif%}
+                <div class="col-12 text-center">
+                    {% if item.btn_link %}
+                    <a id="{{item.btn_click_id}}" href="{{item.btn_link}}"
+                       class="btn btn-dashed-primary font-size-16 mb-5 font-weight-400" style="padding-top: 16px">
+                        {{item.btn_text}}
+                    </a>
+                    {%endif%}
+                </div>
+                {%else%}
+                <!-- if item.float != 'bottom'     -->
+                <div class="col-lg-6 {%if item.class%}{{item.class}}{%endif%} {%if item.float=='right'%} {{pr}} pr-sm-0 order-md-1 {% else %} order-md-2 {%endif%}">
+                    {% if item.description %}
+                    <p class="font-size-19 color-dark-5 line-height-24 mb-0 {%if item.description_class%}{{item.description_class}}{%endif%}">
+                        {{item.description}}</p>
+                    {% endif %}
+                    {% if item.btn_link %}
+                    {% if item.btn_space %}
+                    <div class="{{item.btn_space}}"></div>
+                    {%endif%}
+                    <a id="{{item.btn_click_id}}" href="{{item.btn_link}}"
+                       class="btn {%if item.btn_class%} {{item.btn_class}}{%else%}btn-dashed-primary {%endif%} font-size-16 mb-5 font-weight-400"
+                       style="padding-top: 16px">
+                        {{item.btn_text}}
+                    </a>
+                    {%endif%}
+                    {%if item.small_description%}
+                    <div class="space20"></div>
+                    <p class="font-size-14 color-dark-5 mb-0 {%if item.small_description_class%}{{item.small_description_class}}{%endif%}">
+                        {{item.small_description}}</p>
+                    {%endif%}
+                </div>
+                <div class="col-lg-6 row member-card justify-content-around {%if item.float=='right'%} order-md-2 {% else %} {{pr}} pr-sm-0 order-md-1 {%endif%}">
+                    {%if item.type == 'members'%}
+                    <div class="members">
+                        {%for member in item.members%}
+                        <div class="members_item border_base text-center d-flex flex-column align-items-center justify-content-start">
+                            <div class="space20"></div>
+                            {%if member.avatar%}
+                            <figure class="img-blob member-avatar mb-10" style="overflow: hidden;">
+                                <img width="160" height="160" class="aspect-ratio" src="{{ member.avatar }}"
+                                     style="width: 8rem" alt="{{ member.name }}">
+                            </figure>
+                            {%endif%}
+                            {%if member.name%}
+                            <h4 class="font-size-19 color-dark-5 mb-0">{{ member.name }}</h4>
+                            <div class="space20"></div>
+                            {%endif%}
+                            {%if member.intro%}
+                            <p class="font-size-12 color-dark-5 mb-0">{{member.intro}}</p>
+                            {%endif%}
+                        </div>
+                        {%endfor%}
+                    </div>
+                    {%endif%}
+                    <!-- endif item.type == 'members'     -->
+                    {%if item.type == 'image'%}
+                    <img width="2048" height="1725" class="aspect-ratio" src="{{ item.image }}" alt="{{item.title}}">
+                    {%endif%}
+                    {%if item.type == 'image-list'%}
+                    <div class="special_image">
+                        {%for image in item.images%}
+                        <div class="image_item border_base text-center d-flex flex-column align-items-center justify-content-center">
+                            <img width="160" height="160" class="aspect-ratio" src="{{ image.image }}"
+                                 alt="{{ image.intro }}">
+                            {%if image.intro%}
+                            <div class="space40"></div>
+                            <p class="font-size-14 color-dark-5">{{image.intro}}</p>
+                            {%endif%}
+                        </div>
+                        {%endfor%}
+                    </div>
+                    {%endif%}
+                </div>
+                {%endif%}
+                <!-- endif -->
+            </div>
+        </div>
+        <div class="space130"></div>
+        {% endif %}
+        {% endfor %}
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+<script>
+    (function () {
+        document.addEventListener('DOMContentLoaded',()=>{
+            require(['https://player.vimeo.com/api/player.js'],  (Player) =>{
+                const players = []
+                $('.embed-video').each(function (){
+                    players.push({
+                        player: new Player($(this).find("iframe").get(0)),
+                        top: $(this)[0].getBoundingClientRect().top,
+                        status: "pause"
+                    })
+                })
+                const viewportHeight = $(window).height();
+                $(window).on('scroll', function() {
+                    for(let i=0; i<players.length;i++) {
+                        const element = players[i].player.element.getBoundingClientRect()
+                        if (element.top <= viewportHeight && element.bottom > 0) {
+                            if (players[i].status === 'pause'){
+                                players[i].status = "play";
+                                players[i].player.play();
+                            }
+                        }else {
+                            if (players[i].status === 'play'){
+                                players[i].status = "pause";
+                                players[i].player.pause();
+                            }
+                        }
+                    }
+                });
+            })
+        })
+
+    })()
+    function downloadTechnicalBrief(url){
+        const download = (url,fileName) => {
+            let xhr = new XMLHttpRequest();
+            // get 方式
+            xhr.open('get', url, true);
+            xhr.setRequestHeader('Cache-Control', 'no-cache');
+            xhr.setRequestHeader('Content-type', 'application/pdf');
+            // xhr.setRequestHeader('AUTHORIZATION', 'Bearer ' + this.auth.accessToken)
+            // xhr.setRequestHeader('FLOW360USER', this.auth.user.identityId || '')
+            // 返回类型blob
+            xhr.responseType = 'blob';
+            // 定义请求完成的处理函数，请求前也可以增加加载框/禁用下载按钮逻辑
+            xhr.onload = function () {
+                // 请求完成
+                if (this.status === 200) {
+                    let blob = this.response;
+                    let url = window.URL.createObjectURL(blob);
+                    // 生成 url，创建一个a标签用于下载
+                    let a = document.createElement('a');
+                    a.href = url;
+                    a.download = fileName;
+                    a.click();
+                }
+            };
+            xhr.onerror = function () {
+                console.error(`error occurred when download ${fileName}`);
+            };
+            xhr.send();
+        }
+        const nameList = url.split("/")
+        const fileName = nameList[nameList.length-1];
+        // e.stopPropagation()
+        // e.preventDefault()
+        download(url, fileName ?? "Technical_Brief.pdf")
+    }
+</script>
+{% include footer_2.html %}

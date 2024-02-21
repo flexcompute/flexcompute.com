@@ -1,0 +1,65 @@
+{
+  "title": "FDTD 101: Lecture 6",
+  "pages": [
+    {
+      "id": "intro-to-fdtd",
+      "title": "",
+      "transcript": "Today we would continue to talk about some of the issues related to FDTD. I'm Shanhui Fan from Flexcompute."
+    },
+    {
+      "id": "",
+      "title": "Why do you need PML boundary condition in FDTD?",
+      "transcript": "We would talk about the issue associated with perfectly matched layer (PML) boundary condition. In FDTD we are simulating a system in a finite computational domain. So naturally, the question is, how do you truncate this domain? And in many of the simulation we would like to look at the system where the field can escape to a far field or to Infinity. At a boundary, one would need a boundary condition where there's no reflection for every single angle of instance. As an illustration of why this is important, suppose you are interested in computing the radiation pattern of a dipole in free space. Let's say you have a computational domain, you put a dipole at the center and you try to look at the field distribution as indicated by the yellow plant here. If you surround the computational domain entirely with a perfectly electric conductor boundary condition, which is a perfect mirror, then you won't have your usual dipole radiation pattern at all. But if you do the boundary condition, right, which is the perfectly matched layer (PML) boundary condition, then you get back the expected field distribution of a type of radiation pattern. The use of the boundary condition to truncate the spatial domain is extremely important."
+    },
+    {
+      "id": "",
+      "title": "Set up of PML boundary condition",
+      "transcript": "The idea in standard FDTD simulation is to take the computational domain and then surround them by a special lossy material called perfectly matched layer (PML) to absorb incoming waves from all angles of incidence without any reflection. It is perhaps useful to go through some of the basic ideas behind this PML concept."
+    },
+    {
+      "id": "",
+      "title": "The concept of coordinate transformation in PML",
+      "transcript": "One way to present the PML concept is through coordinate transformation.  Imagine that you have a wave propagating in vacuum along the positive X direction, if you take a snapshot at a given time, then you see a sinusoidal wave pattern extending from minus infinity to infinity. What you would like to do in PML is to put a PML layer. For example, X greater than 0 and this accomplish a coordinate transformation, such that, you transform the plane wave as was originally on the right side of the vacuum region into an exponentially decaying wave and therefore is an attenuated wave."
+    },
+    {
+      "id": "",
+      "title": "How does the coordinate transformation work in FDTD?",
+      "transcript": "The detailed math for doing so can be Illustrated first by considering an 1D wave equation. We replace the usual spatial derivative operator with the derivative operator that has a stretch factor. And this stretch factor is one, and therefore you go back to the usual wave equation for x less than zero. For X less than zero you have vacuum. For X greater than 0, you put in a complex stretch factor so that the resulting wave is attenuated in the positive X direction. For this equation with a stretch factor that looks like this, this is how the solution looks like for X less than zero. You have a perfect plane wave. For X greater than 0, you have exponential decay. There's only a wave propagating along the positive X direction and there's no back reflecting wave. All the amplitude incident on the PML enters into the PML, and then gets attenuated wave. The form of the stretch factor, the sigma, is essentially a conductivity. By choosing a conductivity that is uniform, that is frequency independent. This stretch factor here is frequency dependent, and the result is that the attenuation factor here has no frequency dependency. So, in one dimension this choice would have a frequency independent attenuation. Therefore you will be able to absorb waves over a broad frequency range."
+    },
+    {
+      "id": "",
+      "title": "The absorption profile of PML",
+      "transcript": "Now going from one dimension to higher dimension. Again, you can start with the wave equation and then you basically perform this coordinate transformation, along the x direction for an interface that's normal to the x direction. You can use the same stretch factor to obtain a solution that looks like this. Here is a visualization of the solution. What you see on the left in the vacuum region, is a plane wave that's incident on the interface with no reflection. And on the right, you see a wave that's attenuated inside a PML region. You can see that in this case one introduces an attenuation factor, that is only along the X Direction without touching the Y and Z coordinate. There's no attenuation along the Y and Z Direction. Therefore, a PML region is inherently anisotropic. And this anisotropy is important because it allows you to achieve zero reflection for every angle of incidence. And the choice of the attenuation only along the X direction is very important because the k_y and k_z which are conserved across the interface along interfaces, there's no attenuation. There's a matching between the vacuum region and the PML region. And this at least analytically is very attractive because you give you zero reflection and very high absorption for every angle of incidence. So here we are showing the concept of PML. The coordinate transformation concept is continuous and applied to a partial differential equation."
+    },
+    {
+      "id": "",
+      "title": "How does discretization affect the PML profile in FDTD?",
+      "transcript": "In FDTD, we discretize the grid. So that introduces several issues. For example, in the exact wave equation, the PML is reflectionless, even when there is a discontinuity in the conductivity profile. But reflection is in fact introduced if you solve for the discretized problem. And one of the common techniques that's being used is to taper the conductivity profile in real space. In the PML region the field decays exponentially, but you will still need a certain thickness of the PML. So that the exponential field tail reflects on the boundary of the PML doesn't strongly come back into the computational cell. You need a certain number of PML layers. There is, in fact, a very large literature formulating PML for different purposes."
+    },
+    {
+      "id": "",
+      "title": "The impact of boundary reflection in FDTD simulations.",
+      "transcript": "Having introduced the concept of PML, I think it will be useful, maybe to talk a little bit about how these parasitic reflections from the boundaries influence the quality of your simulation. Suppose typically when you talk about these simulations, you are typically interested in, for example, intensity transmission coefficient, or intensity reflection coefficient. The desired quantity that you usually care about is the field absolute value. Now suppose you have parasitic reflection. Then the field is going to be different from the actual physical field by a perturbation as introduced by the reflection. As a result, the intensity is also going to be different from the desired intensity. And when you look at the formula here, you will see that the leading factor of the deviation from the accurate results scales as delta E, the coefficient of amplitude of the reflection coefficient. Even though you are measuring intensity, which is absolute value E square, the error in measuring the intensity due to parasitic reflection scales as the amplitude not the intensity of the reflected wave. When we characterize the reflectivity of a PML, the relevant reflectivity is the amplitude reflectivity."
+    },
+    {
+      "id": "",
+      "title": "How to characterize the reflection from PML in FDTD simulation?",
+      "transcript": "Now you can numerically characterize the performance of a PML. One way to do that is you can put in a gaussian source in time to generate a wave that propagates in the computational region. Then you put a monitor plan somewhere between the gaussian source and the PML region at the end. Here is a typical plot where you show the field as a function of time. Initially you will see a pulse that passes right through the monitor region and then this pulse will keep propagating hitting the PML region and then come back. You will see the reflected pulse. Now once you have this, if you simply take those time steps corresponding to the incident pulse and those that corresponding to the reflected pulse you will be able to get the reflection coefficient."
+    },
+    {
+      "id": "",
+      "title": "The performance of PML with different numbers of layers.",
+      "transcript": "You can now transform the input in a Fourier transformation to measure the ratio between the two then you get the reflection amplitude. So here are the simulation results for two layer or PML regions, you get a reflectivity on the order of 10%. But if you take 12 layers, it greatly improves. The reflection reduces to about 10,000 times."
+    },
+    {
+      "id": "",
+      "title": "The performance of PML as a function of incident angle",
+      "transcript": "One of the great things about PML is that you give angle independent attenuation. In this case here is a computation where you look at the reflection amplitude for 2, 4 and 12 layers as a function of angle of incidence, going all the way from zero to 40 degrees. You see that again the 12 layer of course has much lower reflectivity compared with the two layer case and also you can see that it is very flat as a function of angle."
+    },
+    {
+      "id": "",
+      "title": "How does reflection cause oscillation in simulated spectrum in FDTD?",
+      "transcript": "So now finally I would like to directly illustrate how this kind of different reflectivity is going to influence the quality of your simulation. We'll be comparing a simulation where we use only two layers of PML compared with the case where we use 12 layers of PML. It is a simple structure: a Fabry-Perot cavity or a thin layer of silicon. And we look at the transmission coefficient for light normally instant upon the structure. You can plot the transmission as a function of frequency. The blue curve here is the result that you obtain from 12 layers of PML and this is actually almost identical to the analytic result. If you recall for a two layer PML, the reflectivity amplitude is only order of 10% or so. With that reflectivity you can see very large parasitic oscillations due to the reflection from the PML and that is indicated by the red curve here. The 12 layer, or the correct result in a way, cuts through this very large oscillation. This is a typical signature that if you have parasitic boundary reflectivity in the spectrum, you will typically see this oscillation. And that's something that if you see in your actual numerical simulation, you will have a sense of what to do.\nTo briefly conclude, what I hope to give you a sense is the basic argument about how a PML actually works and also the fact that suppressing the parasitic reflection is extremely important for actual simulation in order to obtain high quality results."
+    }
+  ]
+}

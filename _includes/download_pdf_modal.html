@@ -1,0 +1,165 @@
+<div class="modal fade position-fixed" id="download_pdf" tabindex="-1" role="dialog" data-labelledby="modal-01"
+     data-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-md" role="document" style="width: 520px;">
+        <div class="modal-content">
+            <div class="container-fluid boxed p-0 position-relative">
+                <div id="download-pdf-modal-header"
+                     class="subscribe-modal-header modal-header p-10 d-flex justify-content-between align-items-center">
+                    <h3 class="mb-0 font-size-16" id="download-pdf-modal-title">Download Tutorial Presentation Slides</h3>
+                </div>
+                <button type="button" id="download-pdf-modal-close-btn" class="close position-absolute" data-dismiss="modal" aria-label="Close" style="top: 8px !important;">
+                    <span data-hidden="true">&times;</span>
+                </button>
+                <div class="position-relative subscribe-modal-body" id="download-pdf-modal-body">
+                    <div class="row no-gutters">
+                        <div class="col-lg-12">
+                            <div class="p-20 d-flex">
+                                <div class="align-self-center" style="width: 100%;">
+                                    <div class="newsletter-wrapper form-group-shadow" id="download-pdf-form-group-shadow">
+                                        <div id="download-pdf-form">
+                                            <p class="color-dark-3 line-height-20">Enter your email address below to receive the presentation slides. In the future, we’ll share you very few emails when we have new tutorial release, development updates, valuable toolkits and technical guidance . You can unsubscribe at any time by clicking the link at the bottom of every email. We’ll never share your information.</p>
+                                            <input id="fdtd-download-pdf-value" type="hidden">
+                                            <form
+                                                action="https://flexcompute.us14.list-manage.com/subscribe/post?u=4fb72f7d323950bae34717b3f&amp;id=62958770b2"
+                                                method="post"
+                                                id="mc-embedded-download-pdf-form"
+                                                name="mcEmbeddedSubscribeForm"
+                                                class="validate fields-white"
+                                                target="hide-download-pdf-iframe"
+                                            >
+                                                <input type="hidden" value="EM" name="MLIST" required class="" id="mce-download-pdf-MLIST">
+                                                <div class="input-group d-block">
+                                                    <div>
+                                                        <label for="mce-download-pdf-EMAIL" class="mb-0 font-size-14">Email Address</label>
+                                                        <input
+                                                            style="width: 100%;"
+                                                            type="email"
+                                                            value=""
+                                                            name="EMAIL"
+                                                            class="required form-control reset-input"
+                                                            id="mce-download-pdf-EMAIL"
+                                                            required
+                                                            data-error="email is required"
+                                                        >
+                                                    </div>
+                                                    <div class="space20"></div>
+                                                    <p class="color-dark-gray font-size-12 mb-5">By clicking below, you are agreeing to Flexcompute's
+                                                        <a class="color-primary-hover" target="_blank" href="/privacy/">Privacy Policy.</a>
+                                                    </p>
+                                                    <button
+                                                        id="mc-embedded-download-pdf-submit"
+                                                        type="submit"
+                                                        class="btn btn-sm m-0 btn-primary border-radius-4 float-right"
+                                                        data-dismiss="modal"
+                                                        style="width: 100%;"
+                                                    >
+                                                        <span class="download-loading" id="download-pdf_loading">
+                                                            <i class="icofont-spinner"></i>
+                                                        </span>
+                                                        Download
+                                                    </button>
+                                                    <div id="mce-download-pdf-responses" class="clear">
+                                                        <div class="response" id="mce-download-pdf-error-response"
+                                                             style="display:none"></div>
+                                                        <div class="response" id="mce-download-pdf-success-response"
+                                                             style="display:none"></div>
+                                                    </div>
+                                                    <!-- real people should not fill this in and expect good things - do not remove this or risk form bot signups-->
+                                                    <div style="position: absolute; left: -5000px;" data-hidden="true">
+                                                        <input type="text" name="b_4fb72f7d323950bae34717b3f_62958770b2"
+                                                               tabindex="-1" value=""></div>
+                                                    <div class="clearfix"></div>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                    <!-- /.newsletter-wrapper -->
+                                </div>
+                                <!-- /div -->
+                            </div>
+                            <!-- /.box -->
+                        </div>
+                        <!--/column -->
+                    </div>
+                    <!--/div -->
+                </div>
+                <!--/.image-block-wrapper -->
+            </div>
+            <!--/.boxed -->
+        </div>
+        <!--/.modal-content -->
+    </div>
+    <!--/.modal-dialog -->
+    <iframe id="download-pdf-submit-iframe" name="hide-download-pdf-iframe" style="display:none;"></iframe>
+</div>
+<script>
+    (function () {
+        const submitBtn = document.getElementById("mc-embedded-download-pdf-submit")
+        const inputEle = document.getElementById("mce-download-pdf-EMAIL");
+        const downloading = document.getElementById("download-pdf_loading");
+
+        const _xhrDownload = (url, fileName) => {
+            let xhr = new XMLHttpRequest();
+            // get 方式
+            xhr.open('get', url, true);
+            xhr.setRequestHeader('Cache-Control', 'no-cache');
+            xhr.setRequestHeader('Content-type', 'application/json');
+            // 返回类型blob
+            xhr.responseType = 'blob';
+            // 定义请求完成的处理函数，请求前也可以增加加载框/禁用下载按钮逻辑
+            xhr.onload = function () {
+                // 请求完成
+                if (this.status === 200) {
+                    let blob = this.response;
+                    let url = window.URL.createObjectURL(blob);
+                    // 生成 url，创建一个a标签用于下载
+                    let a = document.createElement('a');
+                    a.href = url;
+                    a.download = fileName;
+                    a.click();
+                    $("#download-pdf-modal-close-btn").click();
+                    inputEle.value = ""
+                    downloading.style.display = 'none';
+                }
+            };
+            xhr.onerror = function () {
+                console.error('error occurred when download pdf');
+            };
+            xhr.send();
+        }
+
+        const handleDownload = (url) => {
+            if (url){
+                downloading.style.display = 'inline-block';
+                const nameList = url.split("/")
+                const fileName = nameList[nameList.length-1];
+                setTimeout(()=>{
+                    _xhrDownload(url, fileName)
+                },1000)
+            }
+        }
+
+        submitBtn.addEventListener('click', function (e) {
+            e.stopPropagation()
+            e.cancelBubble = true
+            const reg = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+            if (reg.test(inputEle.value)) {
+                const pdfUrlElement = document.querySelector("#fdtd-download-pdf-value")
+                handleDownload(pdfUrlElement.value)
+            }
+        })
+
+        const mailListElement = document.getElementById("mce-download-pdf-MLIST");
+
+        const pathName = window.location.pathname
+        if (pathName.indexOf("fdtd101") > -1 || pathName.indexOf('tidy3d/learning-center')>-1) {
+            mailListElement.value = 'EM'
+        } else if (pathName.indexOf("aircraft-cfd101")>0){
+            mailListElement.value = 'CFD'
+        } else if (pathName.indexOf("cfd-essentials")>0){
+            mailListElement.value = 'CFD'
+        } else {
+            mailListElement.value = "CFD,EM"
+        }
+    })()
+</script>

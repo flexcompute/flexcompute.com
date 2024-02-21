@@ -1,0 +1,17 @@
+{% if site.data.general_settings.channels.enable %}
+<div class="divider d-flex justify-content-start align-items-center">
+  {% assign channelList = site.data.general_settings.channels.list %}
+  {% for item in channelList %}
+  {% if item.enable %}
+  <a id="{%if include.extra_id%}{{include.extra_id}}_{{item.type | downcase}}{%else%}{{item.id}}{%endif%}"
+      href="{{item.url}}"
+      class="{% if include.icon-class %} {{include.icon-class}} {%endif%} font-size-20 social-icon color-dark"
+      target="_blank"
+      title="{{item.title}}"
+  >
+    <i class="{{item.icon}}" ></i>
+  </a>
+  {% endif %}
+  {% endfor %}
+</div>
+{% endif %}

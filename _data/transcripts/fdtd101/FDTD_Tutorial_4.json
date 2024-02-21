@@ -1,0 +1,50 @@
+{
+  "title": "FDTD 101: Lecture 4",
+  "pages": [
+    {
+      "id": "intro-to-fdtd",
+      "title": "",
+      "transcript": "This is another video for introduction to the finite difference time domain (FDTD) method. I'm Shanhui Fan from Flexcompute."
+    },
+    {
+      "id": "",
+      "title": "How to simulate Mach-Zehnder interferometer in FDTD",
+      "transcript": "Today we're going to talk about using the FDTD method in the context of integrated photonics applications. This device is called the Mach-Zehnder interferometer. What you see here is a top view of the device.  The red regions here correspond to a silicon waveguide sitting on a silicon dioxide substrate. The other side of the waveguide is air. This device is used as an optical switch. Suppose you change the refractive index of silicon a little bit in this region as indicated as phase shifter, you may switch input light to either the bottom or the top waveguide. This device operates as an optical switch. It is very important for a wide range of integrated photonic applications. For example, it is used both for quantum computing as well as for neuropathic optical computing. I'm going to show you some of the considerations in simulating this waveguide."
+    },
+    {
+      "id": "",
+      "title": "How to inject modal source to a waveguide?",
+      "transcript": "The first thing we’d like to talk about is to effectively inject the mode into the waveguide. We take a straight single waveguide as an example to illustrate the process. What we like to do is to inject a single mode into this waveguide. We would like to set up the simulation so that it excites a single mode that perfectly propagates down the waveguide."
+    },
+    {
+      "id": "",
+      "title": "Setting up the boundary condition for waveguide simulation",
+      "transcript": "Now for this purpose, we set up the computational cell as usual. We surround the waveguide with the perfectly matched layer boundary so that a wave propagation away from the computation domain is absorbed. To perfectly absorb a waveguide mode. It is important to extend both the waveguide and the substrate into the PML region."
+    },
+    {
+      "id": "",
+      "title": "Introducing modal source for waveguides",
+      "transcript": "The other important consideration is to use what's called the modal source. To get a clean simulation, it will be very advantageous to use an eigenmode source defined on the plane to inject the specific mode along the forward direction."
+    },
+    {
+      "id": "",
+      "title": "Use eigen solver to obtain the modal source in FDTD",
+      "transcript": "For a waveguide that looks like this you can use an eigen solver to solve for the guided mode of the waveguide. It has a fundamental mode with the electric field along the y direction and this is the mode that we would like to excite but it has other higher order modes as well. Using the modal source computed by the eigenmode solver, one can set the modal source in FDTD to selectively excite one of these modes. For example, to selectively excite the first order mode."
+    },
+    {
+      "id": "",
+      "title": "The difference between a modal source and a dipole source in FDTD",
+      "transcript": "Here is a cross-sectional view through the center of the waveguide. The green line here corresponds to the position of the model source, and you can see that the use of modal source perfectly generates the key mode. One interesting aspect is that the modal source actually allows you to do directional excitation. You can see that the field is perfectly launched to the right of the source and there's zero field to the left of the source. Now you can contrast the behavior of the modal source with that of a dipole source. If you just put a dipole into the waveguide, well, you see quite a bit different in the field distribution. First of all, the dipole source is not directional launching. It  launches waves in both directions. The second is that the polarization of the dipole is set to selectively excite a TE mode. But it takes some propagation distance before the mode settles into a perfect TE mode profile. During this process, there is radiation into the substrate."
+    },
+    {
+      "id": "",
+      "title": "Examining the flux in a waveguide excited by dipole and modal sources",
+      "transcript": "To further illustrate the difference between the modal source and the point dipole source, we can perform a simulation where we compute the flux going through a flux plane perpendicular to the waveguide centered at the center of the waveguide. What we plot here is the flux as a function of distance of the flux point from the source. In the case of a modal source because we launch a single waveguide mode perfectly the flux basically remains the same as the propagation distance changes. Whereas if you put a point dipole source, the flux initially decays because the dipole is not perfectly matched with the mode. There is some radiation going out. And then after some propagation distance, the flux settles as the mode settles into the desired mode. In this process,  there is radiation into the computational domain and that's a source of unwanted electromagnetic interference inside the computation domain. If you like to get a high-quality calculation of the behavior of the waveguide system, it would be better to use the modal source so that you don't have such radiation."
+    },
+    {
+      "id": "",
+      "title": "Results of a Mach-Zehnder FDTD simulation",
+      "transcript": "Let's come back to the simulation of a Mach-Zehnder. The movies that I'm playing here correspond to the case where the refractive index of the phase shifter is chosen so that the wave is perfectly launched or perfectly routed to the top waveguide. And in this case, you can see that a wave is very well confined in the waveguide. There's very little outside the waveguide. The field of the output retains essentially a perfectly single mode profile. This characteristic is the sign of the waveguide device that is very well designed. It is also a sign that the setup of the simulation is done correctly so that you don't have unwanted electromagnetic interference. Now to demonstrate a switch behavior, you can change the dielectric function of the phase shifter. As the wave goes through the device, it's perfectly routed but now to the bottom waveguide. The system will behave as an excellent optical switch."
+    }
+  ]
+}

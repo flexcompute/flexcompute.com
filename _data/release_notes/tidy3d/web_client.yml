@@ -1,0 +1,976 @@
+_inputs:
+  releases:
+    type: array
+    options:
+      structures: _structures.web_client_release_note
+      preview:
+        text:
+          - key: version
+        subtext:
+          - key: date
+more_section:
+  enable: true
+  more_text: More Release Notes
+releases:
+  - version: 3.11.2
+    date: 2023-08-21 00:00:00
+    link: ''
+    new_features: []
+    resolved_issues:
+      - >-
+        Fixed: Structure outside of the simulation domain is not shown correctly
+        in 3D chart
+      - 'Fixed: 3D chart is incorrect when toggling between display modes'
+    improvements: []
+  - version: 3.11.1
+    date: 2023-08-16 00:00:00
+    link: ''
+    new_features: []
+    resolved_issues:
+      - 'Fixed: Data columns are swapped in the downloaded FieldMonitor data'
+      - 'Fixed: STL imported structure does not show up in 3D chart'
+      - >-
+        Fixed: Cannot open Tidy3D web UI when the Safari version is less than
+        14.1
+    improvements:
+      - Improved the layout of the expression editor
+      - Organized the videos into Tutorials and Examples
+      - Improved the source and monitor visualization in 3D chart
+  - version: 3.11.0
+    date: 2023-08-16 00:00:00
+    link: ''
+    new_features:
+      - GUI supports FullyAnisotropicMedium
+      - GUI supports CustomCurrentSource
+      - >-
+        GUI supports spatially varying dispersive materials, including
+        CustomPoleResidue, CustomSellmeier, CustomLorentz, CustomDebye,
+      - CustomDrude, and CustomAnisotropicMedium
+      - >-
+        The private material library now supports adding all medium types as
+        well as uploading tabulated data
+      - Added interpolate in UniformCurrentSource and PointDipole
+      - Added direction in ModeSolverMonitor
+      - GUI supports gain in relevant medium types by adding allow_gain field
+      - User can now estimate monitor data size before running a simulation
+      - >-
+        An automatic email is sent to user when their simulation diverges to
+        help user troubleshoot
+      - Added real-time log for mode solver
+      - >-
+        Added GUI tutorial videos and the links to them at the corresponding
+        windows
+      - A status icon is added to each object in the editor panel
+    resolved_issues:
+      - 'Fixed: 3D chart configuration and visibility setting reset unexpected'
+      - >-
+        Fixed: Tidy3D Notebook missing jax library when importing the Adjoint
+        plugin
+      - 'Fixed: Error message about browser support webGL'
+      - 'Fixed: Estimate cost does not reflect the most up-to-date changes'
+      - 'Fixed: 3D chart visualization cropped by boundary'
+      - 'Fixed: Some links in the Tidy3D Notebook examples are not accessible'
+      - 'Fixed: Unexpected geometry when sidewall_angle is not zero'
+    improvements:
+      - Sweep tasks now run automatically after validation is successfully
+      - Support of infinite rotation and zoom in 3D chart
+      - Added axis info to data points for plots in Post-Run Result
+      - Increased the web UI loading speed for new users
+      - 'Increased the speed of validation '
+      - >-
+        Updated help center content and added links about importing geometry and
+        anisotropic medium
+      - >-
+        More intuitive messages are shown in Tidy3D Notebook when the kernel is
+        busy
+      - Simplified the "New Simulation" creation workflow
+      - >-
+        Optimized the default 3D chart display mode of structure, source, and
+        monitor
+      - Improved the readability of the timestamps in real-time log
+      - >-
+        The progress window now displays a one-line rolling real-time log
+        message while the simulation runs
+  - version: 3.10.1
+    date: 2023-07-25 00:00:00
+    link: ''
+    new_features: []
+    resolved_issues:
+      - >-
+        Fixed: Permission error when opening examples from the Notebook Launcher
+        page
+      - 'Fixed: Unable to re-upload STL file'
+      - 'Fixed: Notebook cursor uncontrolled movement'
+    improvements:
+      - Improved custom source plot layout
+      - Improved grid computation speed for larger simulations
+      - >-
+        Improved the message in the monitor window regarding flux and Poynting
+        vector computation
+      - >-
+        Improved the y-label of the plot in Post-Run Results to better represent
+        the quantity being plotted
+  - version: 3.10.0
+    date: 2023-07-20 00:00:00
+    link: ''
+    new_features:
+      - GUI supports TriangleMesh structure type and 3D CAD file (STL) import
+      - GUI supports CustomMedium and CustomFieldSource
+      - >-
+        Better support for self-intersecting polygons in GDS import using
+        ComplexPolySlab
+      - 2D chart now includes a permittivity plot
+      - Poynting vector plot is added to Post-Run Results
+      - Field monitors now include flux plots in Post-Run Results
+      - Multiple datasets and expressions can now be plotted in Post-Run Results
+      - User can now abort a running simulation of FDTD, mode solver, or sweep
+      - Real-time log messages are displayed in the progress window
+    resolver_issues:
+      - 'Fixed: Bug of 2D FieldTimeMonitor'
+      - 'Fixed: Validation error in parameter sweep'
+      - >-
+        Fixed: ModeMonitor missing amplitude data in the data.csv downloaded
+        from GUI
+      - 'Fixed: GDS file layer is not recognized'
+      - 'Fixed: Notebook uncontrolled scrolling'
+      - 'Fixed: Notebook added extra white lines in example notebooks'
+      - 'Fixed: New simulation created from the example missing script object'
+    improvements:
+      - Upgraded GUI to support Tidy3D version 2.3.0
+      - Added default values when a structure is added
+      - Mode solver tasks created by Python client are now displayed in web UI
+      - 3D chart configuration is kept unchanged after edits
+      - Support of using parameters in monitors' "number of points"
+      - Support of using parameters in list-type variables
+      - The notebook server will stop after a certain period of inactivity
+      - Improved the colormap for E in FieldTimeMonitor
+      - Improved the UI of the variables in the expression editor
+  - version: 3.9.2
+    date: 2023-06-30 00:00:00
+    link: ''
+    new_features: []
+    resolved_issues:
+      - 'Fixed: Incorrect source polarization representation'
+      - 'Fixed: Structure overlay showing incorrect structure'
+      - >-
+        Fixed: The "Refer" window will pop up briefly and disappear after
+        clicking 'TRY IT NOW'
+      - 'Fixed: Wavelength incorrectly written to freq in json'
+      - 'Fixed: Bug when switching between wavelength and frequency'
+      - 'Fixed: 2D chart in GUI shows different structures than in Python'
+      - 'Fixed: The source plot has duplicate wavelength/frequency selection'
+      - 'Fixed: The color of geometry is different on one side from the other'
+      - 'Fixed: Duplicated layers displayed in imported GDS'
+      - 'Fixed: Incorrect "help" link in Script Object'
+    improvements:
+      - Rearranged the layout of the Account page
+      - Improved the UI of the "Getting Started" window
+  - version: 3.9.1
+    date: 2023-06-26 00:00:00
+    link: ''
+    new_features: []
+    resolved_issues:
+      - 'Fixed: 3D model export should only export structures'
+      - 'Fixed: Sweep result is unresponsive for a specific task'
+      - 'Fixed: All plots have the same color scale range'
+      - 'Fixed: Color scale does not work for negative value'
+      - >-
+        Fixed: Diffraction monitor post run x-axis label is incorrect for 1D
+        data
+    improvements: []
+  - version: 3.9.0
+    date: 2023-06-21 00:00:00
+    link: ''
+    new_features:
+      - Allow user to set FlexCredit limit for a simulation
+      - User can export transaction history from the Account page
+      - Added payment link to the FlexCredit purchasing window
+      - Upgraded GUI to support Tidy3D version 2.2.2
+      - User can select to highlight sources and monitors in 3D and 2D charts
+      - Support editing user name in Account page
+      - >-
+        Advanced post-run analysis in GUI supporting multiple datasets and
+        expression
+      - Support adjusting color scale in post-run results
+      - Added ruler to 3D chart
+    resolved_issues:
+      - 'Fixed: Exported STL files have additional arrows'
+      - 'Fixed: Source time plots'' y axis does not update with amplitude'
+    improvements:
+      - Improved API key instructions
+      - Improved the layout of transaction history page
+      - Improved the layout of transaction history page
+      - Improved the “New Folder” behavior in folder listing page
+      - Improved the visibility of the “Support” button
+      - Support expression in custom input box
+      - Improved the real-time simulation progress updates
+      - Preserved the settings of scripts and variables Sweep’s subtasks
+  - version: 3.8.2
+    date: 2023-06-13 00:00:00
+    link: ''
+    new_features: []
+    resolved_issues:
+      - >-
+        Fixed: Long blank screen when switching from another tab to the Notebook
+        tab
+    improvements: []
+  - version: 3.8.1
+    date: 2023-06-09 00:00:00
+    link: ''
+    new_features: []
+    resolved_issues:
+      - 'Fixed: Incorrect “submit time” shown for mode solver'
+    improvements:
+      - Set default 3D chart view based on simulation domain
+      - Improved the Getting Started tab for Python interface
+      - Improved the My Plan page layout
+      - Crop sources and monitors by simulation boundary in 3D chart
+      - Updated the help center links in editor windows
+      - Clicking an error message will open up the corresponding editing window
+  - version: 3.8.0
+    date: 2023-06-06 00:00:00
+    link: ''
+    new_features:
+      - >-
+        Tidy3D Notebook: A cloud-based platform for writing and executing Python
+        code
+      - Referral program with FlexCredits reward and extension of expiration
+      - Support Total-Field Scattered-Field (TFSF) source in GUI
+      - Support dispersive AnisotropicMedium in GUI
+      - Added the simulation workbench wizard for new users
+      - Support plotting structures outside the simulation domain
+      - Added “Decibel (dB)” in ModeMonitor post-run results
+      - Added a library of commonly used geometries based on Script Object
+    resolved_issues:
+      - 'Fixed: 3D chart issue when cylinder length is infinity'
+      - 'Fixed: Cylinder orientation does not change with the axis'
+    improvements:
+      - Improved the display of error and warning messages
+      - Improved the performance of task searching
+      - Enhanced the visibility of the overlay structure in post-run results
+      - Use cyclic colormap for phase plots in post-run results
+  - version: 3.7.1
+    date: 2023-05-26 00:00:00
+    link: ''
+    new_features: []
+    resolved_issues:
+      - 'Fixed: Bug of the input fields after new version release'
+    improvements: []
+  - version: 3.7.0
+    date: 2023-05-25 00:00:00
+    link: ''
+    new_features:
+      - Upgraded GUI to support v2.1.0
+      - Provided .obj, or .stl file formats to download in 3D charts
+      - >-
+        Added help info for ‘Add Structures' and 'mode specification’ for
+        modesolver
+      - "Display references in each Parameter and allow user clicking to jump to the corresponding window\t"
+      - 'Added boundary layer to 2D chart '
+    resolved_issues:
+      - 'Fixed: Medium2D ss and tt should not allow Medium2D type'
+    improvements:
+      - Improved the warning msg for the generation of new API key
+      - >-
+        Improved the UI for 'my plan' tab, especially for Education License and
+        Professional License
+      - Updated Copyright for Tidy3d web UI
+      - Improved video loading speed in 'Getting started'
+      - >-
+        Made the getting started window pop up by default, add “Do not show this
+        again” check box
+      - >-
+        Improved the user experience to create new version, make it more
+        conveniently
+      - Improved the UI for validation status and error warning message display
+      - Optimized fitter status error display
+      - >-
+        Improved the UI for the ‘Wavelength' and 'Frequencies’ input for monitor
+        types
+  - version: 3.6.1
+    date: 2023-05-19 00:00:00
+    link: ''
+    new_features: []
+    resolved_issues:
+      - 'Fixed: error when apply for education license '
+    improvements: []
+  - version: 3.6.0
+    date: 2023-05-16 00:00:00
+    link: ''
+    new_features:
+      - Included mode solver to count total tasks and monthly tasks
+      - Improved the UI for the Advanced section
+      - Combined expression and number in Parameters
+      - >-
+        Show the variable value beside the variable name in the tree to be more
+        user friendly
+      - Substituted X3D with threejs for 3D chart
+      - Allow to search folder/tasks with case insensitive
+    resolved_issues:
+      - 'Fixed: Public shared GUI example requires log in'
+      - 'Fixed: Duplicated layers displayed in import gds'
+      - 'Fixed: GDS file not imported correctly'
+    improvements:
+      - Reduced the ModeSolver queue time.
+      - Provided hdf5 data download for ModeSolver in GUI.
+      - Added Storage and Billed Compute info in ModeSolver task detail page.
+      - >-
+        Made the '+' button always visible for adding structures, sources,
+        monitors and scripts.
+      - Supported the deletion of the sweep tasks.
+      - Improved the list type data input method.
+      - Allowed user to create new variable when using an undefined variable.
+  - version: 3.5.1
+    date: 2023-05-10 00:00:00
+    link: ''
+    new_features: []
+    resolved_issues:
+      - 'Fixed: Parameter sweep not working for a specific task'
+      - >-
+        Fixed: API in downloaded config file is different from that shown in
+        "Current API key"
+      - >-
+        Fixed: BlochBoundary input method gets incorrectly updated to "from
+        source" for Python and json uploaded tasks
+      - 'Fixed: Show grid doesn''t show anything when the grid is too fine'
+  - version: 3.5.0
+    date: 2023-04-28 00:00:00
+    link: ''
+    new_features:
+      - >-
+        Supported loading geometries from GDS file in GUI into GeometryGroup
+        structure.
+      - Supported secure sign-in with multi-factor authentication (MFA).
+    resolved_issues:
+      - 'Fixed: When sidewall_angle is not zero, the structure is incorrect.'
+      - 'Fixed: The ModeSolver is missing in transaction history.'
+    improvements:
+      - Reduced the ModeSolver queue time.
+      - Provided hdf5 data download for ModeSolver in GUI.
+      - Added Storage and Billed Compute info in ModeSolver task detail page.
+      - >-
+        Made the '+' button always visible for adding structures, sources,
+        monitors and scripts.
+      - Supported the deletion of the sweep tasks.
+      - Improved the list type data input method.
+      - Allowed user to create new variable when using an undefined variable.
+  - version: 3.4.1
+    date: 2023-04-23 00:00:00
+    link: ''
+    new_features:
+      - >-
+        Added Python installation and authentication tutorial video to Getting
+        Started.
+    resolved_issues:
+      - 'Fixed: Variables are not conserved after upgrading to a newer version.'
+      - >-
+        Fixed: FieldMonitor result is not correctly displayed when switching
+        sweep tasks.
+    improvements:
+      - Used monospace font for script editor of script object.
+  - version: 3.4.0
+    date: 2023-04-21 00:00:00
+    link: ''
+    new_features:
+      - Supported users to sign in with their Apple IDs.
+      - Upgraded GUI to support Tidy3D version 2.0.3.
+      - Added ModeSolver in GUI.
+    resolved_issues:
+      - 'Fixed: Sweep task and data not visible when shared.'
+      - 'Fixed: ModeSolver is missing after ‘edit’ / ''duplicate''/ ''save as''.'
+      - 'Fixed: The symmetry status in 3D chart is not shown correctly.'
+      - 'Fixed: Fitting plot too small.'
+      - 'Fixed: Validation failed unexpectedly.'
+    improvements:
+      - >-
+        Improve the performance of Adjoint optimization by reducing data
+        transfer.
+      - Improved the 'Getting Started' button consistency between the tabs.
+  - version: 3.3.2
+    date: 2023-04-07 00:00:00
+    link: ''
+    new_features:
+      - >-
+        Allow users to submit support request directly through a form
+        submission.
+    resolved_issues: []
+    improvements: []
+  - version: 3.3.1
+    date: 2023-04-03 00:00:00
+    link: ''
+    new_features:
+      - Upgraded GUI to support Tidy3D version 2.0.
+    resolved_issues:
+      - 'Fixed: Typo in API Key instructions.'
+      - >-
+        Fixed: Duplicated notifications when new community users log in for the
+        first time.
+      - 'Fixed: Edge Coupler example doesn''t open.'
+      - 'Fixed: Warning messages don''t show properly in GUI.'
+      - >-
+        Fixed: json uploaded doesn't display content properly due to Infinity
+        string issue.
+    improvements: []
+  - version: 3.3.0
+    date: 2023-04-01 00:00:00
+    link: ''
+    new_features:
+      - Supported users to sign in with their Google accounts.
+      - Supported self-registration and complimentary Community Plan.
+      - Supported application of Education Plan.
+      - >-
+        Added 'My Plan' in account page to display multiple plans with user’s
+        current plan highlighted.
+      - Added 'My Profile' in account page to display user profile.
+    resolved_issues: []
+    improvements: []
+  - version: 3.2.2
+    date: 2023-04-01 00:00:00
+    link: ''
+    new_features:
+      - Upgraded GUI to support Tidy3D version 1.10.0.
+      - >-
+        Added 'Getting Started' onboarding instructions when users login for the
+        first time.
+      - Added 'API Key' instruction for Python authentication.
+      - Added default value when adding a sweep parameter.
+      - Added 'Magnitude (abs)' and 'Intensity (abs^2)' for FieldTimeMonitor.
+      - Added Example Library in the simulation workbench.
+      - Supported more math operators in expression editor.
+      - Allowed calling medium in script by "param.medium_name".
+      - Added description of how to use "param." in GUI script.
+    resolved_issues:
+      - 'Fixed: Wrong status returned after user saved the task'
+      - 'Fixed: Script errors unexpectedly'
+      - 'Fixed: List-type variable errors using "Custom" input method'
+      - 'Fixed: Error when switching medium input method'
+      - >-
+        Fixed: source_time plot should be allowed if all fields of source_time
+        are filled
+      - 'Fixed: Symmetry in simulation.json not showing up in log'
+      - >-
+        Fixed: ModeMonitor post-run showing same data for different value
+        selection
+    improvements:
+      - >-
+        Automatically rerun a script if a parameter (or medium) it uses is
+        updated
+      - Updated the help center to include latest features
+      - Renamed "SIMULATION" in the left sidebar to "STUDIES"
+      - Moved the task status display to the left sidebar
+      - Moved the validation status display beside the Run button
+      - Improved the error message when user run out of credits
+      - Improved the loading speed of the account page
+      - Improved the material info display
+      - Display variable value under sweep in Post-Run Analysis
+      - Improved for "Add Simulation" window
+      - Renamed "FlexUnit" to "FlexCredit"
+      - Updated default GUI script object content
+      - Improved the mode effective index and mode amplitude visualization
+      - Resized expression editor
+      - Improved the source_time plot
+  - version: 3.2.1
+    date: 2023-03-22 00:00:00
+    link: ''
+    new_features: []
+    resolved_issues:
+      - 'Fixed: Script editing issue in Safari'
+      - 'Fixed: Script errors when it should run properly'
+      - 'Fixed: Variable can not be deleted'
+      - 'Fixed: Sweep missing when duplicated'
+    improvements:
+      - Remember plot setting when switching data selection in post-run
+  - version: 3.2.0
+    date: 2023-03-16 00:00:00
+    link:
+    new_features: []
+    resolved_issues:
+      - 'Fixed: Shared task can not be opened'
+      - >-
+        Fixed: When rerunning a script object, monitors created by the previous
+        script didn't get deleted
+      - 'Fixed: Polyslab vertices: “Enter” leads to deletion of content'
+    improvements:
+      - Added hint for non-clickable item in simulation editor
+      - Auto-expanded a node when "add" (+) button is clicked
+      - Merged "Background Medium" with "Simulation Domain"
+      - Improved material plotting
+      - >-
+        Provided explicit guide to add or edit variable in expression editor
+        variable section
+      - Added a copy button in expression editor
+      - Include name and abbreviation in Material library search box
+      - Show tooltip with instruction to edit in View Only Mode
+      - Improved the progress bar for running status
+  - version: 3.1.0
+    date: 2023-03-07 00:00:00
+    link: ''
+    new_features:
+      - Added parameter sweep function
+      - It allows adding multiple sweeps, each having a baseline simulation
+      - Sweep parameter can be selected from user defined global variables
+      - >-
+        Allow two types of sweep (ways of combining variables): permute /
+        parallel
+      - >-
+        All child tasks (name, variables, status, task id) in the Task Details
+        tab
+      - Added 'Generate API Key' function in Account page
+      - >-
+        Added the ability to highlight this object in the editor tree in the
+        left sidebar when selected in 3D/2D chart
+    resolved_issues:
+      - 'Fixed: Bug switching from Ex to E in post-run'
+      - >-
+        Fixed: Editing panel too narrow for sources and monitor if user dragged
+        the simulation tree
+    improvements:
+      - >-
+        Improved the reminder message when user’s credit is expired or
+        insufficient.
+      - Auto-scroll when script error
+      - Changed 3D default view angle
+      - Updated the colormap of "Power" plot in FieldProjection monitors
+      - Improved the download data icon for Post-Run result
+      - Changed “PARAMETERS” to “CONFIGURATION” to avoid confusion
+  - version: 3.0.0
+    date: 2023-02-17 00:00:00
+    link: ''
+    new_features:
+      - Added GUI Python script linked with objects
+      - Simulation Editor tree added an new entry “Script Objects”
+      - Added the script editor support Python script editing.
+      - >-
+        Added the ability to insert the objects created by scripts to
+        corresponding location in simulation.json
+      - Added the ability to reorder structure
+    resolved_issues:
+      - 'Fixed: Color of the Symmetry Is Not Consistent'
+      - 'Fixed: edits not updated in referenced fields'
+    improvements:
+      - Improved the switch expression in GUI , make it read-only
+      - Added the constraints to input 'Infinity' in PolySlab
+      - Improved overlay structure on post run
+      - Linked normalize_index to source
+  - version: 2.14.1
+    date: 2023-02-13 00:00:00
+    link: ''
+    new_features: []
+    resolved_issues:
+      - >-
+        Fixed: Item size uploaded exceed max allowed in dynamodb for large
+        simulation files
+      - 'Fixed: Extra Field Written to Json'
+    improvements: []
+  - version: 2.14.0
+    date: 2023-02-10 00:00:00
+    link: ''
+    new_features:
+      - Allow users to redeem a valid FlexUnit code in user account page
+      - >-
+        Integrated "Continue with Google" into Tidy3D login page, user can login
+        with google account
+      - >-
+        Provided the ability to view the medium detail info once user set the
+        medium in Override structure, Background Medium and Structure panel.
+      - >-
+        Provided the ability for user to easily bookmark a public project and
+        view it in their own account
+      - Added ‘Examples' and ‘Bookmarks’ folder under folder page for all users.
+    resolved_issues:
+      - 'Fixed: GUI 3D Display Incorrect'
+      - 'Fixed: Overlay with structure doesn''t look correct'
+      - >-
+        Fixed: Duplicated background medium is created when selecting from
+        public library
+    improvements:
+      - Improved the k value when the conductivity = 0 when editing Medium
+      - >-
+        Merge duplicates to display minimal information (medium used in
+        simulation) to reduce use
+      - Improved the list datatype fields input for Monitors
+  - version: 2.13.3
+    date: 2023-02-06 00:00:00
+    link: ''
+    new_features: []
+    resolved_issues:
+      - 'Fixed: Create New Medium in Structure doesn''t work (view only)'
+    improvements: []
+  - version: 2.13.2
+    date: 2023-02-02 00:00:00
+    link: ''
+    new_features:
+      - >-
+        Only (GaussianBeam, ModeSource or PlaneWave) source can be selected in
+        the source dropdown list
+      - >-
+        If the source has been linked to blochboundary, show warning msg when
+        trying to disable/delete the source or change the source type
+    resolved_issues:
+      - 'Fixed: bug about BlochBoundary not updated'
+    improvements: []
+  - version: 2.13.1
+    date: 2023-01-29 00:00:00
+    link: ''
+    new_features:
+      - Upgrade GUI to support schema v1.8.3
+    resolved_issues: []
+    improvements:
+      - Updated the wording of version from 'Current' to 'Default'
+      - Improved the green color in GUI
+      - >-
+        Technical upgrade: Check the validity of id token before sending any
+        billing requests, refresh id token if it's expired
+  - version: 2.13.0
+    date: 2022-01-19 00:00:00
+    link: ''
+    new_features:
+      - >-
+        Added pre-validation message info into the validation result shown in
+        GUI
+      - Added warning message info into the validation result shown in GUI
+      - >-
+        Added the ability to filter out "daily storage fee" transactions from
+        Billing history by default
+      - Added a "My Expenses" tab to user account (/account) page
+      - >-
+        Added a New min, max Option for Source Time Definition, updated the plot
+        of the source_time
+      - >-
+        Supported direct expression input in the fields of number datatype in
+        simulation editor
+    resolved_issues:
+      - 'Fixed: object cannot be deleted when disabled'
+      - 'Fixed: failure to delete large number of tasks and misleading message'
+    improvements:
+      - >-
+        Improved the user interaction for the mediums from Material Library;
+        Improved the naming rules for medium; Improved the user interaction to
+        expression editor; Added the ability to remind user to remove
+        associations first (variable being used by other fields)
+  - version: 2.12.1
+    date: 2023-01-17 00:00:00
+    link: ''
+    new_features:
+      - GUI upgraded to support Tidy3D v1.8.2
+    resolved_issues:
+      - 'Fixed: background medium duplicated on reopen'
+      - 'Fixed: Visibility hide/show icon doesn''t work on certain items'
+    improvements: []
+  - version: 2.12.0
+    date: 2023-01-10 00:00:00
+    link: ''
+    new_features:
+      - >-
+        GUI upgraded to support Tidy3D v1.8.1, including the following updates 
+        Material Fitter improvement, Improved Mode tracking in ModeSpec, Field
+        Projection Monitors, Cylinder support sidewall_angle, PolySlab support
+        x,y axis and reference plane, Broadband ModeSource and GaussianBeam,
+        Added DiffractionMonitor, Added post-run result for DiffractionMonitor
+        and Field Projection Monitors, Improved GridSpec editing
+      - Expanded material library and improved documentation
+      - Allow enable/disable for monitors and sources
+      - Added |E|^2 in Post-Run Results
+    resolved_issues:
+      - 'Fixed: FieldProjectionAngleMonitor doesn''t allow value 0 in angles'
+      - 'Fixed: Issues on list variable number of points'
+      - 'Fixed: Only one digit is displayed in certain places'
+      - 'Fixed: Point Dipole Source Showing Two Arrows'
+    improvements:
+      - Updated the value input for the bloch_vec
+      - Added error message if user input "Infinity" in bounds
+      - Improved reference handling for variable reference - name change
+      - >-
+        Fill the cross-section in 3D chart geometry intersecting simulation
+        bounds
+  - version: 2.11.1
+    date: 2023-01-03 00:00:00
+    link: ''
+    new_features: []
+    resolved_issues:
+      - 'Fixed: Bug about unit switching in editor'
+      - 'Fixed: Couldn''t change n in Medium'
+      - >-
+        Fixed: Bug about number rounding and scientific notation conversion in
+        editor
+      - 'Fixed: Error when switch between list and string variable type'
+      - 'Fixed: 2D chart displayed incorrectly'
+    improvements:
+      - Remember input mode for medium
+  - version: 2.11.0
+    date: 2022-12-23 00:00:00
+    link: ''
+    new_features:
+      - Allow enable/disable structures
+      - 2D chart added option to show/hide sources/monitors
+      - Overlay structure on Post-Run field plots
+      - Added support to input k in Medium
+    resolved_issues:
+      - 'Fixed: Clicking a task in search page leads to 404'
+      - 'Fixed: The run_time is not displayed correctly during typing'
+      - 'Fixed: Typo in background medium'
+      - 'Fixed: Visibility tree node level issue'
+    improvements:
+      - Improve reference handling in GUI
+      - Improvement on boundary editing
+      - Keep scientific notation in editor
+      - Recalculate Bloch vector if relevant settings are updated
+      - round number for display
+      - Source plot improvement
+      - >-
+        2D chart add symbol for in and out of plane source polarization and
+        propagation direction arrows
+      - Improved 2D chart pan operation
+      - Refined the display for PML/StablePML/Absorber editing panel
+      - Rearrange layout of Structure panel
+  - version: 2.10.0
+    date: 2022-12-13 00:00:00
+    link: ''
+    new_features:
+      - >-
+        Added "Estimate" button under "Run" button, allow user to estimate
+        FlexUnit cost before clicking Run
+      - Added a new column "FlexUnit" in Task page
+      - Pop over Edit to guide user to use this button
+      - Allow user to save expression as a new variable during editing
+      - Expanded color palette for materials
+      - Added ruler in 2D chart
+    resolved_issues:
+      - 'Fixed: Variables disappeared after renaming the simulation'
+      - 'Fixed: Source arrow incorrect in 3d/2d chart'
+    improvements:
+      - Rearranged "Medium" as parameter
+      - Added default values for simulation domain and run time
+      - Changed 2D simulation visualization from 3D view to 2D view
+      - Simplified list input method
+      - Redesigned and increased the visual transition to Task Success
+      - Show time steps in progress bar
+      - Set the grid override structure’s default visibility to false
+      - Added constraints on list type variable
+      - Improved the expression "fx" label
+      - Improved the material library plotting with missing range
+      - Simplified the "Saved" status in workbench title bar
+      - Simplified and grouped related input fields with visual cue
+      - Renamed duplicated task with _Copy and a number
+      - Improved 1D simulation visualization
+  - version: 2.9.1
+    date: 2022-12-02 00:00:00
+    link: ''
+    new_features:
+      - Allow user to share tasks in any status
+      - Added structure transparency in 3D/2D chart
+    resolved_issues:
+      - 'Fixed: shutoff=0 in Editor but 0.00001 in json'
+      - 'Fixed: ‘Save as’ doesn''t work in public task'
+    improvements:
+      - Improved the pop over under version label after creating new version
+      - >-
+        Improved the version dropdown, allow to click the entire row to switch
+        versions
+      - Improvements for variables input and UI
+      - Allow user to delete parent task in version listing page
+  - version: 2.9.0
+    date: 2022-11-25 00:00:00
+    link: ''
+    new_features:
+      - >-
+        User can now rerun a simulation and retrieve its full version history.
+        After a simulation finishes running, user can click “Edit” button to
+        create a new version, edit the simulation, and rerun. The history of all
+        versions of the simulation can be found through the dropdown list in the
+        title bar or under the “Task Details” - “History” tab.
+      - >-
+        User can now declare variables that can be used across different input
+        fields in the simulation editor. Expressions consisting of variables and
+        simple math operators are also supported.
+      - >-
+        The simulation cost of all simulations in a folder can be retrieved
+        through the “Get Info” button in the right-click menu of this folder.
+      - >-
+        User can now archive all simulations in a folder by clicking the
+        “Archive” button in the right-click menu of this folder.
+      - >-
+        Monitor data can be downloaded in .csv format in the Post-Run Result
+        page.
+      - User can now visualize the source time signal and spectrum.
+      - >-
+        User can upgrade a simulation of an older version to the latest
+        supported version of the GUI simulation editor.
+      - Grid can be plotted on top of the structures in the 2D chart.
+    resolved_issues:
+      - >-
+        Fixed: added missing labels for B and C coefficients in material model
+        fields.
+      - 'Fixed: GUI rendering issue of Gaussian source.'
+      - >-
+        Fixed: dispersive model pop up warning message even though no editing is
+        made.
+      - 'Fixed: object re-arranged but 2D chart not updated correctly.'
+      - 'Fixed: FluxMonitor fields update only after closing the window.'
+      - 'Fixed: PointDipole source disappear if unhide the Near2Far monitor.'
+      - >-
+        Fixed: 2D chart reset zoom after editing a parameter in simulation
+        editor.
+      - 'Fixed: the reset issue when try to edit the BlochBoundary.'
+      - 'Fixed: 2D chart not including PolySlab dilation.'
+      - 'Fixed: switch from 2D chart to 3D chart when editing any parameters.'
+      - 'Fixed: Post-Run Result missing axis label.'
+    improvements:
+      - Medium can be defined through index in addition to permittivity.
+      - >-
+        Geometries of Box and Cylinder can be defined through boundary (min+max)
+        in addition to center+size.
+      - >-
+        Improve Post-Run Result page layout to display simulation editor on the
+        left sidebar for convenient revisit of the monitor setting.
+      - >-
+        Open up the progress window when entering a task which is currently
+        running.
+      - >-
+        Display the action menu when multiple items are selected in the folder
+        system.
+      - >-
+        Explicitly label the tasks that have been shared and provide filter
+        function.
+      - Support downloading “Simulation.json” for tasks in draft status.
+      - Allow drag to adjust the width of each column in the folder system.
+      - >-
+        Increase the upper limit of number of tasks which can be deleted in
+        batch.
+      - Plot the propagation and polarization directions of sources in 3D chart.
+      - Provide the “Field decay” info in the task progress window.
+      - Support equal axis aspect ratio plotting in Post-Run Result.
+      - Support opening “tidy3d.log” in GUI viewer directly.
+      - >-
+        Improve Grid Override user experience by visualizing the grid override
+        region in 3D chart, and allowing user to set override geometry from
+        existing structures.
+      - Improve the BlochBoundary boundary editing experience.
+      - Improve PML/StablePML/Absorber boundary editing experience.
+      - >-
+        Keep the same fields unchanged when switching the types of Source or
+        Monitor.
+      - Show fitting progress in Material Fitter.
+      - Optimize performance of Tidy3D Web Client initialization.
+      - >-
+        Improve the colormap for magnitude and intensity field plots in Post-Run
+        Result.
+      - >-
+        Improve the performance of user login: now it should take <2 seconds to
+        login.
+  - version: 2.6.0
+    date: 2022-09-30 00:00:00
+    link: ''
+    new_features:
+      - >-
+        GUI now supports Tidy3D version 1.6.3, including the following new
+        features: FluxMonitor and FluxTimeMonitor with 3D box geometries
+        computing flux going out of all box surfaces (or with exclusion). A new
+        simulation parameter "normalize_index." ModeFieldMonitor is changed to
+        ModeSolverMonitor which includes additional effective index data.
+        Editing support for Near2Far monitors (Post-Run Result for Near2Far
+        monitors is coming soon)
+      - >-
+        The intensity and absolute values are added to field plots in Post-Run
+        Result
+      - >-
+        Use can specify source-time using central wavelength in addition to
+        central frequency
+      - Material Fitter now plots data immediately after file upload
+      - Sources and monitors are displayed by default in 3D chart
+      - Help center documentation now supports full-text search
+      - User can drag to reorder the structures in the override_structures list
+      - “Solver Duration” is now displayed in task progress panel
+    resolved_issues:
+      - >-
+        Fixed: Grid override structure couldn't add geometries into
+        GeometryGroup
+      - 'Fixed: 2D ring resonator structure color mismatch'
+    improvements:
+      - Added confirmation to "Delete" to prevent accidental deletion
+      - Improved BlochBoundary editing
+      - >-
+        Return to the previous location in Folder system when exiting from
+        Editor
+      - >-
+        Improved version message when user upload higher version json than the
+        version that UI can support
+      - Re-adjusted Parameter list order
+      - Improved responsiveness by scrolling to reveal added fields in editor
+  - version: 2.5.1
+    date: 2022-09-23 00:00:00
+    link: ''
+    new_features:
+      - >-
+        Client Administrator can now view tasks of other users of the same
+        organization in the "Folders" page
+      - >-
+        Added "User Name" to transaction history in the "Admin" page of Client
+        Administrator
+    resolved_issues: []
+    improvements:
+      - Search result now displays the owner information of a task
+      - >-
+        User can now drag to adjust width of the side panels inside the GUI
+        editor
+  - version: 2.5.0
+    date: 2022-09-19 00:00:00
+    link: ''
+    new_features:
+      - User can now duplicate a task inside the simulation editor
+      - Tidy3D user can save a shared task to their own account
+      - >-
+        Provided "Infinity" for eligible fields in the drop-down menu in the
+        simulation editor
+      - >-
+        User can now drag to reorder items in the simulation editor's left
+        sidebar
+      - Press ESC to unselect all tasks in the folder page
+    resolved_issues:
+      - 'Fixed: Post-Run Result vertical axes labels were missing'
+      - 'Fixed: PoleResidue model''s coefficient labels were flipped in GUI'
+      - 'Fixed: 3D chart cropped front surface when structure is very large'
+      - 'Fixed: 2D chart didn''t plot source and monitor correctly'
+      - 'Fixed: 3D chart reset navigation setting after editing'
+    improvements:
+      - Improved the speed performance of Post-Run Result visualization
+      - Removed redundant information in the sidebar of Post-Run Result
+      - User can now hide the progress bar by clicking outside of the window
+      - Simplified the input format of complex number
+  - version: 2.4.0
+    date: 2022-09-05 00:00:00
+    link: ''
+    new_features:
+      - >-
+        Tidy3D users can now publicize their tasks using the "Share"
+        functionality. Anyone with the public link of a task can view the
+        simulation setup and results without logging into a Tidy3D account
+    improvements:
+      - Improved the display of long task names in Task Details tab
+  - version: 2.3.0
+    date: 2022-08-26 00:00:00
+    link: ''
+    new_features:
+      - >-
+        A status monitor allows users to track real-time processing of a
+        submitted task.
+      - 3D visualization now supports exporting 3D model in GLB format.
+      - >-
+        FieldTimeMonitor post-run visualization now supports downloading movie
+        as GIF.
+      - The initialization performance of simulation editor has been improved.
+      - >-
+        A back button is now available for users to go back to previously
+        visited pages in Help Center.
+      - >-
+        An admin page is now available for client administrator to manage users
+        and browse complete transaction history of all users.
+      - >-
+        Miscellaneous UI/UX improvements have been applied to the simulation
+        editor and across the site making it more intuitive and more
+        intelligent.
+    resolved_issues:
+      - >-
+        Fixed: Users can not zoom the y-axis when using the “data zoom” function
+        inside the post-run heatmap by mouse dragging, mouse move, mouse scroll
+        or finger touch.

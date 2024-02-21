@@ -1,0 +1,23 @@
+.collapsed-item.collapsed .collapsed-header {
+    border-bottom: unset!important;
+}
+
+.collapsed-item .collapsed-header {
+    cursor: pointer;
+}
+
+.collapsed-item.collapsed .collapsed-header i {
+    transform: rotateZ(-90deg);
+}
+
+.collapsed-item.expand .collapsed-body {
+    display: block;
+}
+
+.collapsed-item.collapsed .collapsed-body {
+    display: none;
+}
+
+.simulation-codes-item-body {
+    border-top: 1px solid #E6E6E6;
+}

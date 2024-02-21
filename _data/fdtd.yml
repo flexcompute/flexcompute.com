@@ -1,0 +1,34 @@
+feature_examples:
+  - title: Adjoint-Optimized Quantum Emitter Light Extractor
+    enabled: true
+    description: >-
+      In quantum technologies, the role of quantum emitters cannot be
+      overstated. These nanoscale entities, ranging from quantum dots and atoms
+      to color centers in crystals, are pivotal in emitting single photons - a
+      cornerstone for quantum applications. However, a significant challenge
+      lies in efficiently extracting this light, often hindered by its weak and
+      uncontrolled emission characteristics. To address this, we highlight a
+      case study featuring an adjoint-optimized quantum emitter light extractor
+      at the start of this new year. This optimized design achieves an
+      impressive extraction efficiency exceeding 80% and maintains a remarkably
+      compact footprint.
+    thumbnail: /uploads/januaray-linkedin-post-1-1-1.png
+    link: https://www.linkedin.com/feed/update/urn:li:activity:7148728250876186626
+  - title: Radiative cooling glass coating
+    enabled: true
+    description: >-
+      Air conditioning accounts for about 10% of global electricity use, and
+      demand is projected to rise significantly. New approaches like radiative
+      cooling can reduce this
+    thumbnail: /assets/images/fdtd/radiative.png
+    link: >-
+      https://www.flexcompute.com/tidy3d/examples/notebooks/RadiativeCoolingGlass/
+  - title: Bi-layer SiN edge coupler in the visible frequency
+    enabled: true
+    description: >-
+      In this case we study on how to set up an FDTD simulation and measure the
+      performance of a typical CMOS RGB image sensor composed of a periodic
+      arrangement of Bayer unit cells.
+    thumbnail: /assets/images/fdtd/bi-layer.png
+    link: >-
+      https://www.flexcompute.com/tidy3d/examples/notebooks/BilayerSiNEdgeCoupler/

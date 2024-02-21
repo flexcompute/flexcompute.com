@@ -1,0 +1,17 @@
+{% if include.menus %}
+{% assign route = page.url | split: "/" | last %}
+{% for menu in include.menus %}
+{% assign path = menu.path | split: "/" | last %}
+{% assign id_prefix = include.idPrefix %}
+{% unless id_prefix %}
+{% assign id_prefix = page.url | replace: "/", "" | prepend: "__pg_" %}
+{% endunless %}
+{% if menu.path %}
+<li class="font-size-14 align-items-start mt-10 mb-10" style="line-height: 1.2 !important;">
+  <a id="{{id_prefix}}_{{menu.name | slugify}}_link" class="{%if route == path%}color-primary-hover{%else%}color-dark-gray{%endif%} color-primary-hover" href="/tidy3d/examples/{{menu.path}}">{{menu.name}}</a>
+</li>
+{% else %}
+{% include example-left-side/menu-item.html menus=menu.menus idPrefix=id_prefix %}
+{%endif%}
+{% endfor %}
+{% endif %}

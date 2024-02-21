@@ -1,0 +1,1147 @@
+more_section:
+  enable: true
+  more_text: More Release Notes
+  link: https://docs.flexcompute.com/projects/tidy3d/en/latest/changelog.html
+log_list:
+  - version: 2.3.0
+    date: 2023-06-30 00:00:00
+    link: https://docs.flexcompute.com/projects/tidy3d/en/latest/changelog.html
+    latest: false
+    description: "<b>Added</b>\n<br>\n1.\tSpecification of spatial permittivity distribution of dispersive material using user-supplied data through CustomPoleResidue, CustomSellmeier, CustomLorentz, CustomDebye, and CustomDrude components.\n<br>\n2.\tCustomAnisotropicMedium where each component can take user-supplied data to define spatial permittivity distribution of non-dispersive or dispersive material.\n<br>\n3.\tCoords.spatial_interp to interpolate spatial data avoiding pitfalls of xarray.interp in directions where there is a single data point.\n<br>\n4.\tAll medium types accept allow_gain which is False by default, but allows the medium to be active if True.\n<br>\n5.\tCausality validation in PoleResidue model.\n<br>\n6.\tGroup index calculation added to mode monitors and available through ModeData.n_group.\n<br>\n7.\tSupport for JaxGeometryGroup in adjoint plugin.\n<br>\n8.\tSupport for gradients w.r.t. FieldMonitor data from output_monitors in adjoint plugin.\n<br>\n9.\testimate_cost() method for Job and Batch.\n<br>\n10.\ts3utils.get_s3_sts_token accepts extra query parameters.\n<br>\n11.\tplugins.mode.web to control the server-side mode solver.\n<br>\n12.\tSupport for JaxDataArray.interp, allowing differentiable linear interpolation.\n<br>\n13.\tSupport for JaxSimulationData.get_intensity(), allowing intensity distribution to be differentiated in adjoint plugin.\n<br>\n14.\tSupport for JaxFieldData.flux to compute differentiable flux value from FieldData.\n<br>\n15.\tAll custom medium types accept subpixel which is False by default, but applies subpixel averaging of the permittivity on the interfaces of the structure (including exterior boundary and intersection interfaces with other structures) if True and simulation's subpixel is also True.\n<br><br>\n\n<b>Changed</b>\n<br>\n1.\tAdd Medium2D to full simulation in tests.\n<br>\n2.\tDispersionFitter and StableDispersionFitter unified in a single DispersionFitter interface.\n<br>\n3.\tStableDispersionFitter deprecated, with stable fitter now being run instead through plugins.dispersion.web.run(DispersionFitter).\n<br>\n4.\tRemoved validator from CustomFieldSource that ensured data spanned the source geometry. Now the current values are extrapolated outside of the supplied data ranges.\n<br>\n5.\tCustomMedium now take fields permittivity and conductivity. eps_dataset will be deprecated in v3.0.\n<br>\n6.\tMoved CustomMedium._interp to Coords.spatial_interp to be used by custom current sources.\n<br>\n7.\tAdjoint simulations no longer contain unused gradient permittivity monitors, reducing processing time.\n<br>\n8.\tBatch prints total estimated cost if verbose=True.\n<br>\n9.\tUnified config and authentication.\n<br>\n10.\tRemove restriction that JaxCustomMedium must not be a 3D pixelated array.\n<br>\n11.\tLimit total number of input structures in adjoint plugin for performance reasons.\n<br>\n12.\tModeSolver and ModeSolverMonitor now contain direction field that explicitly specifies the mode propagation direction (default is \"+\").\n<br>\n13.\tAdded an interpolate option to CustomCurrentSource and UniformCurrentSource, which uses linear interpolation to emulate exact placement of the source along directions where the source has zero size, rather than snapping to the nearest grid location, similar to the behavior for PointDipole. Default: True.\n<br><br>\n\n<b>Fixed</b>\n<br>\n1.\tPlotting 2D materials in SimulationData.plot_field and other circumstances.\n<br>\n2.\tMore segments in plotting of large cylinder and sphere cross-sections.\n<br>\n3.\tProper handling of nested list of custom data components in IO, needed for custom dispersive medium coefficients.\n<br>\n4.\tElectromagneticFieldData.outer_dot now works correctly for FieldData, not only ModeSolverData.\n<br>\n5.\tFix to the setting of the mode solver PML parameters that produces better results for modes which do not decay in the PML, and fewer spurious modes.\n<br>\n6.\tFix to single-precision mode solver to do the type conversion on the final matrix only rather than at intermediate steps, which improves accuracy in some cases.\n<br>\n7.\tImprovements to graphene medium fit.\n<br>\n8.\tSchema titles in ArrayLike fields.\n<br>\n9.\tFix web.estimate_cost error/time-out for large simulations, it should now always work but may take some time for complex cases.\n<br>\n10.\tA more accurate injection and decomposition of backward propagating waveguide modes in lossy and gyrotropic systems.\n"
+    release_types: ''
+    full_list_text:
+    full_list_link: ''
+  - version: 2.2.3
+    date: 2023-06-15 00:00:00
+    link: https://docs.flexcompute.com/projects/tidy3d/en/latest/changelog.html
+    latest: false
+    description: |
+      <b>Added</b>
+
+      <b>Changed</b>
+
+      <b>Fixed</b>
+      <br>
+      1. Callback URL: "call_back_url" replaced with proper "callbackUrl".
+      <br>
+    release_types: ''
+    full_list_text: ''
+    full_list_link: ''
+  - version: 2.2.2
+    date: 2023-05-25 00:00:00
+    link: https://docs.flexcompute.com/projects/tidy3d/en/latest/changelog.html
+    latest: false
+    description: >-
+      <b>Added</b>
+
+
+      <b>Changed</b>
+
+      <br>
+
+      1. Tidy3D component .to_hdf5() and .from_hdf5() now accept custom encoder
+      and decoder functions for more flexible IO.
+
+      <br><br>
+
+
+      <b>Fixed</b>
+
+      <br>
+
+      1. JaxDataArrays are properly handled when reading and writing to file,
+      dramatically reducing the VJP simulation download size in server-side
+      adjoint.
+
+      <br>
+
+      2. A bug in a total-field scattered-field (TFSF) validator which was
+      causing unnecessary errors when a TFSF surface intersected with 2D
+      materials.
+
+      <br>
+
+      3. CI tests working with binary installation of gdstk instead of compiling
+      from source.
+    release_types: ''
+    full_list_text: ''
+    full_list_link: ''
+  - version: 2.2.1
+    date: 2023-05-23 00:00:00
+    link: https://docs.flexcompute.com/projects/tidy3d/en/latest/changelog.html
+    latest: false
+    description: >-
+      <b>Added</b>
+
+
+      <b>Changed</b>
+
+
+      <b>Fixed</b>
+
+      <br>
+
+      1. Downgrade typing_extensions to <=4.5.0 to avoid bug with pydantic for
+      python <= 3.9.
+
+      <br>
+
+      2. Bug in ModeSolver which was causing a preconditioner to be applied even
+      when it is not needed.
+    release_types: ''
+    full_list_text: ''
+    full_list_link: ''
+  - version: 2.2.0
+    date: 2023-05-22 00:00:00
+    link: https://docs.flexcompute.com/projects/tidy3d/en/latest/changelog.html
+    latest: true
+    description: >-
+      <b>Added</b>
+
+      <br>
+
+      1. Fully anisotropic medium class (FullyAnisotropicMedium) that allows to
+      simulate materials with permittivity and conductivity tensors oriented
+      arbitrary with respect to simulation grid.
+
+      <br>
+
+      2. Adjoint processing is done server side by default, to avoid unnecessary
+      downloading of data.
+
+      <br>
+
+      3. JaxPolySlab in adjoint plugin, which can track derivatives through its
+      .vertices.
+
+      <br>
+
+      4. run_local and run_async_local options in tidy3d.plugins.adjoint.web to
+      provide way to run adjoint processing locally.
+
+      <br>
+
+      5. web.test() to simply test if the authentication is configured correctly
+      and raise exception otherwise.
+
+      <br>
+
+      6. SimulationTask.get_running_tasks() to get a list of running tasks from
+      the server.
+
+      <br>
+
+      7. Retry for set number of seconds in web functions if internet connection
+      errors.
+
+      <br>
+
+      8. Argument scale to ModeSolver.plot_field to control plot scaling.
+
+      <br><br>
+
+
+      <b>Changed</b>
+
+      <br>
+
+      1. Perfect electric conductors (PECs) are now modeled as high-conductivity
+      media in both the frontend and backend mode solvers, and their presence
+      triggers the use of a preconditioner to improve numerical stability and
+      robustness. Consequently, the mode solver provides more accurate
+      eigenvectors and field distributions when PEC structures are present.
+
+      <br>
+
+      2. Include source amplitude in amp_time.
+
+      <br>
+
+      3. Increased the maximum allowed estimated simulation data storage to
+      50GB. Individual monitors with projected data larger than 10GB will
+      trigger a warning.
+
+      <br>
+
+      4. PolySlab.inside now uses matplotlib.path.contains_points for better
+      performance.
+
+      <br>
+
+      5. JaxCustomMedium accepts a maximum of 250,000 grid cells to avoid slow
+      server-side processing.
+
+      <br><BR>
+
+
+      <b>Fixed</b>
+
+      <br>
+
+      1. Log messages provide the correct caller origin (file name and line
+      number).
+
+      <br>
+
+      2. Medium2D is removed from the list of allowed options for
+      Simulation.medium in the documentation.
+
+      <br>
+
+      3. Symmetry works properly in adjoint plugin.
+    release_types: ''
+    full_list_text: ''
+    full_list_link: ''
+  - version: 2.1.1
+    date: 2023-04-25 00:00:00
+    link: https://docs.flexcompute.com/projects/tidy3d/en/latest/changelog.html
+    latest: false
+    description: >-
+      <b>Added</b>
+
+
+      <b>Changed</b>
+
+      <br>
+
+      1. adjoint plugin now filters out adjoint sources that are below a
+      threshold in amplitude relative to the maximum amplitude of the monitor
+      data, reducing unnecessary processing by eliminating sources that won’t
+      contribute to the gradient.
+
+      <br>
+
+      2. web.run_async uses Batch under the hood instead of asyncio.
+
+      <br><br>
+
+
+      <b>Fixed</b>
+
+      <br>
+
+      1. More helpful error messages from HTTP responses.
+
+      <br>
+
+      2. Bug in _validate_no_structures_pml, which was using wrong pml
+      thicknesses.
+
+      <br>
+
+      3. Broken callback_url in webapi.
+    release_types: ''
+    full_list_text: ''
+    full_list_link: ''
+  - version: 2.1.1
+    date: 2023-04-25 00:00:00
+    link: https://docs.flexcompute.com/projects/tidy3d/en/latest/changelog.html
+    latest: false
+    description: >-
+      <b>Changed</b>
+
+
+      <b>Fixed</b>
+
+      <br>
+
+      1. More helpful error messages from HTTP responses.
+
+      <br>
+
+      2. Bug in _validate_no_structures_pml, which was using wrong pml
+      thicknesses.
+
+      <br>
+
+      3. Broken callback_url in webapi.
+    release_types: ''
+    full_list_text: ''
+    full_list_link: ''
+  - version: 2.1.0
+    date: 2023-04-18 00:00:00
+    link: https://docs.flexcompute.com/projects/tidy3d/en/latest/changelog.html
+    latest: true
+    description: >-
+      <b>Added</b>
+
+      <br>
+
+      1. Group index calculation added to ModeSpec.
+
+      <br>
+
+      2. Waveguide plugin for quickly calculating modes in dielectric
+      waveguides.
+
+      <br>
+
+      3. ElectromagneticFieldData.dot_intep to calculate mode overlap integrals
+      between modes with different discretizations.
+
+      <br>
+
+      4. ElectromagneticFieldData.mode_area to calculate the effective mode
+      area.
+
+      <br>
+
+      5. ElectromagneticFieldData.intensity returns the sum of the squared
+      components of the electric field.
+
+      <br>
+
+      6. Group index calculation added to ModeSolver.
+
+      <br>
+
+      7. Web interface prints clickable link to task on Tidy3D web interface.
+
+      <br>
+
+      8. Allow configuration through API key in python via
+      tidy3d.web.configure(apikey: str) function.
+
+      <br><br>
+
+
+      <b>Changed</b>
+
+      <br>
+
+      1. adjoint plugin now filters out adjoint sources that are below a
+      threshold in amplitude relative to the maximum amplitude of the monitor
+      data, reducing unnecessary processing by eliminating sources that won’t
+      contribute to the gradient.
+
+      <br>
+
+      2. ArrayLike fields use np.ndarray internally instead of TidyNDArray
+      subclass. Tidy3D objects are no longer hashable, instead, hash the
+      obj.json() string.
+
+      <br><br>
+
+
+      <b>Fixed</b>
+
+      <br>
+
+      1. web.Batch monitoring is more robust, will not raise exception if a job
+      errors or diverges. In this case, the progressbar text will render in red.
+
+      <br>
+
+      2. More robust handling for 2D structure validator.
+    release_types: ''
+    full_list_text: ''
+    full_list_link: ''
+  - version: 2.0.3
+    date: 2023-04-11 00:00:00
+    link: https://docs.flexcompute.com/projects/tidy3d/en/latest/changelog.html
+    latest: false
+    description: >-
+      <b>Changed</b>
+
+      <br>
+
+      1. Times logged in tidy3d.log during solver run now split into Solver time
+      (time-stepping only), Field projection time (after the time stepping if
+      any field projection monitors present) and Data write time (when the raw
+      data is packaged to disk). Previously, Solver time used to include the
+      Field projection time and not Data write time.
+
+      <br><br>
+
+
+      <b>Fixed</b>
+
+      <br>
+
+      1. Port name duplication in smatrix plugin for multimode ports.
+
+      <br>
+
+      2. Web functions create the leading directories for the supplied filename
+      if they don’t exist.
+
+      <br>
+
+      3. Some docstring examples that were giving warnings.
+
+      <br>
+
+      4. web.monitor() only prints message when condition met.
+
+      <br>
+
+      5. PML boxes have non-zero extent along any dimensions where the
+      simulation has 0 size, to fix plotting issues for 2D simulations.
+
+      <br>
+
+      6. Improved PEC handling around curved interfaces and structure
+      intersections. Old handling accessible with subpixel=False (previously, it
+      was independent of the subpixel setting).
+
+      <br>
+
+      7. Fix to field projections sometimes containing NaN values.
+    release_types: ''
+    full_list_text: ''
+    full_list_link: ''
+  - version: 2.0.2
+    date: 2023-04-03 00:00:00
+    link: https://docs.flexcompute.com/projects/tidy3d/en/latest/changelog.html
+    latest: false
+    description: >-
+      <b>Changed</b>
+
+
+      <b>Fixed</b>
+
+      <br>
+
+      1. Bug in web interface when Simulation upload was not putting quotes
+      around td.inf values.
+    release_types: ''
+    full_list_text: ''
+    full_list_link: ''
+  - version: 2.0.1
+    date: 2023-03-31 00:00:00
+    link: https://docs.flexcompute.com/projects/tidy3d/en/latest/changelog.html
+    latest: false
+    description: >-
+      <b>Changed</b>
+
+      <br>
+
+      1. Default Tidy3d logging level is now set to 'WARNING'.
+
+      <br>
+
+      2. Tidy3D is no longer pip installable from tidy3d-beta on PyPI.
+
+      <br>
+
+      3. Plugins must be imported from their respective directories, eg. from
+      tidy3d.plugins.mode import ModeSolver.
+
+      <br>
+
+      4. Removed Geometry.intersections().
+
+      <br>
+
+      5. Log level only accepts upper case strings.
+
+      <br>
+
+      6. PolySlab reference_plane is "middle" by default.
+
+      <br>
+
+      7. Boundary conditions are now PML() by default.
+
+      <br>
+
+      8. PointDipole sources now have a continuous dependence on the source
+      position, as opposed to snapping to Yee grid locations. Behavior is
+      controlled by the interpolate argument, set to True by default.
+
+      <br>
+
+      9. smatrix plugin accepts list of frequencies and returns data as an
+      xarray.DataArray instead of a nested dict.
+
+      <br>
+
+      10. importlib-metadata version set to >= 6.0.0.
+
+      <br><br>
+
+
+      <b>Fixed</b>
+
+      <br>
+
+      1. Helpful error message if user has insufficient credits.
+    release_types: ''
+    full_list_text: ''
+    full_list_link: ''
+  - version: 1.10.0
+    date: 2023-03-28 00:00:00
+    link: https://docs.flexcompute.com/projects/tidy3d/en/latest/changelog.html
+    latest: ''
+    description: >-
+      <b>Added</b>
+
+      <br>
+
+      1. TriangleMesh class for modeling geometries specified by triangle
+      surface meshes, with support for STL file import.
+
+      <br>
+
+      2. Total-field scattered-field (TFSF) source which allows angled plane
+      waves to be injected into a finite region of space (the total-field
+      region), such that only scattered fields exist outside this region
+      (scattered-field region).
+
+      <br>
+
+      3. Medium2D class for surface conductivity model of a 2D material.
+
+      <br>
+
+      4. Entries in material_library for graphene and some common TMDs.
+
+      <br>
+
+      5. Ability to create a 2D representation of a thin 3D material.
+
+      <br>
+
+      6. SimulationData.plot_field accepts new field components and values,
+      including the Poynting vector.
+
+      <br>
+
+      7. SimulationData.get_poynting_vector for calculating the 3D Poynting
+      vector at the Yee cell centers.
+
+      <br>
+
+      8. Post-init validation of Tidy3D components.
+
+      <br>
+
+      9. Validate post-Simulation init to error if any structures have bounds
+      that terminate inside of the PML.
+
+      <br>
+
+      10. Validate slab_bounds for PolySlab.
+
+      <br><br>
+
+
+      <b>Changed</b>
+
+      <br>
+
+      1. Tidy3D account authentication done solely through API key. Migration
+      option offered for useres with old username / password authentication.
+
+      <br>
+
+      2. export_matlib_to_file in material_library exports material’s full name
+      in addition to abbreviation.
+
+      <br>
+
+      3. Simpler progress bars for run_async.
+
+      <br>
+
+      4. Medium property n_cfl added to adjust time step size according to CFL
+      condition.
+
+      <br>
+
+      5. In the mode solver plugin, regular methods in solver.py transformed
+      into classmethods.
+
+      <br>
+
+      6. ArrayLike types are stored internally as np.ndarray and written to json
+      as lists. constrained_array() provides way to validate ArrayLike values
+      based on ndim and dtype.
+
+      <br>
+
+      7. Pip installing tidy3d automatically creates ~/.tidy3d directory in home
+      directory.
+
+      <br>
+
+      8. Percentage done and field decay determined through http request.
+
+      <br>
+
+      9. SourceTime plotting methods .plot() and .plot_spectrum() accept a val
+      kwarg, which selects which part of the data ('real', 'imag', or 'abs') to
+      plot, rather than plotting all at once.
+
+      <br><br>
+
+
+      <b>Fixed</b>
+
+      <br>
+
+      1. Bug in remote file transfer when client environment has no correct
+      certificate authority pem file install locally.
+
+      <br>
+
+      2. Tidy3D exceptions inherit from ValueError so they are handled properly
+      by pydantic.
+
+      <br>
+
+      3. Two unstable materials in material_library: Cu_JohnsonChristy1972 and
+      Ni_JohnsonChristy1972. TiOx_HoribStable added for improved stability.
+
+      <br>
+
+      4. Bug in infinite long cylinder when the reference_plane is not at the
+      bottom or the cylinder is slanted.
+    release_types: ''
+    full_list_text: ''
+    full_list_link: ''
+  - version: 1.9.3
+    date: 2023-03-08 00:00:00
+    link: https://docs.flexcompute.com/projects/tidy3d/en/latest/changelog.html
+    latest: ''
+    description: ''
+    release_types: ''
+    full_list_text: ''
+    full_list_link: ''
+  - version: 1.9.2
+    date: 2023-03-08 00:00:00
+    link: https://docs.flexcompute.com/projects/tidy3d/en/latest/changelog.html
+    latest: ''
+    description: ''
+    release_types: ''
+    full_list_text: ''
+    full_list_link: ''
+  - version: 1.9.1
+    date: 2023-03-06 00:00:00
+    link: https://docs.flexcompute.com/projects/tidy3d/en/latest/changelog.html
+    latest: ''
+    description: ''
+    release_types: ''
+    full_list_text: ''
+    full_list_link: ''
+  - version: 1.9.0
+    date: 2023-03-01 00:00:00
+    link: https://docs.flexcompute.com/projects/tidy3d/en/latest/changelog.html
+    latest: false
+    description: >-
+      <b>Added</b>
+
+      <br>
+
+      1. Specification of relative permittivity distribution using raw,
+      user-supplied data through a CustomMedium component.
+
+      <br>
+
+      2. Automatic differentiation through Tidy3D simulations using jax through
+      tidy3d.plugins.adjoint.
+
+      <br>
+
+      3. New Drude model variants for Gold and Silver in the material_library.
+
+      <br>
+
+      4. Plugin ComplexPolySlab for supporting complex polyslabs containing
+      self-intersecting polygons during extrusion.
+
+      <br>
+
+      5. Asynchronous running of multiple simulations concurrently using
+      web.run_async.
+
+      <br>
+
+      6. Jax-compatible run_async in the adjoint plugin for efficiently running
+      multi-simulation objectives concurrently and differentiating result.
+
+      <br>
+
+      7. Warning in Simulation.epsilon if many grid cells and structures
+      provided and slow run time expected as a result.
+
+      <br>
+
+      8. verbose option in tidy3d.web functions and containers. If False, there
+      will be no non-essential output when running simulations over web api.
+
+      <br>
+
+      9. Warning if PML or absorbing boundaries are used along a simulation
+      dimension with zero size.
+
+      <br><br>
+
+
+      <b>Changed</b>
+
+      <br>
+
+      1. Saving and loading of .hdf5 files is made orders of magnitude faster
+      due to an internal refactor.
+
+      <br>
+
+      2. PolySlab.from_gds supports gds_cell from both gdspy and gdstk, both
+      packages are made optional requirements.
+
+      <br>
+
+      3. Adjoint plugin JaxCustomMedium is made faster and can handle several
+      thousand pixels without significant overhead.
+
+      <br>
+
+      4. Jax is made an optional requirement. The adjoint plugin supports jax
+      versions 0.3 and 0.4 for windows and non-windows users, respectively.
+
+      <br>
+
+      5. Issue a deprecation warning that Geometry.intersections will be renamed
+      to Geometry.intersections_plane in 2.0.
+
+      <br>
+
+      6. Limit some warnings to only show for the first structure for which they
+      are encountered.
+
+      <br>
+
+      7. Billed flex unit no longer shown at the end of web.run as it may take a
+      few seconds until it is available. Instead, added a web.real_cost(task_id)
+      function to get the cost after a task run.
+
+      <br>
+
+      8. Refactored tidy3d.web for more robustness and test coverage.
+
+      <br><br>
+
+
+      <b>Fixed</b>
+
+      <br>
+
+      1. Progressbars always set to 100% when webapi functions are finished.
+
+      <br>
+
+      2. Faster handling of Geometry.intersects and Geometry.inside by taking
+      into account geometry bounds.
+
+      <br>
+
+      3. Numpy divide by zero warning in mode solver fixed by initializing
+      jacobians as real instead of complex.
+
+      <br>
+
+      4. Bug in validators for 2D objects being in homogeneous media which were
+      looking at the infinite plane in which the objects lie. This can also
+      significantly speed up some validators in the case of many structures.
+
+      <br>
+
+      5. Sources and monitors with bend radii are displayed with curved arrows.
+    release_types: ''
+    full_list_text: ''
+    full_list_link: ''
+  - version: 1.8.4
+    date: 2023-02-13 00:00:00
+    link: https://docs.flexcompute.com/projects/tidy3d/en/latest/changelog.html
+    latest: ''
+    description: ''
+    release_types: ''
+    full_list_text: ''
+    full_list_link: ''
+  - version: 1.8.3
+    date: 2023-01-26 00:00:00
+    link: ''
+    latest: ''
+    description: ''
+    release_types: ''
+    full_list_text: ''
+    full_list_link: ''
+  - version: 1.8.2
+    date: 2023-01-12 00:00:00
+    link: https://docs.flexcompute.com/projects/tidy3d/en/latest/changelog.html
+    latest: false
+    description: ''
+    release_types:
+      - enable: false
+        description: ''
+        list: ''
+    full_list_text: ''
+    full_list_link: ''
+  - version: 1.8.1
+    date: 2022-12-30 00:00:00
+    link: https://docs.flexcompute.com/projects/tidy3d/en/latest/changelog.html
+    latest: ''
+    description: ''
+    release_types: []
+    full_list_text: ''
+    full_list_link: ''
+  - version: 1.8.0
+    date: 2022-12-14 00:00:00
+    link: https://docs.flexcompute.com/projects/tidy3d/en/latest/changelog.html
+    latest: false
+    description: >-
+      <b>Added</b>
+
+      <br>
+
+      1. CustomFieldSource that can inject arbitrary source fields.
+
+      <br>
+
+      2. ElectromagneticFieldData.flux property for data corresponding to 2D
+      monitors, and ElectromagneticFieldData.dot method for computing the
+      overlap integral over two sets of frequency-domain field data.
+
+      <br>
+
+      3. Data corresponding to 2D FieldMonitor and FieldTimeMonitor, as well as
+      to ModeSolverMonitor, now also stores grid_correction data related to the
+      finite grid along the normal direction. This needs to be taken into
+      account to avoid e.g. numerical oscillations of the flux with the exact
+      position of the monitor that is due to the interpolation from the grid
+      cell boundaries. These corrections are automatically applied when using
+      the flux and dot methods.
+
+      <br>
+
+      4. Resonance finding plugin for estimating resonance frequency and
+      Q-factor of multiple resonances from time-domain data. Accessed through
+      tidy3d.plugins.ResonanceFinder.
+
+      <br>
+
+      5. New .updated_copy(**kwargs) method to all tidy3d objects to add a more
+      convenient shortcut to copying an instance with updated fields, i.e.
+      med.copy(update=dict(permittivity=3.0)) becomes
+      med.updated_copy(permittivity=3.0).
+
+      <br>
+
+      6. Test support for python 3.11.
+
+      <br>
+
+      7. sidewall_angle option for Cylinder that allows a Cylinder to be tuned
+      into a conical frustum or a cone.
+
+      <br>
+
+      8. reference_plane for PolySlab that provides options to define the
+      vertices at the bottom, middle, or top of the PolySlab.
+
+      <br>
+
+      9. Automesh generation: MeshOverrideStructure that allows for a direct
+      grid size specification in override structures, and dl_min that bounds the
+      minimal grid size.
+
+      <br>
+
+      10. More material models to the material database such as gold from
+      Olman2012.
+
+      <br>
+
+      11. In AdvancedFitterParam for StableDispersionFitter, random_seed option
+      to set the random seed, and bound_f_lower to set the lower bound of pole
+      frequency.
+
+      <br>
+
+      12. Introduced the option to project fields at near, intermediate, and far
+      distances using an exact Green’s function formalism which does not make
+      far-field approximations. This can be enabled in any
+      AbstractFieldProjectionMonitor by setting far_field_approx=False. A
+      tutorial notebook as a comprehensive reference for field projections was
+      added to the documentation.
+
+      <br>
+
+      13. Tracking of modes in ModeSolverData based on overlap values,
+      controlled through ModeSpec.track_freq.
+
+      <br>
+
+      14. Native broadband support for GassuainBeam AstigmaticGaussianBeam, and
+      ModeSource through the num_freqs argument.
+
+      <br>
+
+      15. Apodization option for frequency-domain monitors to ignore temporal
+      data in the beginning and/or end of a simulation
+
+      <br><br>
+
+
+      <b>Changed</b>
+
+      <br>
+
+      1. Minimum flex unit charge reduced from 0.1 to 0.025.
+
+      <br>
+
+      2. Default courant factor was changed from 0.9 to 0.99.
+
+      <br>
+
+      3. A point dipole source placed on a symmetry plane now always has twice
+      the amplitude of the same source in a simulation without the symmetry
+      plane, as expected by continuity with the case when the dipole is slightly
+      off the symmetry plane, in which case there are effectively two dipoles,
+      the original one and its mirror image. Previously, the amplitude was only
+      doubled for dipoles polarized normal to the plane, because of Yee grid
+      specifics.
+
+      <br>
+
+      4. FluxMonitor and FluxTimeMonitor no longer snap fields to centers, but
+      instead provide continuous interpolation of the flux over the exact
+      geometry of the monitor.
+
+      <br>
+
+      5. Major refactor to internal handling of data structures, including pure
+      Dataset components that do not depend on other Tidy3D components and may
+      therefore be used to define custom data in Tidy3D models.
+
+      <br>
+
+      6. Speed and memory usage improvement when writing and reading Tidy3d
+      models to and from .hdf5 files.
+
+      <br>
+
+      7. Writing Tidy3D models containing custom data to .json file will log a
+      warning and exclude the raw data from the file for performance reasons.
+
+      <br>
+
+      8. Material database reorganization and fixing a few references to the
+      dispersion data.
+
+      <br>
+
+      9. The name Near2Far has been replaced with FieldProjection. For example,
+      Near2FarAngleMonitor is now FieldProjectionAngleMonitor.
+
+      <br>
+
+      10. The API for far field projections has been simplified and several
+      methods have now become properties. For example, the radar cross section
+      is now accessed as .radar_cross_section, not .radar_cross_section().
+
+      <br>
+
+      11. Added a method renormalize_fields to AbstractFieldProjectionData to
+      re-project far fields to different projection distances.
+
+      <br>
+
+      12. The API for DiffractionData was refactored to unify it with the API
+      for AbstractFieldProjectionData.
+
+      <br>
+
+      13. The user no longer needs to supply orders_x and orders_y when creating
+      a DiffractionMonitor; all allowed orders are automatically generated and
+      returned in the resulting DiffractionData.
+
+      <br>
+
+      14. The user no longer needs to supply a medium when creating a
+      DiffractionMonitor or any AbstractFieldProjectionMonitor; the medium
+      through which fields are to be projected is now determined automatically
+      based on the medium in which the monitor is placed.
+
+      <br>
+
+      15. The following attributes of AbstractFieldProjectionMonitor are now
+      properties rather than methods: fields_spherical, fields_cartesian, power,
+      radar_cross_section.
+
+      <br><br>
+
+
+      <b>Fixed</b>
+
+      <br>
+
+      1. Some issues in DiffractionMonitor that is not z-normal that could lead
+      to solver errors or wrong results.
+
+      <br>
+
+      2. Bug leading to solver error when Absorber boundaries with num_layers =
+      0 are used.
+
+      <br>
+
+      3. Bug leading to solver error when a FieldMonitor crosses a BlochBoundary
+      and not all field components are recorded.
+
+      <br>
+
+      4. When running a Batch, path_dir is created if not existing.
+
+      <br>
+
+      5. Ignore shapely STRtree deprecation warning.
+
+      <br>
+
+      6. Ignore x axis when plotting 1D Simulation cross sections to avoid plot
+      irregularities.
+
+      <br>
+
+      7. Local web api tests.
+
+      <br>
+
+      8. Use Tidy3D logger for some warnings that used to use default python
+      logging
+    release_types: ''
+    full_list_text: ''
+    full_list_link: ''
+  - version: 1.7.1
+    date: 2022-10-10 00:00:00
+    link: https://docs.flexcompute.com/projects/tidy3d/en/latest/changelog.html
+    latest: ''
+    description: ''
+    release_types: []
+    full_list_text: ''
+    full_list_link: ''
+  - version: 1.7.0
+    date: 2022-10-03 00:00:00
+    link: https://docs.flexcompute.com/projects/tidy3d/en/latest/changelog.html
+    latest: false
+    description: >+
+      Our newest release includes the addition of user-requested features and
+      the removal of several features which negatively impacted the customer
+      experience and performance of the product.
+
+    release_types: ''
+    full_list_text: ''
+    full_list_link: ''
+  - version: 1.6.3
+    date: 2022-09-13 00:00:00
+    link: https://docs.flexcompute.com/projects/tidy3d/en/latest/changelog.html
+    latest: ''
+    description: ''
+    release_types: ''
+    full_list_text: ''
+    full_list_link: ''
+  - version: 1.6.2
+    date: 2022-09-06 00:00:00
+    link: https://docs.flexcompute.com/projects/tidy3d/en/latest/changelog.html
+    latest: ''
+    description: ''
+    release_types: ''
+    full_list_text: ''
+    full_list_link: ''
+  - version: 1.6.1
+    date: 2022-08-31 00:00:00
+    link: https://docs.flexcompute.com/projects/tidy3d/en/latest/changelog.html
+    latest: ''
+    description: ''
+    release_types: ''
+    full_list_text: ''
+    full_list_link: ''
+  - version: 1.6.0
+    date: 2022-08-29 00:00:00
+    latest: false
+    link: https://docs.flexcompute.com/projects/tidy3d/en/latest/changelog.html
+    description: >-
+      This new version brings some major internal reorganizations, and a number
+      of new features and bug fixes. 
+
+      <br>
+
+      The full list of changes can be found <a
+      href="https://docs.flexcompute.com/projects/tidy3d/en/latest/changelog.html">HERE</a>.
+
+      <br>
+
+      <b>We would like to highlight some simulation pricing changes starting
+      from this release:</b>
+
+      <br>
+
+      1. We have worked on reducing our overhead and are happy to announce that
+      we are decreasing the minimum charge per task from 0.2 to 0.1 flex units.
+
+      <br>
+
+      2. We have reduced the typical cost premium for dispersive materials in
+      simulations, especially when only part of the simulation is dispersive.
+
+      <br>
+
+      3. We have added a cost for monitors, but this will be negligible in
+      typical simulations, and will only be non-negligible for very large
+      monitors. For example, for a very large frequency-domain monitor at many
+      frequencies, such that the number of pixels in the monitor span times the
+      number of frequencies is similar to the total number of pixels in the
+      simulation, the charge for the monitor will still be only a fraction of
+      the current charge for the simulation run.
+    release_types: []
+  - version: 1.5.0
+    date: 2022-07-21 00:00:00
+    link: https://docs.flexcompute.com/projects/tidy3d/en/latest/changelog.html
+  - version: 1.4.1
+    date: 2022-06-13 00:00:00
+    link: https://docs.flexcompute.com/projects/tidy3d/en/latest/changelog.html
+    latest: ''
+    description: ''
+    release_types: ''
+    full_list_text: ''
+    full_list_link: ''
+  - version: 1.4.0
+    date: 2022-06-03 00:00:00
+    link: https://docs.flexcompute.com/projects/tidy3d/en/latest/changelog.html
+  - version: 1.3.3
+    date: 2022-05-18 00:00:00
+    link: https://docs.flexcompute.com/projects/tidy3d/en/latest/changelog.html
+  - version: 1.3.2
+    date: 2022-04-30 00:00:00
+    link: https://docs.flexcompute.com/projects/tidy3d/en/latest/changelog.html
+    latest: ''
+    description: ''
+    release_types: ''
+    full_list_text: ''
+    full_list_link: ''
+  - version: 1.3.1
+    date: 2022-04-29 00:00:00
+    link: https://docs.flexcompute.com/projects/tidy3d/en/latest/changelog.html
+    latest: ''
+    description: ''
+    release_types: ''
+    full_list_text: ''
+    full_list_link: ''
+  - version: 1.3.0
+    date: 2022-04-26 00:00:00
+    link: https://docs.flexcompute.com/projects/tidy3d/en/latest/changelog.html
+  - version: 1.2.1
+    date: 2022-03-30 00:00:00
+    link: https://docs.flexcompute.com/projects/tidy3d/en/latest/changelog.html
+  - version: 1.1.1
+    date: 2022-03-02 00:00:00
+    link: https://docs.flexcompute.com/projects/tidy3d/en/latest/changelog.html
+  - version: 1.0.1
+    date: 2022-02-16 00:00:00
+    link: https://docs.flexcompute.com/projects/tidy3d/en/latest/changelog.html
+  - version: 1.0.0
+    date: 2022-01-31 00:00:00
+    link: https://docs.flexcompute.com/projects/tidy3d/en/latest/changelog.html

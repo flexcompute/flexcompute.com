@@ -1,0 +1,43 @@
+---
+layout: default
+title: "Intro to Turbulence in CFD | Flexcompute"
+description: "Dr. Philippe Spalart of Spalart-Allmaras turbulence model fame walks us through the fundamentals of turbulence modeling in CFD."
+tags:
+- CFD
+- Turbulence modeling and prediction
+- RANS
+- LES
+- DES
+- DNS
+- Spalart-allmaras turbulence model
+- K-Omega SST
+author: Philippe Spalart
+custom_font: font2
+banner_section:
+  enable: true
+  bg: "/assets/images/cfd101/cfd101_bg.png"
+  page_title: 'Introduction to Turbulence Modeling in Computational Fluid Dynamics (CFD)'
+  description: "Turbulence models use mathematical approximations to predict complex flow behavior. It is a very complex science that still confuses most CFD users. Which turbulence model to choose? One equation or two equation models? Wall functions? What are the pros and cons of the most common models? When should CFD users trust which models? And so on… In this video series on CFD turbulence modeling we will have Dr. Philippe Spalart, of Spalart-Allmaras turbulence model fame, explain the problems faced by the CFD community when it comes to modeling turbulence.<br> <br> We will also explore the problems associated with turbulence modeling and how the models solve those issues. The latest state of the art in Reynolds-Averaged Navier-Stokes (RANS), Large Eddy Simulation (LES), Detached Eddy Simulation (DES), Direct Numerical Simulation (DNS), and other types of CFD will be covered. More specifically, we’ll review how each type of CFD tackles the complex problem of turbulence. Additional focus will be given to the Spalart-Allmaras (SA) and k-ω SST models and when to use them, as well as wall functions. Our implementation techniques, requirements, best practices, tips, and tricks will be presented using real world examples and suggestions."
+---
+<div class="content-wrapper">
+  {% include header.html extra_class="absolute transparent" logo_class="logo fc-logo" container_class="container" %}
+  {% if page.banner_section.enable %}
+  <div class="wrapper pt-60">
+    <div class="wrapper">
+      <div class="container text-left pb-20 pt-60 fdtd-banner image-wrapper bg-image" data-image-src="{{ page.banner_section.bg }}">
+        <div class="row" style="min-height: 350px">
+          <div class="col-md-7">
+            <h1 class="page-title color-dark">{{page.banner_section.page_title}}</h1>
+            <p class="text-left font-size-16 color-dark-3" style="line-height: 26px;">{{page.banner_section.description}}</p>
+            {% include subscribe_btn.html extra_id="__pg_cfd-essentials_btn_subscribe-to-receive-update" %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  {% include lecture/vertical_tabs.html data=site.data.lecture.turbulence.lecture_section tHeader_class="true" extra_id_prefix="__pg_cfd-essentials" %}
+
+  {% include footer_2.html %}
+</div>

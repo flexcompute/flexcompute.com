@@ -1,0 +1,46 @@
+<div class="product-item box bg-white shadow" id="product-item">
+  {% for product in page.product.list %}
+  {% if product.enable %}
+  <div class="item {{product.class}}">
+    {% if product.logo %}
+    <div class="item-logo">
+      <picture class="d-inline-block" style="width: 280px; max-width: 280px">
+        <source srcset="{{product.logo}}" type="image/svg+xml">
+        <img src="{{product.logo}}" alt="{{product.logo_alt}}" style="width: 100%">
+      </picture>
+      <p class="font-size-16 line-height-18 mb-0 color-dark-9 mt-10">{{product.logo_alt}}</p>
+    </div>
+    {% endif %}
+    {% if product.bg_image %}
+    <div class="product-image">
+      <img class="aspect-ratio" src="{{product.bg_image}}" alt="{{product.description}}">
+      <div class="footer-blur"></div>
+    </div>
+    {% endif %}
+    <div class="item-content">
+      <div class="caption">
+        <h2 class="font-size-32 line-height-32">{{product.title}}</h2>
+        <p class="font-size-14 line-height-17 color-dark-9 font-weight-700">{{product.description}}</p>
+      </div>
+      <div class="space30"></div>
+      <div class="examples row" style="row-gap: 20px">
+        {% for example in product.examples  %}
+        <div class="col-lg-4 col-6 example-item mb-0">
+          <div>
+            <h3 class="font-size-17 line-height-17 mb-0">{{example.name}}</h3>
+            <p class="font-size-14 line-height-17 color-dark-9 mb-0" style="height: 100px">{{example.description}}</p>
+          </div>
+          {% if example.link %}
+          <div class="space20"></div>
+          <a href="{{example.link}}" class="btn btn-sm btn-dashed-primary font-size-14 line-height-17 mb-5">
+            {{example.link_text}}
+          </a>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
+  {% endfor %}
+</div>

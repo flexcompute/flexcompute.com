@@ -1,0 +1,340 @@
+---
+layout: default
+
+custom_font: font2
+---
+<div class="content-wrapper">
+{% include header.html extra_class="absolute transparent" logo_class="logo fc-logo" container_class="container" %}
+<div style="height: 135px; position: relative; top: 66px; z-index: 0">
+  <div class="container">
+    <span class="font-size-14 color-dark-gray">
+      <a href="/tidy3d/learning-center/fdtd101/" class="color-dark-gray">FDTD 101</a> /
+      {{ page.lecture_title }}
+    </span>
+  </div>
+</div>
+
+<div class="container">
+  <div class="d-none d-lg-block clearfix sticky-top float-left fdtd-slider">
+    <div class="lecture-directory mb-30 box bg-white shadow">
+      {% assign directory = 'left-directory' | split: ',' %}
+      {% assign directory_prefix = page.click_id_prefix | split: '_' | concat:directory | join: '_'  %}
+      {% include lecture/lecture_directory.html data=site.data.lecture.fdtd.lecture_section extra_class="lecture-directory-header" extra_id_prefix=directory_prefix %}
+    </div>
+    <a id="{%if page.click_id_prefix%}{{page.click_id_prefix}}_left-directory_tidy3d{%endif%}" href="/tidy3d/solver/">
+      <div class="lecture-directory tidy3d-box box bg-white shadow text-center">
+        <picture>
+          <source srcset="/assets/images/product/tidy3D/tidy3d-logo.svg" type="image/svg+xml">
+          <img src="/assets/images/product/tidy3D/Layer%202.svg" alt="{{page.left_tidy3d_logo_alt}}">
+        </picture>
+        <p class="color-dark-gray font-size-12">EM FDTD simulation tool</p>
+      </div>
+    </a>
+  </div>
+  <div class="row ml-lg-3 fdtd-container">
+    <div class="col-lg-12 mx-auto">
+      <div class="blog classic-view">
+        <div class="post mb-0">
+          <div class="post-content">
+            <div class="d-flex flex-column flex-wrap justify-content-start">
+              {% if page.lecture_title %}
+              <h1 class="post-title font-size-24 mb-0 color-dark-7">{{page.course_title}}</h1>
+              {% endif %}
+              <div class="meta mb-0">
+                {% if page.author %}
+                <span class="author reset-author font-size-16" style="line-height: 19px">
+                  <a href="javascript:void(0)">By {{page.author}}</a>
+                </span>
+                {% endif %}
+              </div>
+            </div>
+            <div class="space20"></div>
+            <div class="h-100 box bg-white shadow p-0">
+              {% if page.videoId %}
+              <lite-vimeo id="{{page.click_id_prefix}}_video" videoid="{{page.videoId}}"></lite-vimeo>
+              {% endif %}
+              <div class="space20"></div>
+              {% if page.lecture_title %}
+              <div class="p-20">
+                <h2 class="font-size-24 font-weight-bold" style="line-height: 29px !important; color: #000000">
+                  {{page.lecture_title}}
+                </h2>
+                {% if page.lecture_description %}
+                <p class="font-size-16 color-dark-gray line-height-32 mb-0">
+                  {{page.lecture_description}}
+                </p>
+                {% endif %}
+                <div class="space10"></div>
+                {% if page.container %}
+                <p class="font-size-16 color-dark-gray line-height-32 mb-0">
+                  {{page.container}}
+                </p>
+                {% endif %}
+                {% if page.download_links %}
+                <p class="font-size-16 color-dark-gray line-height-32 mb-0">
+                  For Python setup used in this lecture, please see related
+                  {% if page.enable_FDTD_link %}
+                  <a href="/tidy3d/learning-center/fdtd101/" class="underline color-primary-hover" id="{{page.click_id_prefix}}_fdtd-python_link">FDTD</a>
+                  {% else %}
+                  FDTD
+                  {% endif %}
+                  Python Tutorial below.
+                </p>
+                {% endif %}
+                <div class="space20"></div>
+                <div class="fdtd-view-tool d-flex justify-content-start align-items-center font-size-16 color-black-1 flex-wrap" style="column-gap: 50px; row-gap: 10px">
+                  {% if page.public_links %}
+                  <div class="public-links">
+                    {% assign numOfPublicLinks = page.public_links.size %}
+                    <span>Visit public projects</span>
+                    {% for numOfLink in (1..numOfPublicLinks) %}
+                    {% assign linkIndex = numOfLink | minus: 1 %}
+                    {% assign linkItem = page.public_links[linkIndex] %}
+                    <a target="_blank" data-trigger="hover" data-placement="top" title="{{linkItem.text}}" id="{{linkItem.click_id}}" class="color-primary-hover has-tooltip" href="{{linkItem.url}}">
+                      [{{numOfLink}}]
+                    </a>
+                    {% endfor %}
+                  </div>
+                  {% endif %}
+                  {% if page.download_links %}
+                  {% assign numOfLinks = page.download_links.size %}
+                  <span class="download-ipynb">
+                    {% if numOfLinks > 0 %}
+                    Download .ipynb {% if numOfLinks == 1 %}file{% else %}files{% endif %}
+                      {% for link in page.download_links %}
+                        <a id="{{link.click_id}}" class="color-primary-hover underline" onclick="handleDownload('{{link.url}}')" href="javascript:void(0);">{{link.text}}</a>
+                      {% endfor %}
+                    {% endif %}
+                  </span>
+                  {% endif %}
+                  {% if page.pdf_url %}
+                  <span class="view-presentation-slides">
+                    View Presentation Slides
+                    <a class="color-primary-hover underline" onclick="handleScroll('presentation-slides')" href="javascript:void(0);">
+                      HERE
+                    </a>
+                  </span>
+                  {% endif %}
+                </div>
+                <div class="space20"></div>
+                <div class="d-flex flex-wrap justify-content-between align-items-center" style="row-gap: 10px">
+                  {%if page.click_id_prefix %}
+                  {% assign subscribe_btn = 'btn,subscribe-to-receive-update' | split: ',' %}
+                  {% assign sign_up_btn = 'btn,sign-up-tidy3d' | split: ',' %}
+                  {% assign share_btn = 'share,btn' | split: ',' %}
+                  {% assign subscribe_prefix = page.click_id_prefix | split: '_' | concat:subscribe_btn | join: '_'  %}
+                  {% assign sign_up_prefix = page.click_id_prefix | split: '_' | concat:sign_up_btn | join: '_'  %}
+                  {% assign share_prefix = page.click_id_prefix | split: '_' | concat:share_btn | join: '_'  %}
+                  <div class="d-flex flex-wrap" style="row-gap: 5px; column-gap: 5px">
+                    {% include sign-up-tidy3d-button/default.html extra_id=sign_up_prefix %}
+                    {% include subscribe_btn_dashed.html extra_id=subscribe_prefix %}
+                  </div>
+                    {% include social_link.html extra_id=share_prefix %}
+                  {%else%}
+                  <div class="d-flex flex-wrap" style="row-gap: 5px; column-gap: 5px">
+                    {% include sign-up-tidy3d-button/default.html%}
+                    {% include subscribe_btn_dashed.html%}
+                  </div>
+                  {% include social_link.html %}
+                  {%endif%}
+                </div>
+              </div>
+              {% endif %}
+            </div>
+            <div class="space30"></div>
+            <div class="h-100 box bg-white shadow pr-0 pl-0 pt-0 pb-0">
+              <div id="{{page.active}}" class="accordion-wrapper simple custom-collapsed">
+                <!-- source html -->
+                {% if page.source_html_list %}
+                <div class="card">
+                  <div class="card-header" id="introduction">
+                    <button
+                        class="lecture-collapsed-header"
+                        data-toggle="collapse"
+                        data-target="#introduction-content"
+                        data-expanded="true"
+                        data-controls="introduction-content">
+                      Introduction
+                    </button>
+                  </div>
+                  <!-- /.card-header -->
+                  <div id="introduction-content" class="collapse show" data-labelledby="introduction" data-target="#{{page.active}}">
+                    <div class="card-body">
+                      {% for html in page.source_html_list %}
+                      {% include {{html.html}} %}
+                      <div class="space50"></div>
+                      {% endfor %}
+                    </div>
+                    <!-- /.card-body -->
+                  </div>
+                  <!-- /.collapse -->
+                </div>
+                {% endif %}
+                <!-- /.card -->
+                <!-- ppt -->
+                {% if page.pdf_url %}
+                <div class="card">
+                  <div class="card-header d-flex flex-wrap align-items-center justify-content-between" id="presentation-slides">
+                    <button
+                        class="lecture-collapsed-header"
+                        data-toggle="collapse"
+                        data-target="#presentation-slides-content"
+                        data-expanded="true"
+                        data-controls="presentation-slides-content">
+                      View Presentation Slides
+                    </button>
+                    <div class="collapse-header-ext">
+                      <img width="27" height="27" src="/assets/images/pdf.png" alt="">
+                      <span class="font-size-16 color-black-1">
+                        {% assign download_btn = 'btn,download-pdf' | split: ',' %}
+                        {% assign download_prefix = page.click_id_prefix | split: '_' | concat:download_btn | join: '_'  %}
+                        {% include download_pdf.html
+                          extra_id=download_prefix
+                          url=page.pdf_url
+                          title=page.download_pdf_title
+                        %}
+                      </span>
+                    </div>
+                  </div>
+                  <!-- /.card-header -->
+                  <div id="presentation-slides-content" class="collapse show" data-labelledby="presentation-slides" data-target="#{{page.active}}">
+                    <div class="card-body p-20">
+                      {% if page.transcript %}
+                      {% assign transcript = site.data.transcripts.fdtd101[page.transcript] | jsonfy %}
+                      {% include pdf-viewer.html transcript=transcript %}
+                      {% endif %}
+                    </div>
+                    <!-- /.card-body -->
+                  </div>
+                  <!-- /.collapse -->
+                </div>
+                {% endif %}
+                <!-- /.card -->
+
+              </div>
+            </div>
+            <div class="space30"></div>
+            <div class="pagination fdtd-pagination">
+              <ul class="d-flex justify-content-between align-items-center">
+                <li class="previous" style="text-align: start">
+                  {% if page.previous_link %}
+                  <a id="{{page.click_id_prefix}}_previous-lecture_btn" href="{{ page.previous_link }}" class="d-flex align-items-center" style="column-gap: 10px">
+                    <i class="jam jam-arrow-left"></i>
+                    <span>
+                      <span class="font-size-14">
+                        Previous Lecture {{page.prev_course_number}}
+                      </span>
+                      <br>
+                    {% if page.prev_lecture_title %}
+                      <span class="font-size-12 lecture-title">
+                        {{page.prev_lecture_title}}
+                      </span>
+                    {% endif %}
+                    </span>
+                  </a>
+                  {% endif %}
+                </li>
+                <li class="next" style="text-align: end">
+                  {% if page.next_link %}
+                  <a id="{{page.click_id_prefix}}_next-lecture_btn"  href="{{ page.next_link }}" class="d-flex align-items-center" style="column-gap: 10px">
+                    <span>
+                      <span class="font-size-14">Next Lecture {{page.next_course_number}}</span>
+                      <br>
+                      {% if page.next_lecture_title %}
+                      <span class="font-size-12 lecture-title">
+                        {{page.next_lecture_title}}
+                      </span>
+                      {% endif %}
+                    </span>
+                    <i class="jam jam-arrow-right"></i>
+                  </a>
+                  {% endif %}
+                </li>
+              </ul>
+          </div>
+          </div>
+          <!-- /.post-content -->
+        </div>
+        <!-- /.post -->
+      </div>
+      <!-- /.blog -->
+    </div>
+    <!-- /column -->
+  </div>
+  <!-- /.row -->
+</div>
+<div class="space70"></div>
+<script>
+  function switchLastCollapsed(){
+    const element = document.querySelector(`#video-transcript`);
+    const collapseBtn = element?.querySelector('button');
+    if (collapseBtn){
+      const isShow = collapseBtn.getAttribute('data-expanded') === 'true'
+      if (isShow){
+        element.classList.add('collapsed')
+      }else {
+        element.classList.remove('collapsed')
+      }
+    }
+  }
+
+  function switchElementCollapsed(id, hide_other = true) {
+    const id_list = ['introduction', 'presentation-slides', 'video-transcript']
+    id_list.forEach(each_id => {
+      const element = document.querySelector(`#${each_id}`);
+      const collapseBtn = element?.querySelector('button');
+      if (collapseBtn) {
+        // check other id is open
+        const isShow = collapseBtn.getAttribute('data-expanded') === 'true'
+        if (id !== each_id && isShow && hide_other) {
+          setTimeout(() => {
+            collapseBtn.click()
+          }, 500)
+        }
+        //  check current id is close
+        if (id === each_id && !isShow) {
+          console.log("id", id, each_id, isShow)
+          collapseBtn.click()
+        }
+      }
+    })
+  }
+
+  function handleScroll(id) {
+    const scrollElement = document.querySelector(`#${id}`);
+    window.scrollTo({
+      // 480 each slider height
+      top: scrollElement.getBoundingClientRect().top + 480,
+      behavior: 'smooth'
+    })
+    switchElementCollapsed(id, false)
+  }
+
+  function handleDownload(link) {
+    const download = (url) => {
+      const elink = document.createElement('a')
+      elink.href = url
+      elink.download = ""
+      elink.style.display = 'none'
+      document.body.appendChild(elink)
+      elink.click()
+      setTimeout(() => {
+        document.body.removeChild(elink)
+      }, 5 * 1000)
+    }
+    if (link.indexOf("#&#") > -1) {
+      const links = link.split("#&#");
+      links.forEach(item => download(item))
+    } else {
+      download(link)
+    }
+  }
+
+  /* Debugger tooltip */
+  function handleTooltip(){
+      $("#__pg_fdtd101_lecture-02_broadband-source-with-slab_link_here").tooltip('show')
+  }
+</script>
+<!-- /.wrapper -->
+{% include footer_2.html light_logo="false" %}
+</div>

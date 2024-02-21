@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link rel="shortcut icon" href="{{relative_url}}/assets/images/favicon.ico"/>
+  {% assign assets_cdn = site.data.general_settings.assets_file_cdn_link %}
+  {% include title.html %}
+  <link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" media="screen" type="text/css" href="{{assets_cdn}}/css/bootstrap.min.css"/>
+  <link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" media="screen" type="text/css" href="{{assets_cdn}}/css/plugins.min.css"/>
+  <link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" media="screen" type="text/css" href="{{assets_cdn}}/css/style.min.css"/>
+  <noscript>
+    <link rel="stylesheet" media="screen" type="text/css" href="{{assets_cdn}}/css/bootstrap.min.css"/>
+    <link rel="stylesheet" media="screen" type="text/css" href="{{assets_cdn}}/css/plugins.min.css"/>
+    <link rel="stylesheet" media="screen" type="text/css" href="{{assets_cdn}}/css/style.min.css"/>
+  </noscript>
+
+  <link rel="stylesheet" media="screen" type="text/css" href="{{assets_cdn}}/revolution/css/settings.min.css"/>
+  <link rel="stylesheet" media="screen" type="text/css" href="{{assets_cdn}}/type/type.min.css"/>
+  {% unless page.hide_extra_static_file %}
+  <link rel="stylesheet" media="screen" type="text/css" href="{{assets_cdn}}/revolution/css/layers.min.css"/>
+  <link rel="stylesheet" media="screen" type="text/css" href="{{assets_cdn}}/css/slick.min.css"/>
+  <link rel="stylesheet" media="screen" type="text/css" href="{{assets_cdn}}/css/tocbot.css"/>
+  <link rel="stylesheet" media="screen" type="text/css" href="{{relative_url}}/assets/css/editor.css"/>
+  {% endunless %}
+  {%if page.preconnect%}
+  <link crossorigin href="{{page.preconnect}}" rel="preconnect" />
+  {%endif%}
+  <style>
+    :root {
+        --color-dark: #111111 !important;
+        --color-dark-2: #202124;
+        --color-dark-3: #333333;
+        --color-dark-4: #696969;
+        --color-dark-5: #6F6F6F;
+        --color-dark-6: #828282;
+        --color-dark-7: #131313;
+        --color-dark-8: #404040;
+        --color-dark-9: #808080;
+        --color-dark-gray: #707070;
+        --color-dark-gray-2: #11111199;
+        --color-dark-gray-3: #A3A3A3;
+        --color-dark-gray-4: #00000029;
+        --color-dark-gray-5: #C9C9C9;
+        --color-dark-gray-6: #817E7E;
+        --color-dark-gray-7: #E6E6E6;
+        --color-dark-gray-8: #737373;
+        --color-dark-gray-9: #8A8A8A;
+        --color-dark-gray-10: #787878;
+        --color-dark-gray-11: #A6ACB0;
+        --color-dark-gray-12: #A1A1A1;
+        --color-primary: #c43959 !important;
+        --color-black: #11111129;
+        --color-black-1: #000000;
+        --color-disabled: #CCCCCC;
+        --unit-size: 8px
+    }
+  </style>
+  <!--page wise css-->
+  {% if page.custom_css -%}
+    {%- for stylesheet in page.custom_css -%}
+    <link rel="stylesheet" type="text/css" href="{{ site.baseurl }}/assets/css/{{ stylesheet }}.css">
+    {% endfor %}
+  {%- endif -%}
+  {%- if page.custom_font -%}
+    {% for stylesheet in page.custom_font %}
+    <link rel="stylesheet" type="text/css" href="{{ site.baseurl }}/assets/css/font/{{ stylesheet }}.css">
+    {% endfor %}
+  {% endif %}
+  <!--/.page wise css-->
+  {% if site.google_tag_manager.enable and jekyll.environment == 'production' %}
+    {% include gtm.html %}
+  {% endif %}
+  {% if site.google_analytics.enable and jekyll.environment == 'production' %}
+   {% include analytics.html %}
+  {% endif %}
+  <link rel="stylesheet" type="text/css" href="{{relative_url}}/assets/css/override.css"/>
+  <style>
+      /*override plugin class*/
+      [class*="MJXc-space"] {
+          width: unset !important;
+      }
+  </style>
+  {% seo title=false description="false" %}
+  {% if page.tags %}
+    <meta itemprop="keywords" content="{{ page.tags | join: ',' }}" />
+    {% for tag in page.tags %}
+    <meta property="article:tag" content="{{ tag }}">
+    {% endfor %}
+  {% endif %}
+  {% if page.noindex %}
+  <meta name="robots" content="noindex">
+  {% endif %}
+  <!-- breadcrumb -->
+  {% breadcrumbs %}
+  {% assign share_image = page.image.path | size %}
+  {% if page.layout == 'post' and share_image == 0 %}
+  <meta property="og:title" content="{{page.title}}" />
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="{{page.url}}" />
+  <meta property="og:image" content="{{page.post_image}}" />
+  <meta property="og:image:alt" content="{{page.title}}" />
+  {% endif %}
+
+
+  <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+  {% if site.data.general_settings.crisp_chat.enable %}
+  {% include crisp_chat.html %}
+  {% endif %}
+
+  {% if page.show_schema %}
+  {% include Schema_Validator.html %}
+  {% endif %}
+
+  {% unless page.hide_extra_static_file %}
+  <script type="text/x-mathjax-config">
+    init_mathjax = function() {
+        if (window.MathJax) {
+            MathJax.Hub.Config({
+                showMathMenu: false,
+                TeX: {
+                    equationNumbers: {
+                      autoNumber: "AMS",
+                      useLabelIds: true
+                    }
+                },
+                tex2jax: {
+                    inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+                    displayMath: [ ['$$','$$'], ["\\[","\\]"] ],
+                    processEscapes: true,
+                    processEnvironments: true
+                },
+                displayAlign: 'center',
+                styles: {
+                  ".pdf-page-transcript span.MJXc-display": {
+                    display: "inline !important",
+                    "font-size": "12px !important",
+                  },
+                  ".pdf-page-transcript span.MathJax_CHTML": {
+                      "font-size": "120% !important"
+                  },
+                  ".pdf-page-transcript span.MathJax_CHTML .mjx-ove": {
+                      "padding-bottom": "0 !important"
+                  },
+                  ".pdf-page-transcript span.MathJax_CHTML .mjx-over span": {
+                      "padding-bottom": "0 !important"
+                  }
+                },
+                CommonHTML: {
+                    linebreaks: {
+                      automatic: true
+                    }
+                }
+            });
+
+            MathJax.Hub.Register.MessageHook("TeX Jax - parse error",function (message) {
+              //  do something with the error.  message[2] is the Error object that records the problem.
+              console.error("message", message)
+            });
+
+            MathJax.Hub.Register.StartupHook("TeX Jax Ready", function () {
+              console.debug("The TeX input jax is loaded and ready!")
+            });
+
+            MathJax.Hub.Register.MessageHook("New Math", function (message) {
+              var script = MathJax.Hub.getJaxFor(message[1]).SourceElement();
+              console.debug(message.join(" ")+": '"+script.text+"'");
+            })
+
+            MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
+        }
+    }
+    init_mathjax();
+</script>
+  <script type="text/javascript" async defer src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS_CHTML-full,Safe"></script>
+  {% endunless %}
+  {%if page.enable_hubspot_form%}
+  <script charset="utf-8" type="text/javascript" src="https://js.hsforms.net/forms/embed/v2.js"></script>
+  <link rel="stylesheet" href="/assets/css/hubspot-form.css" />
+  {%endif%}
+</head>
+<body {% if page.overflow %} class="overflow-hidden" {% endif %}>
+  {% if site.google_tag_manager.enable and jekyll.environment == 'production' %}
+    {% include gtm_noscript.html %}
+  {% endif %}
+  <div class="content-wrapper bg-opacity-default">
+    {{ content }}
+  </div>
+  {% if page.hide_cookie_consent != true %}
+  {% include cookie-consent.html %}
+  {% endif %}
+  {% include subscribe_modal.html %}
+  {% include download_pdf_modal.html %}
+  <script src="{{assets_cdn}}/js/jquery.min.js"></script>
+  <script src="{{assets_cdn}}/js/popper.min.js"></script>
+  <script src="{{assets_cdn}}/js/bootstrap.min.js"></script>
+  <script src="{{assets_cdn}}/revolution/js/jquery.themepunch.tools.min.js"></script>
+  <script src="{{assets_cdn}}/revolution/js/jquery.themepunch.revolution.min.js"></script>
+  <script src="{{assets_cdn}}/revolution/js/extensions/revolution.extension.slideanims.min.js"></script>
+  <script src="{{assets_cdn}}/js/plugins.min.js"></script>
+  <script src="{{assets_cdn}}/js/scripts.min.js"></script>
+  {% unless page.hide_extra_static_file %}
+  <script src="{{relative_url}}/assets/js/slick.min.js"></script>
+  <script src="{{relative_url}}/assets/js/tocbot.min.js"></script>
+  <script src="{{relative_url}}/assets/js/simple-jekyll-search.min.js"></script>
+  <script type="module" src="{{relative_url}}/assets/js/lite-vimeo.min.js"></script>
+  {% if page.dynamic_js %}
+  {% for js in page.dynamic_js %}
+  <script src="{{js}}"></script>
+  {% endfor %}
+  {% endif %}
+  <script src="https://cdn.jsdelivr.net/npm/algoliasearch@4.20.0/dist/algoliasearch-lite.umd.js" integrity="sha256-DABVk+hYj0mdUzo+7ViJC6cwLahQIejFvC+my2M/wfM=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/instantsearch.js@4.60.0/dist/instantsearch.production.min.js" integrity="sha256-9242vN47QUX50UG5Gf5XDO1YREWCEJRyXHofh5fsl24=" crossorigin="anonymous"></script>
+  <script src="{{assets_cdn}}/js/require.min.js"></script>
+  <script src="{{assets_cdn}}/js/Polyfill.js"></script>
+  {% if page.custom_js -%}
+    {%- for script in page.custom_js -%}
+    <script src="{{relative_url}}/assets/js/{{script}}.js"></script>
+    {% endfor %}
+  {%- endif -%}
+  <script>
+    $(document).ready(function(){
+      $('#product-item').slick({
+        autoplay: true,
+        autoplaySpeed: 5000,
+        arrows: false,
+        speed: 500,
+        fade: true,
+        cssEase: 'linear',
+        pauseOnDotsHover: true
+      });
+      tocbot.init({
+        // Where to render the table of contents.
+        tocSelector: '#notebook-anchor',
+        // Where to grab the headings to build the table of contents.
+        contentSelector: '#notebook-container',
+        // Which headings to grab inside of the contentSelector element.
+        headingSelector: 'h1, h2, h3',
+        // For headings inside relative or absolute positioned containers within content.
+        hasInnerContainers: true,
+        // Main class to add to links.
+        linkClass: 'toc-link',
+        includeHtml: true,
+        // Extra classes to add to lists.
+        extraListClasses: 'list-unstyled font-size-14',
+        listItemClass: 'toc-list-item color-dark-gray color-primary-hover'
+      });
+
+      $('#download_pdf').on('show.bs.modal', function(event) {
+        const button = $(event.relatedTarget);
+        const content = button.data('whatever');
+        const modal = $(this);
+        modal.find('#fdtd-download-pdf-value').val(content);
+      });
+    })
+  </script>
+  {% endunless %}
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+
+      setTimeout(()=>{
+        const bannerClone = document.querySelector('nav.banner--clone');
+        if (!bannerClone) return;
+        const aTags = bannerClone.querySelectorAll('a')
+        const btnTags = bannerClone.querySelectorAll('button')
+        const ulTags = bannerClone.querySelectorAll('ul')
+        aTags.forEach(aTag=>{
+          const _id = aTag.getAttribute('id');
+          if (_id){
+            aTag.setAttribute('id', _id + '_stick')
+          }
+        })
+        btnTags.forEach(btnTag=>{
+          const _id = btnTag.getAttribute('id');
+          if (_id){
+            btnTag.setAttribute('id', _id + '_stick')
+          }
+        })
+        ulTags.forEach(ulTag=>{
+          const _id = ulTag.getAttribute('id');
+          if (_id){
+            ulTag.setAttribute('id', _id + '_stick')
+          }
+        })
+      }, 0)
+    })
+  </script>
+  {% if jekyll.environment == 'production' %}
+  <!-- Start of HubSpot Embed Code -->
+  <script type="text/javascript" id="hs-script-loader" async defer src="//js-na1.hs-scripts.com/43542601.js"></script>
+  <!-- End of HubSpot Embed Code -->
+  {% endif %}
+</body>
+</html>

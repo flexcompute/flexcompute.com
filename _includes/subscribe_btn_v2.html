@@ -1,0 +1,12 @@
+<!-- Dashed Button -->
+<button
+    class="btn btn-dashed-primary font-size-16 {% if include.ext_class %} {{include.ext_class}} {%else%} cookie-btn {%endif%}"
+    id="{%if include.extra_id%}{{include.extra_id}}{%else%}global-subscribe-btn{%endif%}"
+    data-toggle="modal"
+    data-target="#Subscribe">
+    {% if include.title %}
+    {{include.title}}
+    {%else%}
+    Subscribe to Receive Update
+    {%endif%}
+</button>

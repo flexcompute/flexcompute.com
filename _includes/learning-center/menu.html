@@ -1,0 +1,172 @@
+<div class="menu-box d-flex flex-column background-linear-white {% if page.menu_config.collapsed %} collapsed {% else %} expand {%endif%}position-relative" id="learning-center-menus">
+  {% for category in site.data.learning-center.menu.categories %}
+  <p class="mb-0 font-size-12 font-weight-600 color-dark-5 menu-category {%if forloop.first%}menu-first-category{%endif%}" style="line-height: 12px">{{category}}</p>
+  {% for menu in site.data.learning-center.menu.menus %}
+  {% if menu.enable and menu.category == category %}
+  {% assign defaultSelected = page.menu_config.selected | downcase | slugify %}
+  {% assign currentMenu = menu.title | downcase | slugify %}
+  <div data-menu="{{menu.title | downcase | slugify}}" class="item {% if defaultSelected == currentMenu %} active {%endif%} {% if menu.submenu %} has-submenu {% endif %}">
+    <a class="d-flex align-items-center justify-content-start font-size-18 color-dark font-weight-600 {% if menu.selected_class %} {{menu.selected_class}} {% endif %}" style="column-gap: 8px"
+       href="{{menu.path}}">
+      {% svg "{{ site.baseurl }}/assets/svg-icon/{{menu.icon}}" width=26 %}
+      {{menu.title}}
+    </a>
+    {% if menu.submenu %}
+    <div class="position-absolute item-submenus flex-column">
+      {% if menu.submenu_sources == 'tidy3d-python' %}
+      {% include learning-center/tidy3d-python/submenu.html  %}
+      {% else %}
+      {% assign menus = site[menu.submenu_sources] | sort: "course_number" %}
+      {% include learning-center/submenu.html menus=menus %}
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
+  {% endif %}
+  {% endfor %}
+  {% endfor %}
+</div>
+<script>
+  const learnCenterMenu = {
+    expandRequestAnimationId: null,
+    collapsedRequestAnimationId: null,
+    setActiveMenuItem: () => {
+      const url = window.location.href;
+      let currentItem = url.split('learning-center').pop();
+      if (currentItem.includes('index.html')) {
+        currentItem = currentItem.replace('index.html', '')
+      }
+      const queryParams = window.location.search;
+      if (queryParams) {
+        const paramIndex = currentItem.indexOf("?")
+        currentItem = currentItem.slice(0, paramIndex)
+      }
+      const anchor = window.location.hash;
+      if (anchor) {
+        const anchorIndex = currentItem.indexOf("#")
+        currentItem = currentItem.slice(0, anchorIndex)
+      }
+      if (currentItem === '/') {
+        currentItem = 'fdtd101'
+      }
+      const menus = document.getElementById('learning-center-menus');
+      const menuName = currentItem.replaceAll('/', '');
+      const menuOfClick = menus.querySelector(`div[data-menu="${menuName}"]`);
+      if (menuOfClick) {
+        menuOfClick.classList.add('active');
+      }
+    },
+    removeActiveItem: () =>{
+      const menuDom = document.getElementById('learning-center-menus');
+      const childNodes = menuDom.childNodes
+      for (let i = 0; i < childNodes.length; i++) {
+        const element = childNodes[i]
+        if (element.nodeType === Node.ELEMENT_NODE && element.classList.contains('active')){
+          element.classList.remove('active')
+        }
+      }
+    },
+    expandAnimation: (target, targetHeight) =>{
+      let startHeight = target.offsetHeight;
+      let startTime = null;
+      const delayTime = 300
+      const onExpand = (timestamp) => {
+        if (!startTime) {
+          startTime = timestamp;
+        }
+        let progress = timestamp - startTime;
+        const newHeight = startHeight + (progress / delayTime) * (targetHeight - startHeight);
+        if (newHeight <= targetHeight) {
+          target.style.height = newHeight + "px";
+          learnCenterMenu.expandRequestAnimationId = window.requestAnimationFrame(()=>onExpand(Date.now()));
+        } else {
+          target.style.height = targetHeight + "px";
+        }
+      }
+      onExpand(Date.now())
+    },
+    collapsedAnimation: (target, targetHeight) => {
+      let startHeight = target.offsetHeight;
+      let startTime = null;
+      const delayTime = 300;
+      const onCollapsed = (timestamp) => {
+        if (!startTime) startTime = timestamp;
+        let progress = timestamp - startTime;
+        const newHeight = startHeight - (progress / delayTime) * startHeight;
+        if (newHeight >= targetHeight) {
+          target.style.height = newHeight + "px";
+          learnCenterMenu.collapsedRequestAnimationId = window.requestAnimationFrame(() => onCollapsed(Date.now()));
+        } else {
+          target.style.height = targetHeight + "px";
+        }
+      }
+      onCollapsed(Date.now())
+    },
+    onSubMenuMouseEnter: (e) => {
+      const target = e.target
+      if (!target) return;
+      const linksDom = target.getElementsByClassName("quick-links")[0];
+      if (linksDom){
+        const childNodes = linksDom.childNodes
+        let height = 45; // submenu default height;
+        for (let i = 0; i < childNodes.length; i++) {
+          const element = childNodes[i];
+          if (element.nodeType === Node.ELEMENT_NODE){
+            const { height: elementHeight } = element.getBoundingClientRect()
+            height += (elementHeight + 8) // only one line height line-height-20, margin-bottom-8
+          }
+        }
+        learnCenterMenu.expandAnimation(target, height);
+      }
+    },
+    onSubMenuMouseLeave:(e)=>{
+      window.cancelAnimationFrame(learnCenterMenu.expandRequestAnimationId)
+      learnCenterMenu.expandRequestAnimationId = null
+      const target = e.target
+      if (!target) return;
+      // reset to default height 45px
+      learnCenterMenu.collapsedAnimation(target, 45)
+    },
+    onMenuItemEnter: (e) => {
+      const target = e.target
+      if (!target || target.classList.contains('active')) return;
+      learnCenterMenu.removeActiveItem()
+    },
+    onMenuItemLeave: (e) => {
+      learnCenterMenu.setActiveMenuItem()
+    }
+  };
+  (function () {
+    let menuDom;
+    let switchState = "";
+
+    const mouseEnterListener = () => {
+      if (!menuDom) return;
+      menuDom.addEventListener('mouseenter', (e) => {
+        const target = e.target;
+        if (target.classList.contains('expand') || !!switchState) return
+        switchState = "expand";
+        target.classList.add("expand")
+        target.classList.remove("collapsed")
+      });
+    }
+
+    const mouseLeaveListener = () => {
+      if (!menuDom) return;
+      menuDom.addEventListener('mouseleave', (e) => {
+        const target = e.target;
+        if (target.classList.contains('collapsed') || !switchState) return
+        target.classList.add("collapsed")
+        target.classList.remove("expand")
+        switchState = "";
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      menuDom = document.getElementById("learning-center-menus");
+      mouseEnterListener();
+      mouseLeaveListener();
+    })
+    learnCenterMenu.setActiveMenuItem();
+  })()
+</script>

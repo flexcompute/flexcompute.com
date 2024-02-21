@@ -1,0 +1,7 @@
+:root {
+	--color-default: #3c71d3;
+	--rgb-default: 60, 113, 211;
+}
+.bg-opacity-default {
+    background: rgba(var(--rgb-default), 0.065);
+}

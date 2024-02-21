@@ -1,0 +1,220 @@
+---
+layout: default
+title: "Electromagnetic Simulation Whitepaper | Flexcompute"
+description: 'Download Tidy3D electromagnetic solver whitepaper. Fast simulations for electromagnetic modeling. Implementing widely used algorithms and FDTD method. '
+tags:
+  - Simulation
+  - CFD
+  - EM
+  - FDTD
+  - Electromagnetic Solver whitepaper
+  - FDTD whitepaper
+  - simulation using algorithm
+author: Flexcompute
+custom_font: font2
+custom_css:
+  - download-whitepaper
+  - pdf_viewer.min
+custom_js:
+  - utils/download
+navigation_section:
+  enable: true
+  logo: "/assets/images/product/tidy3D/tidy3d-logo.svg"
+  logo_alt: "Next-gen Electromagnetic Simulation Tool"
+  menus:
+    - name: "FDTD101"
+      link: "/tidy3d/learning-center/fdtd101/"
+      enable: true
+    - name: "Tidy3D GUI"
+      link: "/tidy3d/learning-center/tidy3d-gui/"
+      enable: true
+    - name: "Tidy3D Python"
+      link: "/tidy3d/learning-center/tidy3d-python/"
+      enable: true
+    - name: "Publications"
+      link: "/tidy3d/learning-center/publications/"
+      enable: true
+    - name: "Inverse Design"
+      link: "/tidy3d/learning-center/inverse-design/"
+      enable: true
+    - name: "Tidy3D Example Library"
+      has_submenu: true
+      enable: true
+    - name: "Frequently Asked Questions"
+      link: "/tidy3d/learning-center/faq/"
+      enable: true
+content_section:
+  enable: true
+  title: 'Tidy3D: hardware-accelerated electromagnetic solver for fast simulations at scale'
+  whitepaper: "/assets/tidy3d/tidy3d__hardware_accelerated_electromagnetic_solver_for_fast_simulations_at_scale.pdf"
+  download_btn:
+    text: Download
+    id: "__pg_tidy3d-download-whitepaper_btn"
+  abstracts: In this white paper, we will introduce “Tidy3D”, Flexcompute’s simulation tool for electromagnetic modeling. Implementing one of the most general and widely used algorithms for electromagnetics(FDTD), it is applicable to an extremely wide range of systems and devices. The software is designed for maximum user-friendliness by combining the flexibility and simplicity of a scripting-based interface with the performance of advanced computing hardware in the cloud. All aspects of the implementation, from the underlying algorithm to the adaptive allocation of compute resources, are tailored and optimized for the highest performance on Flexcompute’s hardware. The resulting product finds solutions 100x faster and can handle 100x larger problems than conventional CPU-based solvers. Through Tidy3D, engineers and researchers can iterate through designs orders of magnitude faster and model problems previously out of reach, resulting in a dramatic acceleration to research and product development.
+contact_area:
+  enable: true
+  title: Get in Touch
+  icon: "/assets/images/contact/point.png"
+  sub_title: Have any questions? Reach out to us from our contact form and we will
+    get back to you shortly.
+  action_email: tortoizthemes@gmail.com
+  lists:
+  - title: Address
+    info_01: 130 Trapelo Rd
+    info_02: Belmont, MA 02478, United States
+    icon: icofont-location-pin
+  - title: E-mail
+    info_01: info@flexcompute.com
+    icon: icofont-envelope-open
+  forms_data:
+  - field_tag: input
+    field_type: text
+    field_name: FNAME
+    maxlength: "20"
+    placeholder: First Name
+    required: true
+    error_message: First Name is required
+  - field_tag: input
+    field_type: text
+    field_name: LNAME
+    maxlength: "20"
+    placeholder: Last Name
+    required: true
+    error_message: Last Name is required
+  - field_tag: input
+    field_type: email
+    maxlength: "60"
+    field_name: EMAIL
+    placeholder: Work Email Address
+    required: true
+    error_message: Email is required
+  - field_tag: input
+    field_type: tel
+    maxlength: "20"
+    field_name: PHONE
+    placeholder: Work Phone Number
+    required: false
+    error_message: Phone Number is required
+  - field_tag: input
+    field_type: text
+    field_name: COMPANY
+    maxlength: "50"
+    placeholder: Company Name
+    required: true
+    error_message: Company Name is required
+  - field_tag: select
+    field_type: select
+    field_name: INDUSTRY
+    placeholder: Industry
+    source: industry
+    required: true
+    error_message: Industry is required
+  - field_tag: select
+    field_type: select
+    field_name: COUNTRY
+    placeholder: Country
+    source: country
+    class: col-xl-12
+    required: true
+    error_message: Country is required
+  - field_tag: checkbox
+    field_type: checkbox
+    field_name: INT_APPS_TEMP
+    placeholder: Interested Applications
+    source: interested
+    required: true
+    class: col-12
+    error_message: Company Name is required
+  - field_tag: textarea
+    field_name: O_INT_APPS
+    maxlength: "500"
+    placeholder: Comments
+    required: false
+    error_message: Comments is required
+
+---
+{% include header.html extra_class="absolute transparent" logo_class="logo fc-logo" container_class="container" %}
+<div class="wrapper bg-opacity-default">
+  <div class="container inner pt-100">
+    <div class="row position-relative">
+      {%if page.navigation_section.enable%}
+      <div class="d-none d-lg-block col-lg-3 position-absolute navigation-menus">
+        {% if page.navigation_section.logo %}
+        <a id="__pg_tidy3d-download-whitepaper_solver_link" href="/tidy3d/solver/">
+          <picture>
+            <source srcset="{{page.navigation_section.logo}}" type="image/svg+xml">
+            <img src="{{page.navigation_section.logo}}" style="height: 80px" alt="{{page.navigation_section.logo_alt}}}">
+          </picture>
+        </a>
+        <div class="space30"></div>
+        {% endif %}
+        <div class="menus">
+          {% assign menus = page.navigation_section.menus %}
+          {% for menu in menus%}
+          {% if menu.enable %}
+          {% if menu.has_submenu %}
+          <div class="item has-submenu">
+            <div class="trigger-node d-flex justify-content-between align-items-center flex-wrap color-dark-gray">
+              <span>{{menu.name}}</span>
+              <span class="font-size-20 collapsed" onclick="onExpandExamples(event)" style="cursor: pointer" data-toggle="collapse" href="#collapseExample" role="button" aria-expanded="false" aria-controls="collapseExample">
+                <i class="jam jam-chevron-down"></i>
+              </span>
+            </div>
+            <div class="submenus-wrapper collapse" id="collapseExample">
+              <div class="menus pl-15 pr-5">
+                <ul class="list-unstyled mb-0">
+                  {% for examples in site.data.notebooks.example.example_menus %}
+                  {% include example-left-side/menu-item.html menus=examples.menus idPrefix='__pg_tidy3d-download-whitepaper' %}
+                  {% endfor %}
+                </ul>
+              </div>
+            </div>
+          </div>
+          {% else %}
+          <div class="item">
+            <a id="__pg_tidy3d-download-whitepaper_{{menu.name | slugify}}_link" class="color-dark-gray color-primary-hover" href="{{menu.link}}">{{menu.name}}</a>
+          </div>
+          {% endif %}
+          {% endif %}
+          {% endfor %}
+        </div>
+      </div>
+      {%endif%}
+      {%if page.content_section.enable%}
+      <div class="col-12 col-lg-9 offset-0 offset-lg-3">
+        {%if page.content_section.title%}
+        <h1 class="font-size-32 color-dark-3 line-height-46">{{page.content_section.title}}</h1>
+        {%endif%}
+        {% if page.content_section.download_btn %}
+        <button onclick="handleDownload('{{page.content_section.whitepaper}}')" id="{{page.content_section.download_btn.id}}" class="btn btn-md btn-fc-primary m-0 font-weight-600">
+          {{page.content_section.download_btn.text}}
+        </button>
+        <div class="space30"></div>
+        {% endif %}
+        {% if page.content_section.abstracts %}
+        <p class="color-dark-gray font-size-20 line-height-29 mb-30">{{page.content_section.abstracts}}</p>
+        {% endif %}
+        {% if page.content_section.whitepaper %}
+        <div class="pdf-viewer-wrapper position-relative">
+          {% include pdf-simple-viewer.html pdf=page.content_section.whitepaper %}
+        </div>
+        {% endif %}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% include footer_2.html %}
+<script>
+  function onExpandExamples(e){
+    const target = e.currentTarget
+    if (!target) return
+    if (target.classList.contains('expand')){
+      target.classList.remove("expand")
+      target.classList.add("collapsed")
+    }else {
+      target.classList.add("expand")
+      target.classList.remove("collapsed")
+    }
+  }
+</script>

@@ -1,0 +1,109 @@
+<div id="flow360" class="wrapper bg-opacity-default text-center">
+  <div class="container">
+    <h1 class="color-dark font-size-30 font-weight-700 mb-0 text-left">Flow360 Software Releases</h1>
+    <div class="space50"></div>
+    {% assign flow360_python_client = site.data.release_notes.flow360.python_solver %}
+    {% if flow360_python_client.log_list %}
+    {% assign changeLogs = flow360_python_client.log_list %}
+    <div onclick="handleChangeLogClickForMore('flow360-change-logs')">
+      <div id="flow360-change-logs" class="change-logs-section">
+        <div class="change-logs">
+          <h2 class="text-left color-dark font-weight-700">Flow360 Solver</h2>
+          <div class="change-logs-list">
+            {% for log in changeLogs %}
+            <div class="change-logs-item">
+              <div class="circle"></div>
+              <div class="change-log text-left">
+                <div class="change-version d-flex align-items-center">
+                  <h4 class="title mb-0">
+                    {% assign blockTitle = 'flow360,software,releases' | split:"," | join:"-" | split: "," %}
+                    {% assign domainTitle = "_,pg,newsroom" | split: "," | join:"_" | split: "," %}
+                    {% assign versionTitle = log.version | downcase | split: "##" %}
+                    {% assign versionTitleId = domainTitle | concat: blockTitle | concat: versionTitle | join: "_" | downcase  %}
+                    <a id="{{versionTitleId}}_link" href="{{log.link}}" class="color-primary-hover stop-propagation">{{log.version}}</a>
+                  </h4>
+                  {% if log.date %}
+                  <span class="font-size-20 line-height-24 color-dark-5 mb-0 pl-5">({{ log.date | date: "%m/%d/%Y" }})</span>
+                  {% endif %}
+                  {% if log.date_text %}
+                  <span class="font-size-20 line-height-24 color-dark-5 mb-0 pl-5">({{ log.date_text }})</span>
+                  {% endif %}
+                </div>
+                {% assign description_text = log.description | size %}
+                {% if log.latest and description_text > 0%}
+                <div class="space20"></div>
+                <div class="change-log-content">
+                  {% if log.description %}
+                  <p class="font-size-18 line-height-32 color-dark-3 mb-0">{{log.description}}</p>
+                  {% endif %}
+                  {% if log.full_list_text %}
+                  <span class="font-weight-700 color-dark">
+                    {{log.full_list_text}}
+                    {% assign full_list_link_text = log.full_list_link | size %}
+                    {% if full_list_link_text > 0 %}
+                    <a id="{{versionTitleId}}_here_link" class="color-primary-hover underline stop-propagation" href="{{log.full_list_link}}">
+                      HERE
+                    </a>
+                    {% endif %}
+                  </span>
+                  {% endif %}
+                  {% if log.release_types %}
+                  <div>
+                    {% for release in log.release_types %}
+                    {% if release.enable %}
+                    {%if release.title %}
+                    <h5 class="color-dark font-size-18 line-height-32 mb-0">{{release.title}}</h5>
+                    {% endif %}
+                    {%if release.description %}
+                    <p class="font-size-18 line-height-32 mb-0 color-dark-3">{{release.description}}</p>
+                    <div class="space5"></div>
+                    {% endif %}
+                    {% endif %}
+                    {% for item in release.list %}
+                    <div class="release-list-item d-flex align-items-start justify-content-start" style="column-gap: 10px">
+                      <span class="line-height-32"></span>
+                      <p class="font-size-18 line-height-32 color-dark-5 mb-0">{{item.text}}</p>
+                    </div>
+                    {% endfor %}
+                    {% if release.usage %}
+                    <p class="font-size-18 line-height-32 mb-0 color-dark-3">Usage</p>
+                    <div class="space5"></div>
+                    {% for item in release.usage %}
+                    <div class="release-list-item d-flex align-items-start justify-content-start" style="column-gap: 10px">
+                      <span class="line-height-32"></span>
+                      <p class="font-size-18 line-height-32 color-dark-5 mb-0">
+                        {{item.text}}
+                        <code>{{item.code}}</code>
+                      </p>
+                    </div>
+                    {% endfor %}
+                    {% endif %}
+                    {% if release.end_of_text %}
+                    <p class="font-size-18 line-height-32 mb-0 color-dark-3">{{release.end_of_text}}</p>
+                    {%endif%}
+                    <div class="space10"></div>
+                    {% endfor %}
+                  </div>
+                  {% endif %}
+                </div>
+                {% endif %}
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+      <div class="click-for-more">
+        <div class="mask" id="flow360-change-logs-mask"></div>
+        {% if flow360_python_client.more_section.enable %}
+        {% assign moreSection = flow360_python_client.more_section %}
+        {% assign moreTitle = moreSection.more_text | split: " " | join: "-" | split: "," %}
+        {% assign moreClickId = domainTitle | concat: blockTitle | concat: moreTitle | join: "_" | downcase %}
+        <a id="{{moreClickId}}_link" href="{{moreSection.link}}" class="color-primary-hover stop-propagation">{{moreSection.more_text}}</a>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+    {% include release_notes/flow360/web_client.html %}
+  </div>
+</div>

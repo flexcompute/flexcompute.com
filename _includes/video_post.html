@@ -1,0 +1,28 @@
+ <div class="post">
+  <div class="box bg-white shadow">
+    {% if post.vimeo_video_id %}
+    <div class="player-wrapper">
+      <div class="player" data-plyr-provider="vimeo" data-plyr-embed-id="{{post.vimeo_video_id}}"></div>
+    </div>
+    {% endif %}
+    <div class="space40"></div>
+    <div class="post-content" onclick="window.open('{{post.url}}','_self')">
+      <div class="category text-center">
+        {% include category-link.html categories=post.categories class="badge badge-pill bg-yellow" %}
+      </div>
+      <h2 class="post-title text-center"><a href="{{post.url}}">{{post.post_title | default: post.title}}</a></h2>
+      <div class="meta text-center d-flex align-items-center justify-content-center">
+        <span class="date"><i class="jam jam-clock"></i>{{post.date | date_to_string}}</span>
+        {% if post.author %}
+        {%include authors.html authors=post.author%}
+        {% endif %}
+        {% include social_link.html icon-class="box-none" %}
+      </div>
+      <p>{{post.excerpt | strip_html | truncatewords: "100"}}</p>
+      <div class="text-center"><a href="{{post.url}}" class="more">Read more</a></div>
+    </div>
+    <!-- /.post-content -->
+  </div>
+  <!-- /.box -->
+</div>
+<!-- /.post -->

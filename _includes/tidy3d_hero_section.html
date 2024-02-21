@@ -1,0 +1,39 @@
+{% if page.hero_section.enable %}
+{% assign hero = page.hero_section %}
+<div class="container position-relative inner {%if include.pt%}{{include.pt}}{%else%}pt-175{%endif%} pt-md-10 pb-0 text-center">
+  {% if hero.background %}
+  <div class="background-image position-absolute" style="z-index: 0">
+    <div class="mask position-absolute"></div>
+    {%include webp-tag.html src=hero.background.image alt=hero.background.alt class="aspect-ratio"%}
+  </div>
+  {% endif %}
+  <div class="content position-relative" style="z-index: 1">
+    {% if hero.logo %}
+    <object type="image/svg+xml" data="{{hero.logo.image}}" title="{{hero.logo.alt}}" style="height: 30px">
+      <param name="src" value="{{hero.logo.image}}" >
+    </object>
+    {% endif %}
+    {% if hero.title %}
+    <h1 class="font-size-42 line-height-50 m-0 color-dark">{{hero.title}}</h1>
+    <div class="space30"></div>
+    {% endif %}
+    {% if hero.sub_title %}
+    <p class="{%if include.sub_title_class%}{{include.sub_title_class}}{%else%}font-size-20 line-height-32{%endif%} color-dark-3 mb-0">{{hero.sub_title}}</p>
+    <div class="space30"></div>
+    {% endif %}
+    <div class="product-action d-flex flex-md-row flex-column justify-content-center" style="width: 100%">
+      {% if hero.enable_demo %}
+      {% include get_demo.html link="/contact/" extra_id=hero.get-demo_click_id %}
+      {% endif %}
+      {% if hero.enable_subscribe %}
+      {% include subscribe_btn.html ext_class="btn-radius m-0 pt-16" extra_id=hero.subscribe_click_id %}
+      {% endif %}
+      {% if hero.enable_contact %}
+      {% include contact_btn_dashed.html extra_id=hero.contact_click_id %}
+      {% endif %}
+    </div>
+    <div class="space70"></div>
+  </div>
+</div>
+<div class="space130"></div>
+{% endif %}

@@ -1,0 +1,60 @@
+{
+  "title": "FDTD 101: Lecture 2",
+  "pages": [
+    {
+      "id": "intro-to-fdtd",
+      "title": "",
+      "transcript": "This is a second video on introduction to the finite difference time domain method or the FDTD method. I'm Shanhui Fan from Flexcompute."
+    },
+    {
+      "id": "",
+      "title": "Overview",
+      "transcript": "In the last video we gave an introduction to the basic idea of the FDTD method, and showed that you can generate a very nice movie visualizing how electromagnetic waves propagate inside a vacuum region."
+    },
+    {
+      "id": "",
+      "title": "FDTD simulation of dielectric slab",
+      "transcript": "In this video, we're going to take a step further and to show how you can use the FDTD method to get information that you usually care about in device design. And here we're showing a particularly simple example where we're going to try to get a transmission spectrum through a dielectric slab. In our example, the dielectric slab is made of silicon with an index of 3.5 in the infrared wavelength range and with a thickness of half a micron. We will be sending light propagating normally instant upon the silicon slab along the Z axis, and try to compute the transmission. For this simple system the transmission spectrum can be computed analytically and shown here on the right is the analytic result. What we’d like to show you is how to reproduce this analytic result with the finite difference time domain method and in doing so illustrate some of the additional thinking and perhaps subtleties about the setup of the FDTD method."
+    },
+    {
+      "id": "",
+      "title": "How to set up FDTD to simulate the transmission spectrum",
+      "transcript": "To start any FDTD simulation, the first thing that you need to do is to set up the computational cell or the computational domain. In our case, we will put the silicon slab in the middle of the computational domain. We will add some free space below and above the silicon slab so that we can accommodate the source and the monitor on either side of the silicon slab. We choose 1.5 micron which corresponds to about one and a half wavelengths of free space below and above the silicon slab. In the XY direction, we choose the size of the computational domain to be 2 microns. For this problem, it is an overkill. In fact, because the silicon slab is uniform in the x and y dimension, you can in fact, choose a much smaller computational domain size, maybe even 0.1 or 0.2 micron would have worked.\nHowever, in the next video we're going to use the same computational domain to simulate the photonic crystal slab structure, which has more complexity in the in-plane direction. So the xy dimension here is chosen. We choose a discretization so that each grid corresponds to a linear dimension of about 10 nanometer and that turns out to be sufficient to get to the accuracy that we need. As I mentioned in my last video for any finite difference time domain simulation, you will need to choose the boundary condition that truncates the computational domain."
+    },
+    {
+      "id": "",
+      "title": "How to set up the boundary condition for the FDTD simulation of a slab",
+      "transcript": "In our case, we put perfectly matched layers along the z direction and these are artificial absorbers used to absorb incident plane waves to simulate an open structure along the z direction. In the xy dimensions as I mentioned the slab is uniform. And therefore, we put in periodic boundary conditions as indicated here. These periodic boundary conditions are useful for simulating structures with infinite extent interacting within the incident plane wave."
+    },
+    {
+      "id": "",
+      "title": "How to set up the source for the FDTD simulation of a slab",
+      "transcript": "Now let me comment on the source. Source is used to excite the electromagnetic field inside the computational domain. In the FDTD simulation, it consists of distribution of oscillating dipoles on a plane in our case. And we will have all the dipoles to have the same magnitude and they oscillate in phase in order to set up an incident plane wave."
+    },
+    {
+      "id": "",
+      "title": "How to obtain broadband response by setting up Gaussian source in FDTD",
+      "transcript": "One of the very important capabilities in FDTD simulation is that you can set up a pulsed source so that you can get a broad-band response of a given structure, in other words, the response of a given structure over a wide range of frequencies in a single simulation. In our case, we set up a source amplitude in time so that the current actually oscillates at a carrier frequency, but has a gaussian envelope in time. And this is the corresponding spectrum of the source, you can see that with this time dependent source the spectrum covers a frequency range of about a hundred terahertz around the 300 terahertz carrier frequency. We are using a power source to generate a broad-band input in order to determine the response of the structure over a broad bandwidth."
+    },
+    {
+      "id": "",
+      "title": "How to calculate the transmitted power in FDTD",
+      "transcript": "To determine the transmission, we look at the electromagnetic fields on the monitor plane on the other side of the slab, and we compute the Poynting vector flux that passes through the monitor plane as a function of frequency. This allows us to compute for a given source, how much power is actually transmitted on the other side of the structure."
+    },
+    {
+      "id": "",
+      "title": "How to calculate the transmission spectrum in FDTD",
+      "transcript": "To convert this into a transmission spectrum, however, we need to figure out the amount of power or intensity that's in the incident wave. Therefore, in many of these simulations we typically do two calculations. In the first calculation, we would use the same computational domain with the source and the monitor, but without the slab. We're simulating a vacuum and we look at how the Poynting vector flux looks on the monitor plane as a functional frequency and that gives us the blue curve. Then in the second simulation, we repeat the calculation by putting it into the slab. The Poynting vector flux spectrum gives us the red curve. Once we have these two curves we can divide one against the other to get the transmission spectrum and that's shown on the bottom here. You can see that the transmission spectrum in the far-infrared looks very nice. Especially the region near the 300 terahertz frequency range is very smooth. But near 200 terahertz or 400 terahertz, you can see something strange that's going on here. By analyzing the incident wave spectrum as indicated by the blue curve, you can see that at 200 terahertz or 400 terahertz, you’re really at the wing of this incidence spectrum where the power in the incident wave is very small. In this case then, in fact, you will not get very reliable data about the transmission simply because there's not enough power in the incident wave at those frequencies. To fix this what you would usually do is to choose a pulse that's narrow enough in time. That spectrum can cover the entire frequency range that you are interested in."
+    },
+    {
+      "id": "",
+      "title": "How to obtain smooth transmission by broadening the FDTD source spectrum",
+      "transcript": "In our case if you narrow the temporal duration of the pulse, you can get a source spectrum as indicated by the blue curve here, which now covers a broader range of frequencies all the way from 200 terahertz to 400 terahertz. And again, repeating the calculation with the slab, and take the ratio of these two, you get a much nicer transmission spectrum as indicated here. And you can see that the curve in this case is a lot smoother especially at the wing of the instance spectrum for example from 200 terahertz to 400 terahertz."
+    },
+    {
+      "id": "",
+      "title": "Comparing FDTD results with analytical results.",
+      "transcript": "You can compare this result with the analytic results. In this plot, the red curve is from FDTD and the dash line is from analytic results. You can see essentially perfect agreement between FDTD and analytic results. This of course is a relatively simple FDTD calculation. But if you are interested in learning FDTD,  I would strongly encourage you to actually go through the calculation with the script that we provide. I think you will learn a lot on how you actually go about setting up the FDTD simulation and some of the thinking that's behind it  in order to get reliable results."
+    }
+  ]
+}

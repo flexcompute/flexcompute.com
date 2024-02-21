@@ -1,0 +1,857 @@
+---
+author: Tom Chen
+custom_css:
+- learning-center/fdtd101
+- learning-center/menu
+- learning-center/home
+custom_font: font2
+description: This notebook demonstrates how to use tkinter to develop a purpose-specific
+  GUI for Tidy3D.
+image:
+  alt: Waveguide Bend Simulator | Flexcompute
+  path: /assets/tidy3d/examples/image/tkinter_gui.png
+layout: learning-center/example-library
+menu_config:
+  collapsed: true
+  selected: Tidy3D Python
+metadata:
+  category: Advance Applications
+  enable_more_examples: false
+  more_examples:
+  - name: Defining a total-field scattered-field (TFSF) plane wave source
+    path: notebooks/TFSF/
+  - name: Using the mode solver for optical mode analysis
+    path: notebooks/ModeSolver/
+  - name: Fitting dispersive material models
+    path: notebooks/Fitting/
+  pagination:
+    next: false
+    previous:
+      name: Thermally tuned ring resonator
+      path: notebooks/ThermallyTunedRingResonator/
+  type: python-tutorial
+page_title: Building a simple, Python-based GUI for Tidy3D
+source_link: https:/docs.flexcompute.com/projects/tidy3d/en/latest/_sources/notebooks/WaveguideBendSimulator.ipynb
+tags:
+- GUI
+- tkinter
+- waveguide bend
+- Tidy3D
+- FDTD
+title: Waveguide Bend Simulator | Flexcompute
+---
+
+
+<html lang="en">
+<head><meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="/assets/tidy3d/examples/css/example-notebook.css" rel="stylesheet"/>
+
+
+
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS_CHTML-full,Safe"> </script>
+
+<script type="text/x-mathjax-config">
+    init_mathjax = function() {
+        if (window.MathJax) {
+        // MathJax loaded
+            MathJax.Hub.Config({
+                TeX: {
+                    equationNumbers: {
+                    autoNumber: "AMS",
+                    useLabelIds: true
+                    }
+                },
+                tex2jax: {
+                    inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+                    displayMath: [ ['$$','$$'], ["\\[","\\]"] ],
+                    processEscapes: true,
+                    processEnvironments: true
+                },
+                displayAlign: 'center',
+                CommonHTML: {
+                    linebreaks: {
+                    automatic: true
+                    }
+                }
+            });
+
+            MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
+        }
+    }
+    init_mathjax();
+    </script>
+<script type="module">
+  document.addEventListener("DOMContentLoaded", async () => {
+    const diagrams = document.querySelectorAll(".jp-Mermaid > pre.mermaid");
+    // do not load mermaidjs if not needed
+    if (!diagrams.length) {
+      return;
+    }
+    const mermaid = (await import("https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.7.0/mermaid.esm.min.mjs")).default;
+    const parser = new DOMParser();
+
+    mermaid.initialize({
+      maxTextSize: 100000,
+      maxEdges: 100000,
+      startOnLoad: false,
+      fontFamily: window
+        .getComputedStyle(document.body)
+        .getPropertyValue("--jp-ui-font-family"),
+      theme: document.querySelector("body[data-jp-theme-light='true']")
+        ? "default"
+        : "dark",
+    });
+
+    let _nextMermaidId = 0;
+
+    function makeMermaidImage(svg) {
+      const img = document.createElement("img");
+      const doc = parser.parseFromString(svg, "image/svg+xml");
+      const svgEl = doc.querySelector("svg");
+      const { maxWidth } = svgEl?.style || {};
+      const firstTitle = doc.querySelector("title");
+      const firstDesc = doc.querySelector("desc");
+
+      img.setAttribute("src", `data:image/svg+xml,${encodeURIComponent(svg)}`);
+      if (maxWidth) {
+        img.width = parseInt(maxWidth);
+      }
+      if (firstTitle) {
+        img.setAttribute("alt", firstTitle.textContent);
+      }
+      if (firstDesc) {
+        const caption = document.createElement("figcaption");
+        caption.className = "sr-only";
+        caption.textContent = firstDesc.textContent;
+        return [img, caption];
+      }
+      return [img];
+    }
+
+    async function makeMermaidError(text) {
+      let errorMessage = "";
+      try {
+        await mermaid.parse(text);
+      } catch (err) {
+        errorMessage = `${err}`;
+      }
+
+      const result = document.createElement("details");
+      result.className = 'jp-RenderedMermaid-Details';
+      const summary = document.createElement("summary");
+      summary.className = 'jp-RenderedMermaid-Summary';
+      const pre = document.createElement("pre");
+      const code = document.createElement("code");
+      code.innerText = text;
+      pre.appendChild(code);
+      summary.appendChild(pre);
+      result.appendChild(summary);
+
+      const warning = document.createElement("pre");
+      warning.innerText = errorMessage;
+      result.appendChild(warning);
+      return [result];
+    }
+
+    async function renderOneMarmaid(src) {
+      const id = `jp-mermaid-${_nextMermaidId++}`;
+      const parent = src.parentNode;
+      let raw = src.textContent.trim();
+      const el = document.createElement("div");
+      el.style.visibility = "hidden";
+      document.body.appendChild(el);
+      let results = null;
+      let output = null;
+      try {
+        let { svg } = await mermaid.render(id, raw, el);
+        svg = cleanMermaidSvg(svg);
+        results = makeMermaidImage(svg);
+        output = document.createElement("figure");
+        results.map(output.appendChild, output);
+      } catch (err) {
+        parent.classList.add("jp-mod-warning");
+        results = await makeMermaidError(raw);
+        output = results[0];
+      } finally {
+        el.remove();
+      }
+      parent.classList.add("jp-RenderedMermaid");
+      parent.appendChild(output);
+    }
+
+
+    /**
+     * Post-process to ensure mermaid diagrams contain only valid SVG and XHTML.
+     */
+    function cleanMermaidSvg(svg) {
+      return svg.replace(RE_VOID_ELEMENT, replaceVoidElement);
+    }
+
+
+    /**
+     * A regular expression for all void elements, which may include attributes and
+     * a slash.
+     *
+     * @see https://developer.mozilla.org/en-US/docs/Glossary/Void_element
+     *
+     * Of these, only `<br>` is generated by Mermaid in place of `\n`,
+     * but _any_ "malformed" tag will break the SVG rendering entirely.
+     */
+    const RE_VOID_ELEMENT =
+      /<\s*(area|base|br|col|embed|hr|img|input|link|meta|param|source|track|wbr)\s*([^>]*?)\s*>/gi;
+
+    /**
+     * Ensure a void element is closed with a slash, preserving any attributes.
+     */
+    function replaceVoidElement(match, tag, rest) {
+      rest = rest.trim();
+      if (!rest.endsWith('/')) {
+        rest = `${rest} /`;
+      }
+      return `<${tag} ${rest}>`;
+    }
+
+    void Promise.all([...diagrams].map(renderOneMarmaid));
+  });
+</script>
+
+</head>
+<body class="jp-Notebook" data-jp-theme-light="true" data-jp-theme-name="JupyterLab Light">
+<main>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=160032ce">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=a6a34241">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h3 id="A-case-study-of-a-90-degree-waveguide-bend-simulator">A case study of a 90-degree waveguide bend simulator<a class="anchor-link" href="#A-case-study-of-a-90-degree-waveguide-bend-simulator">¶</a></h3>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=a1c2d627">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p><code>Tidy3D</code> offers a versatile web-based <a href="https://tidy3d.simulation.cloud/" target="_blank">graphical user interface</a> (GUI) suitable for a wide range of FDTD simulations from photonic integrated circuit components to metasurfaces and diffractive gratings. While this general-purpose GUI is beneficial for its extensive capabilities, there are situations where you might need to focus on simulating a specific device type repeatedly. For these scenarios, Tidy3D's <a href="https://docs.flexcompute.com/projects/tidy3d/en/latest/api.html" target="_blank">Python API</a> paired with open-source Python libraries such as <a href="https://docs.python.org/3/library/tkinter.html" target="_blank">tkinter</a> enables the easy creation of a customized GUI. This specialized interface, designed with fewer controls and buttons, streamlines the simulation process for ease of use. By sharing this bespoke GUI with less experienced colleagues, they can also efficiently run simulations without extensive prior knowledge or expertise in FDTD.</p>
+<p>Here we demonstrate the creation of a simple GUI for 90-degree waveguide bend simulation. In this GUI, users can select materials for the waveguide bend, substrate, and cladding through combo boxes. We include common materials such as silicon, silicon nitride, silicon oxide, and so on. Users can also select between a circular bend and an Euler bend. Geometric parameters can be entered in the input boxes to define the waveguide dimensions and bend radius. Before running the simulation, users can view the simulation setup as well as the grid by clicking the "View simulation" button. Lastly, users can start the simulation by clicking the "Run simulation" button. After the simulation, the bending loss is automatically plotted. We also include a text window to display some relevant text outputs.</p>
+<p>As a tutorial, we use Jupyter Notebook to store the codes for the GUI creation. If you run the notebook, the GUI window will appear and you can interact with it. One can further package this GUI into a stand-alone application for easier distribution if needed. The GUI should look like below after launching it:</p>
+<br/>
+<br/>
+<center><img alt="diagram" src="/assets/tidy3d/examples/image/tkinter_gui.png" width="700"/></center>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=2922a07e">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>To run this notebook successfully, one needs to have the <code>tkinter</code>, <code>gdstk</code>, and other relevant libraries installed. First, we perform the necessary Python library imports.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=6bc76f3b">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[1]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">tkinter</span> <span class="k">as</span> <span class="nn">tk</span>
+<span class="kn">from</span> <span class="nn">tkinter</span> <span class="kn">import</span> <span class="n">ttk</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">from</span> <span class="nn">matplotlib.backends.backend_tkagg</span> <span class="kn">import</span> <span class="n">FigureCanvasTkAgg</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">tidy3d</span> <span class="k">as</span> <span class="nn">td</span>
+<span class="kn">import</span> <span class="nn">tidy3d.web</span> <span class="k">as</span> <span class="nn">web</span>
+<span class="kn">import</span> <span class="nn">scipy.integrate</span> <span class="k">as</span> <span class="nn">integrate</span>
+<span class="kn">from</span> <span class="nn">scipy.optimize</span> <span class="kn">import</span> <span class="n">fsolve</span>
+<span class="kn">import</span> <span class="nn">gdstk</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=38be733a">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>Define basic parameters. These parameters are not meant to be changed by the GUI user.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=69c3a17c">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[2]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">num_freq</span> <span class="o">=</span> <span class="mi">30</span> <span class="c1"># number of frequency points </span>
+<span class="n">num_theta</span> <span class="o">=</span> <span class="mi">100</span> <span class="c1"># number of circular bend points</span>
+<span class="n">nm_to_um</span> <span class="o">=</span> <span class="mf">1e-3</span> <span class="c1"># conversion factor from nm to um</span>
+<span class="n">min_steps_per_wvl</span> <span class="o">=</span> <span class="mi">15</span> <span class="c1"># grid resolution</span>
+
+<span class="c1"># euler bend parameters</span>
+<span class="n">R_eff</span> <span class="o">=</span> <span class="mi">4</span> 
+<span class="n">A</span> <span class="o">=</span> <span class="mf">2.4</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=17ede518">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>We put the supported media into a dictionary for easier mapping later on. In this specific GUI, we include a few common materials such as silicon, silicon dioxide, silicon nitride, and so on. More can be included as needed.</p>
+<p>Two waveguide bend shapes are included: circular or Euler.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=47dc1985">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[3]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># dictionary to store all materials</span>
+<span class="n">media</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"Si"</span><span class="p">:</span> <span class="n">td</span><span class="o">.</span><span class="n">material_library</span><span class="p">[</span><span class="s2">"cSi"</span><span class="p">][</span><span class="s2">"Palik_Lossless"</span><span class="p">],</span>
+    <span class="s2">"SiO2"</span><span class="p">:</span> <span class="n">td</span><span class="o">.</span><span class="n">material_library</span><span class="p">[</span><span class="s2">"SiO2"</span><span class="p">][</span><span class="s2">"Palik_Lossless"</span><span class="p">],</span>
+    <span class="s2">"Si3N4"</span><span class="p">:</span> <span class="n">td</span><span class="o">.</span><span class="n">material_library</span><span class="p">[</span><span class="s2">"Si3N4"</span><span class="p">][</span><span class="s2">"Luke2015PMLStable"</span><span class="p">],</span>
+    <span class="s2">"Air"</span><span class="p">:</span> <span class="n">td</span><span class="o">.</span><span class="n">Medium</span><span class="p">(</span><span class="n">permittivity</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
+    <span class="s2">"PMMA"</span><span class="p">:</span> <span class="n">td</span><span class="o">.</span><span class="n">material_library</span><span class="p">[</span><span class="s2">"PMMA"</span><span class="p">][</span><span class="s2">"Horiba"</span><span class="p">],</span>
+    <span class="s2">"InAs"</span><span class="p">:</span> <span class="n">td</span><span class="o">.</span><span class="n">material_library</span><span class="p">[</span><span class="s2">"InAs"</span><span class="p">][</span><span class="s2">"Palik"</span><span class="p">],</span>
+    <span class="s2">"GaAs"</span><span class="p">:</span> <span class="n">td</span><span class="o">.</span><span class="n">material_library</span><span class="p">[</span><span class="s2">"GaAs"</span><span class="p">][</span><span class="s2">"Palik_Lossy"</span><span class="p">],</span>
+<span class="p">}</span>
+
+<span class="n">materials</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">media</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="c1"># list of materials for the combo box</span>
+<span class="n">shapes</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"Circular"</span><span class="p">,</span> <span class="s2">"Euler"</span><span class="p">]</span> <span class="c1"># list of shapes for the combo box</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=92e23967">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>Next we define functions to compute the coordinates for the circular and Euler bends. Many codes here are adapted from our previous example on <a href="https://www.flexcompute.com/tidy3d/examples/notebooks/EulerWaveguideBend/" target="_blank">Euler waveguide bends</a>.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=ae2f5f06">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[4]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># function to calculate the coordinates for a circular bend</span>
+<span class="k">def</span> <span class="nf">circular_xy</span><span class="p">(</span><span class="n">r</span><span class="p">):</span>
+    <span class="n">theta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">num_theta</span><span class="p">)</span>
+    <span class="n">x_circle</span> <span class="o">=</span> <span class="n">r</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">theta</span><span class="p">)</span>
+    <span class="n">y_circle</span> <span class="o">=</span> <span class="n">r</span> <span class="o">-</span> <span class="n">r</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">theta</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">x_circle</span><span class="p">,</span> <span class="n">y_circle</span>
+
+<span class="c1"># function to calculate the coordinates for an Euler bend</span>
+<span class="k">def</span> <span class="nf">euler_xy</span><span class="p">(</span><span class="n">r</span><span class="p">):</span>
+    <span class="n">L_max</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># starting point of L_max</span>
+    <span class="n">precision</span> <span class="o">=</span> <span class="mf">0.05</span>  <span class="c1"># increasement of L_max at each iteration</span>
+    <span class="n">tolerance</span> <span class="o">=</span> <span class="mf">0.01</span>  <span class="c1"># difference tolerance of the derivatives</span>
+
+    <span class="c1"># determine L_max</span>
+    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="n">L_max</span> <span class="o">=</span> <span class="n">L_max</span> <span class="o">+</span> <span class="n">precision</span>  <span class="c1"># update L_max</span>
+        <span class="n">Ls</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">L_max</span><span class="p">,</span> <span class="mi">50</span><span class="p">)</span>  <span class="c1"># L at (x1,y1)</span>
+        <span class="n">x1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">Ls</span><span class="p">))</span>  <span class="c1"># x coordinate of the clothoid curve</span>
+        <span class="n">y1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">Ls</span><span class="p">))</span>  <span class="c1"># y coordinate of the clothoid curve</span>
+
+        <span class="c1"># compute x1 and y1 using the above integral equations</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">L</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">Ls</span><span class="p">):</span>
+            <span class="n">y1</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">err</span> <span class="o">=</span> <span class="n">integrate</span><span class="o">.</span><span class="n">quad</span><span class="p">(</span>
+                <span class="k">lambda</span> <span class="n">theta</span><span class="p">:</span> <span class="n">A</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">theta</span><span class="o">**</span><span class="mi">2</span> <span class="o">/</span> <span class="mi">2</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="n">L</span> <span class="o">/</span> <span class="n">A</span>
+            <span class="p">)</span>
+            <span class="n">x1</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">err</span> <span class="o">=</span> <span class="n">integrate</span><span class="o">.</span><span class="n">quad</span><span class="p">(</span>
+                <span class="k">lambda</span> <span class="n">theta</span><span class="p">:</span> <span class="n">A</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">theta</span><span class="o">**</span><span class="mi">2</span> <span class="o">/</span> <span class="mi">2</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="n">L</span> <span class="o">/</span> <span class="n">A</span>
+            <span class="p">)</span>
+
+        <span class="c1"># compute the derivative at L_max</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="n">x1</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">x1</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">])</span> <span class="o">/</span> <span class="p">(</span><span class="n">y1</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">y1</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">])</span>
+        <span class="n">xp</span> <span class="o">=</span> <span class="n">x1</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">yp</span> <span class="o">=</span> <span class="n">y1</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="c1"># check if the derivative is continuous at L_max</span>
+        <span class="n">R</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span>
+            <span class="p">((</span><span class="n">R_eff</span> <span class="o">+</span> <span class="n">k</span> <span class="o">*</span> <span class="n">xp</span> <span class="o">-</span> <span class="n">yp</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">k</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="n">xp</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+            <span class="o">+</span> <span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="n">R_eff</span> <span class="o">+</span> <span class="n">k</span> <span class="o">*</span> <span class="n">xp</span> <span class="o">-</span> <span class="n">yp</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">k</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="n">R_eff</span> <span class="o">-</span> <span class="n">yp</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">R</span> <span class="o">-</span> <span class="n">A</span><span class="o">**</span><span class="mi">2</span> <span class="o">/</span> <span class="n">L_max</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">tolerance</span><span class="p">:</span>
+            <span class="k">break</span>
+
+    <span class="c1"># after L_max is determined, R_min is also determined</span>
+    <span class="n">R_min</span> <span class="o">=</span> <span class="n">A</span><span class="o">**</span><span class="mi">2</span> <span class="o">/</span> <span class="n">L_max</span>
+
+    <span class="n">x3</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flipud</span><span class="p">(</span><span class="n">R_eff</span> <span class="o">-</span> <span class="n">y1</span><span class="p">)</span>
+    <span class="n">y3</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flipud</span><span class="p">(</span><span class="n">R_eff</span> <span class="o">-</span> <span class="n">x1</span><span class="p">)</span>
+
+    <span class="c1"># solve for the parameters of the circular curve</span>
+    <span class="k">def</span> <span class="nf">circle</span><span class="p">(</span><span class="n">var</span><span class="p">):</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="n">var</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="n">var</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">Func</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="mi">2</span><span class="p">))</span>
+        <span class="n">Func</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">xp</span> <span class="o">-</span> <span class="n">a</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">yp</span> <span class="o">-</span> <span class="n">b</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">-</span> <span class="n">R_min</span><span class="o">**</span><span class="mi">2</span>
+        <span class="n">Func</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">R_eff</span> <span class="o">-</span> <span class="n">yp</span> <span class="o">-</span> <span class="n">a</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">R_eff</span> <span class="o">-</span> <span class="n">xp</span> <span class="o">-</span> <span class="n">b</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">-</span> <span class="n">R_min</span><span class="o">**</span><span class="mi">2</span>
+        <span class="k">return</span> <span class="n">Func</span>
+
+    <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">fsolve</span><span class="p">(</span><span class="n">circle</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">R_eff</span><span class="p">))</span>
+
+    <span class="c1"># calculate the coordinates of the circular curve</span>
+    <span class="n">x2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">xp</span> <span class="o">+</span> <span class="mf">0.01</span><span class="p">,</span> <span class="n">R_eff</span> <span class="o">-</span> <span class="n">yp</span> <span class="o">-</span> <span class="mf">0.01</span><span class="p">,</span> <span class="mi">50</span><span class="p">)</span>
+    <span class="n">y2</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">R_min</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="p">(</span><span class="n">x2</span> <span class="o">-</span> <span class="n">a</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="n">b</span>
+
+    <span class="n">x_euler</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">x1</span><span class="p">,</span> <span class="n">x2</span><span class="p">,</span> <span class="n">x3</span><span class="p">))</span>
+    <span class="n">y_euler</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">y1</span><span class="p">,</span> <span class="n">y2</span><span class="p">,</span> <span class="n">y3</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">r</span> <span class="o">*</span> <span class="n">x_euler</span> <span class="o">/</span> <span class="n">R_eff</span><span class="p">,</span> <span class="n">r</span> <span class="o">*</span> <span class="n">y_euler</span> <span class="o">/</span> <span class="n">R_eff</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=9f8be7e1">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>We also create a helper function to convert the $x$ and $y$ coordinates of a path into a Tidy3D <a href="https://docs.flexcompute.com/projects/tidy3d/en/latest/_autosummary/tidy3d.Structure.html" target="_blank">Structure</a> by utilizing <a href="https://heitzmann.github.io/gdstk/" target="_blank">gdstk</a>.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=82fbfdb5">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[5]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># function to convert the coordinates of a path into a bend structure</span>
+<span class="k">def</span> <span class="nf">line_to_structure</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">wg_mat</span><span class="p">):</span>
+    <span class="n">cell</span> <span class="o">=</span> <span class="n">gdstk</span><span class="o">.</span><span class="n">Cell</span><span class="p">(</span><span class="s2">"bend"</span><span class="p">)</span>  <span class="c1"># define a gds cell</span>
+    <span class="n">inf_eff</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">r</span>
+    <span class="c1"># add points to include the input and output straight waveguides</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="n">inf_eff</span><span class="p">)</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">inf_eff</span><span class="p">)</span>
+
+    <span class="n">cell</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">gdstk</span><span class="o">.</span><span class="n">FlexPath</span><span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">y</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">layer</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">datatype</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>  <span class="c1"># add path to cell</span>
+
+    <span class="c1"># define structure from cell</span>
+    <span class="n">bend</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">Structure</span><span class="p">(</span>
+        <span class="n">geometry</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">PolySlab</span><span class="o">.</span><span class="n">from_gds</span><span class="p">(</span>
+            <span class="n">cell</span><span class="p">,</span>
+            <span class="n">gds_layer</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">axis</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+            <span class="n">slab_bounds</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">t</span><span class="p">),</span>
+        <span class="p">)[</span><span class="mi">0</span><span class="p">],</span>
+        <span class="n">medium</span><span class="o">=</span><span class="n">media</span><span class="p">[</span><span class="n">wg_mat</span><span class="p">],</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">bend</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=853e2641">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>Next we define a function to create a Tidy3D <a href="https://docs.flexcompute.com/projects/tidy3d/en/latest/_autosummary/tidy3d.Simulation.html" target="_blank">Simulation</a> instance. In this function, we need to extract the values of the user inputs in the GUI, define the waveguide bend structure based on the extracted values, define a <a href="https://docs.flexcompute.com/projects/tidy3d/en/latest/_autosummary/tidy3d.ModeSource.html" target="_blank">ModeSource</a> to excite the input waveguide and a <a href="https://docs.flexcompute.com/projects/tidy3d/en/latest/_autosummary/tidy3d.ModeMonitor.html" target="_blank">ModeMonitor</a> to measure the transmission to the output waveguide, and lastly return a <a href="https://docs.flexcompute.com/projects/tidy3d/en/latest/_autosummary/tidy3d.Simulation.html" target="_blank">Simulation</a>.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=07b30437">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[6]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># function to compute wavelength range</span>
+<span class="k">def</span> <span class="nf">get_ldas</span><span class="p">():</span>
+    <span class="n">lda0</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">lda0_box</span><span class="o">.</span><span class="n">get</span><span class="p">())</span> <span class="o">*</span> <span class="n">nm_to_um</span>
+    <span class="n">bw</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">bw_box</span><span class="o">.</span><span class="n">get</span><span class="p">())</span> <span class="o">*</span> <span class="n">nm_to_um</span>
+    <span class="n">ldas</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">lda0</span> <span class="o">-</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">bw</span><span class="p">,</span> <span class="n">lda0</span> <span class="o">+</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">bw</span><span class="p">,</span> <span class="n">num_freq</span><span class="p">)</span>  
+    <span class="k">return</span> <span class="n">lda0</span><span class="p">,</span> <span class="n">ldas</span>
+
+<span class="c1"># function to define the bend simulation</span>
+<span class="k">def</span> <span class="nf">make_sim</span><span class="p">():</span>
+    <span class="c1"># get user input values from the gui</span>
+    <span class="n">sub_mat</span> <span class="o">=</span> <span class="n">substrate_box</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+    <span class="n">wg_mat</span> <span class="o">=</span> <span class="n">wg_box</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+    <span class="n">clad_mat</span> <span class="o">=</span> <span class="n">cladding_box</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">radius_box</span><span class="o">.</span><span class="n">get</span><span class="p">())</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">thickness_box</span><span class="o">.</span><span class="n">get</span><span class="p">())</span> <span class="o">*</span> <span class="n">nm_to_um</span>
+    <span class="n">w</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">width_box</span><span class="o">.</span><span class="n">get</span><span class="p">())</span> <span class="o">*</span> <span class="n">nm_to_um</span>
+    <span class="n">shape</span> <span class="o">=</span> <span class="n">shape_box</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+    
+    <span class="c1"># define simulation wavelength range</span>
+    <span class="n">lda0</span><span class="p">,</span> <span class="n">ldas</span> <span class="o">=</span> <span class="n">get_ldas</span><span class="p">()</span>
+    <span class="n">freq0</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">C_0</span> <span class="o">/</span> <span class="n">lda0</span>
+    <span class="n">freqs</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">C_0</span> <span class="o">/</span> <span class="n">ldas</span>
+    <span class="n">fwidth</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">freqs</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">freqs</span><span class="p">))</span>
+
+    <span class="c1"># create structures</span>
+    <span class="k">if</span> <span class="n">shape</span> <span class="o">==</span> <span class="s2">"Circular"</span><span class="p">:</span>
+        <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">circular_xy</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">shape</span> <span class="o">==</span> <span class="s2">"Euler"</span><span class="p">:</span>
+        <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">euler_xy</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+
+    <span class="n">bend</span> <span class="o">=</span> <span class="n">line_to_structure</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">wg_mat</span><span class="p">)</span>
+
+    <span class="n">sub</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">Structure</span><span class="p">(</span>
+        <span class="n">geometry</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">Box</span><span class="o">.</span><span class="n">from_bounds</span><span class="p">(</span>
+            <span class="n">rmin</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span> <span class="o">*</span> <span class="n">r</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span> <span class="o">*</span> <span class="n">r</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span> <span class="o">*</span> <span class="n">r</span><span class="p">),</span> <span class="n">rmax</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">r</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">r</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="p">),</span>
+        <span class="n">medium</span><span class="o">=</span><span class="n">media</span><span class="p">[</span><span class="n">sub_mat</span><span class="p">],</span>
+    <span class="p">)</span>
+
+    <span class="c1"># define source and monitor</span>
+    <span class="n">target_neff</span> <span class="o">=</span> <span class="n">media</span><span class="p">[</span><span class="n">wg_mat</span><span class="p">]</span><span class="o">.</span><span class="n">nk_model</span><span class="p">(</span><span class="n">freq0</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">mode_spec</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">ModeSpec</span><span class="p">(</span><span class="n">num_modes</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">target_neff</span><span class="o">=</span><span class="n">target_neff</span><span class="p">)</span>
+    <span class="n">mode_source</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">ModeSource</span><span class="p">(</span>
+        <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="n">lda0</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">t</span> <span class="o">/</span> <span class="mi">2</span><span class="p">),</span>
+        <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">6</span> <span class="o">*</span> <span class="n">w</span><span class="p">,</span> <span class="mi">8</span> <span class="o">*</span> <span class="n">t</span><span class="p">),</span>
+        <span class="n">source_time</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">GaussianPulse</span><span class="p">(</span><span class="n">freq0</span><span class="o">=</span><span class="n">freq0</span><span class="p">,</span> <span class="n">fwidth</span><span class="o">=</span><span class="n">fwidth</span><span class="p">),</span>
+        <span class="n">direction</span><span class="o">=</span><span class="s2">"+"</span><span class="p">,</span>
+        <span class="n">mode_spec</span><span class="o">=</span><span class="n">mode_spec</span><span class="p">,</span>
+        <span class="n">mode_index</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="c1"># add a mode monitor to measure transmission</span>
+    <span class="n">mode_monitor</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">ModeMonitor</span><span class="p">(</span>
+        <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">r</span> <span class="o">+</span> <span class="n">lda0</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">t</span> <span class="o">/</span> <span class="mi">2</span><span class="p">),</span>
+        <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">6</span> <span class="o">*</span> <span class="n">w</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">8</span> <span class="o">*</span> <span class="n">t</span><span class="p">),</span>
+        <span class="n">freqs</span><span class="o">=</span><span class="n">freqs</span><span class="p">,</span>
+        <span class="n">mode_spec</span><span class="o">=</span><span class="n">mode_spec</span><span class="p">,</span>
+        <span class="n">name</span><span class="o">=</span><span class="s2">"mode"</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">run_time</span> <span class="o">=</span> <span class="mi">15</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">r</span> <span class="o">/</span> <span class="n">td</span><span class="o">.</span><span class="n">C_0</span>  <span class="c1"># simulation run time</span>
+
+    <span class="c1"># define simulation</span>
+    <span class="n">sim</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">Simulation</span><span class="p">(</span>
+        <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="n">r</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">r</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">t</span> <span class="o">/</span> <span class="mi">2</span><span class="p">),</span>
+        <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">r</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">w</span> <span class="o">+</span> <span class="n">lda0</span><span class="p">,</span> <span class="n">r</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">w</span> <span class="o">+</span> <span class="n">lda0</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">lda0</span><span class="p">),</span>
+        <span class="n">grid_spec</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">GridSpec</span><span class="o">.</span><span class="n">auto</span><span class="p">(</span><span class="n">min_steps_per_wvl</span><span class="o">=</span><span class="n">min_steps_per_wvl</span><span class="p">,</span> <span class="n">wavelength</span><span class="o">=</span><span class="n">lda0</span><span class="p">),</span>
+        <span class="n">structures</span><span class="o">=</span><span class="p">[</span><span class="n">bend</span><span class="p">,</span> <span class="n">sub</span><span class="p">],</span>
+        <span class="n">sources</span><span class="o">=</span><span class="p">[</span><span class="n">mode_source</span><span class="p">],</span>
+        <span class="n">monitors</span><span class="o">=</span><span class="p">[</span><span class="n">mode_monitor</span><span class="p">],</span>
+        <span class="n">run_time</span><span class="o">=</span><span class="n">run_time</span><span class="p">,</span>
+        <span class="n">boundary_spec</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">BoundarySpec</span><span class="o">.</span><span class="n">all_sides</span><span class="p">(</span>
+            <span class="n">boundary</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">PML</span><span class="p">()</span>
+        <span class="p">),</span>
+        <span class="n">medium</span><span class="o">=</span><span class="n">media</span><span class="p">[</span><span class="n">clad_mat</span><span class="p">],</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">sim</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=7be45962">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>Lastly, we need to define a few more functions to visualize the simulation, run the simulation, and plot the simulation result.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=2897cf9b">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[7]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># function to plot the simulation cross sections as well as the grid</span>
+<span class="k">def</span> <span class="nf">plot_sim</span><span class="p">():</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">thickness_box</span><span class="o">.</span><span class="n">get</span><span class="p">())</span> <span class="o">*</span> <span class="n">nm_to_um</span>
+    <span class="n">w</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">width_box</span><span class="o">.</span><span class="n">get</span><span class="p">())</span> <span class="o">*</span> <span class="n">nm_to_um</span>
+    
+    <span class="n">sim</span> <span class="o">=</span> <span class="n">make_sim</span><span class="p">()</span>
+    <span class="n">ax1</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+    <span class="n">sim</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">z</span><span class="o">=</span><span class="n">t</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax1</span><span class="p">)</span>
+    <span class="n">xy_canvas</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span>
+
+    <span class="n">ax3</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+    <span class="n">sim</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax3</span><span class="p">)</span>
+    <span class="n">sim</span><span class="o">.</span><span class="n">plot_grid</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax3</span><span class="p">)</span>
+    <span class="n">ax3</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="o">-</span><span class="n">w</span><span class="p">,</span> <span class="n">w</span><span class="p">)</span>
+    <span class="n">ax3</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span> <span class="o">*</span> <span class="n">t</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">t</span><span class="p">)</span>
+    <span class="n">yz_canvas</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span>
+
+<span class="c1"># function to run the simulation</span>
+<span class="k">def</span> <span class="nf">run_sim</span><span class="p">():</span>
+    <span class="n">ax2</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+    <span class="n">result_canvas</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span>
+    <span class="n">sim</span> <span class="o">=</span> <span class="n">make_sim</span><span class="p">()</span>
+    <span class="n">job</span> <span class="o">=</span> <span class="n">web</span><span class="o">.</span><span class="n">Job</span><span class="p">(</span><span class="n">simulation</span><span class="o">=</span><span class="n">sim</span><span class="p">,</span> <span class="n">task_name</span><span class="o">=</span><span class="s2">"Bend"</span><span class="p">)</span>
+    <span class="n">text_widget</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span>
+        <span class="s2">"end"</span><span class="p">,</span>
+        <span class="s2">"View your job in the web GUI at "</span>
+        <span class="o">+</span> <span class="sa">f</span><span class="s2">"tidy3d.simulation.cloud/workbench?taskId=</span><span class="si">{</span><span class="n">job</span><span class="o">.</span><span class="n">task_id</span><span class="si">}</span><span class="s2">.</span><span class="se">\n</span><span class="s2">"</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">text_widget</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s2">"end"</span><span class="p">,</span> <span class="s2">"Simulation started. Please wait.</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span> 
+    <span class="n">text_widget</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s2">"end"</span><span class="p">,</span> <span class="s2">"Once completed, bending loss will be automatically plotted.</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
+    <span class="n">text_widget</span><span class="o">.</span><span class="n">see</span><span class="p">(</span><span class="n">tk</span><span class="o">.</span><span class="n">END</span><span class="p">)</span>
+    <span class="n">root</span><span class="o">.</span><span class="n">update_idletasks</span><span class="p">()</span>
+    <span class="n">sim_data</span> <span class="o">=</span> <span class="n">job</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+    <span class="n">text_widget</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s2">"end"</span><span class="p">,</span> <span class="s2">"Simulation completed.</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
+    <span class="n">text_widget</span><span class="o">.</span><span class="n">see</span><span class="p">(</span><span class="n">tk</span><span class="o">.</span><span class="n">END</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">sim_data</span>
+
+<span class="c1"># function to plot the simulation result</span>
+<span class="k">def</span> <span class="nf">plot_result</span><span class="p">():</span>
+    <span class="n">_</span><span class="p">,</span> <span class="n">ldas</span> <span class="o">=</span> <span class="n">get_ldas</span><span class="p">()</span>
+    <span class="n">sim_data</span> <span class="o">=</span> <span class="n">run_sim</span><span class="p">()</span>
+    <span class="n">amp</span> <span class="o">=</span> <span class="n">sim_data</span><span class="p">[</span><span class="s2">"mode"</span><span class="p">]</span><span class="o">.</span><span class="n">amps</span><span class="o">.</span><span class="n">sel</span><span class="p">(</span><span class="n">mode_index</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">direction</span><span class="o">=</span><span class="s2">"+"</span><span class="p">)</span>
+    <span class="n">T</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">amp</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+
+    <span class="n">ax2</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ldas</span> <span class="o">/</span> <span class="n">nm_to_um</span><span class="p">,</span> <span class="mi">10</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">T</span><span class="p">),</span> <span class="n">c</span><span class="o">=</span><span class="s2">"red"</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">ax2</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">"Bending loss (dB)"</span><span class="p">)</span>
+    <span class="n">ax2</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">"Wavelength (nm)"</span><span class="p">)</span>
+    <span class="n">result_canvas</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=2ded523e">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>With all the preparation works ready, we can go ahead and start our GUI layout design.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=d8b7811e">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[8]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Set up the main window</span>
+<span class="n">root</span> <span class="o">=</span> <span class="n">tk</span><span class="o">.</span><span class="n">Tk</span><span class="p">()</span>
+<span class="n">root</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">"90 degree bend simulator"</span><span class="p">)</span>
+<span class="n">root</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="n">bg</span><span class="o">=</span><span class="s2">"white"</span><span class="p">)</span>
+<span class="n">root</span><span class="o">.</span><span class="n">resizable</span><span class="p">(</span><span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+
+<span class="c1"># add a combo box for substrate material selection</span>
+<span class="n">substrate_label</span> <span class="o">=</span> <span class="n">tk</span><span class="o">.</span><span class="n">Label</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="s2">"Substrate material:"</span><span class="p">,</span> <span class="n">bg</span><span class="o">=</span><span class="s2">"white"</span><span class="p">)</span>
+<span class="n">substrate_label</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">column</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">sticky</span><span class="o">=</span><span class="s2">"E"</span><span class="p">)</span>
+<span class="n">substrate_box</span> <span class="o">=</span> <span class="n">ttk</span><span class="o">.</span><span class="n">Combobox</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">values</span><span class="o">=</span><span class="n">materials</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
+<span class="n">substrate_box</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">column</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">sticky</span><span class="o">=</span><span class="s2">"W"</span><span class="p">)</span>
+<span class="n">substrate_box</span><span class="o">.</span><span class="n">current</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="c1"># add a combo box for cladding material selection</span>
+<span class="n">cladding_label</span> <span class="o">=</span> <span class="n">tk</span><span class="o">.</span><span class="n">Label</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="s2">"Cladding material:"</span><span class="p">,</span> <span class="n">bg</span><span class="o">=</span><span class="s2">"white"</span><span class="p">)</span>
+<span class="n">cladding_label</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">column</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">sticky</span><span class="o">=</span><span class="s2">"E"</span><span class="p">)</span>
+<span class="n">cladding_box</span> <span class="o">=</span> <span class="n">ttk</span><span class="o">.</span><span class="n">Combobox</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">values</span><span class="o">=</span><span class="n">materials</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
+<span class="n">cladding_box</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">column</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">sticky</span><span class="o">=</span><span class="s2">"W"</span><span class="p">)</span>
+<span class="n">cladding_box</span><span class="o">.</span><span class="n">current</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+
+<span class="c1"># add a combo box for waveguide material selection</span>
+<span class="n">wg_label</span> <span class="o">=</span> <span class="n">tk</span><span class="o">.</span><span class="n">Label</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="s2">"Waveguide material:"</span><span class="p">,</span> <span class="n">bg</span><span class="o">=</span><span class="s2">"white"</span><span class="p">)</span>
+<span class="n">wg_label</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">column</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">sticky</span><span class="o">=</span><span class="s2">"E"</span><span class="p">)</span>
+<span class="n">wg_box</span> <span class="o">=</span> <span class="n">ttk</span><span class="o">.</span><span class="n">Combobox</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">values</span><span class="o">=</span><span class="n">materials</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
+<span class="n">wg_box</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">column</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">sticky</span><span class="o">=</span><span class="s2">"W"</span><span class="p">)</span>
+<span class="n">wg_box</span><span class="o">.</span><span class="n">current</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+<span class="c1"># add a combo box for bend shape selection</span>
+<span class="n">shape_label</span> <span class="o">=</span> <span class="n">tk</span><span class="o">.</span><span class="n">Label</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="s2">"Bend shape:"</span><span class="p">,</span> <span class="n">bg</span><span class="o">=</span><span class="s2">"white"</span><span class="p">)</span>
+<span class="n">shape_label</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">column</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">sticky</span><span class="o">=</span><span class="s2">"E"</span><span class="p">)</span>
+<span class="n">shape_box</span> <span class="o">=</span> <span class="n">ttk</span><span class="o">.</span><span class="n">Combobox</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">values</span><span class="o">=</span><span class="n">shapes</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
+<span class="n">shape_box</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">column</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">sticky</span><span class="o">=</span><span class="s2">"W"</span><span class="p">)</span>
+<span class="n">shape_box</span><span class="o">.</span><span class="n">current</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+<span class="c1"># add a label and a input box for waveguide width</span>
+<span class="n">width_label</span> <span class="o">=</span> <span class="n">tk</span><span class="o">.</span><span class="n">Label</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="s2">"Waveguide width (nm):"</span><span class="p">,</span> <span class="n">bg</span><span class="o">=</span><span class="s2">"white"</span><span class="p">)</span>
+<span class="n">width_label</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">column</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">sticky</span><span class="o">=</span><span class="s2">"E"</span><span class="p">)</span>
+<span class="n">width_box</span> <span class="o">=</span> <span class="n">tk</span><span class="o">.</span><span class="n">Entry</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span>
+<span class="n">width_box</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">column</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">sticky</span><span class="o">=</span><span class="s2">"W"</span><span class="p">)</span>
+<span class="n">width_box</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="s2">"500"</span><span class="p">)</span>
+
+<span class="c1"># add a label and a input box for waveguide thickness</span>
+<span class="n">thickness_label</span> <span class="o">=</span> <span class="n">tk</span><span class="o">.</span><span class="n">Label</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="s2">"Waveguide thickness (nm):"</span><span class="p">,</span> <span class="n">bg</span><span class="o">=</span><span class="s2">"white"</span><span class="p">)</span>
+<span class="n">thickness_label</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">column</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">sticky</span><span class="o">=</span><span class="s2">"E"</span><span class="p">)</span>
+<span class="n">thickness_box</span> <span class="o">=</span> <span class="n">tk</span><span class="o">.</span><span class="n">Entry</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span>
+<span class="n">thickness_box</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">column</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">sticky</span><span class="o">=</span><span class="s2">"W"</span><span class="p">)</span>
+<span class="n">thickness_box</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="s2">"220"</span><span class="p">)</span>
+
+<span class="c1"># add a label and a input box for waveguide radius</span>
+<span class="n">radius_label</span> <span class="o">=</span> <span class="n">tk</span><span class="o">.</span><span class="n">Label</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="s2">"Bend radius (um):"</span><span class="p">,</span> <span class="n">bg</span><span class="o">=</span><span class="s2">"white"</span><span class="p">)</span>
+<span class="n">radius_label</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">column</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">sticky</span><span class="o">=</span><span class="s2">"E"</span><span class="p">)</span>
+<span class="n">radius_box</span> <span class="o">=</span> <span class="n">tk</span><span class="o">.</span><span class="n">Entry</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span>
+<span class="n">radius_box</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">column</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">sticky</span><span class="o">=</span><span class="s2">"W"</span><span class="p">)</span>
+<span class="n">radius_box</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="s2">"5"</span><span class="p">)</span>
+
+<span class="c1"># add a label and a input box for central wavelength</span>
+<span class="n">lda0_label</span> <span class="o">=</span> <span class="n">tk</span><span class="o">.</span><span class="n">Label</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="s2">"Central wavelength (nm):"</span><span class="p">,</span> <span class="n">bg</span><span class="o">=</span><span class="s2">"white"</span><span class="p">)</span>
+<span class="n">lda0_label</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">column</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">sticky</span><span class="o">=</span><span class="s2">"E"</span><span class="p">)</span>
+<span class="n">lda0_box</span> <span class="o">=</span> <span class="n">tk</span><span class="o">.</span><span class="n">Entry</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span>
+<span class="n">lda0_box</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">column</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">sticky</span><span class="o">=</span><span class="s2">"W"</span><span class="p">)</span>
+<span class="n">lda0_box</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="s2">"1550"</span><span class="p">)</span>
+
+<span class="c1"># add a label and a input box for bendwidth</span>
+<span class="n">bw_label</span> <span class="o">=</span> <span class="n">tk</span><span class="o">.</span><span class="n">Label</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="s2">"Bendwidth (nm):"</span><span class="p">,</span> <span class="n">bg</span><span class="o">=</span><span class="s2">"white"</span><span class="p">)</span>
+<span class="n">bw_label</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">column</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">sticky</span><span class="o">=</span><span class="s2">"E"</span><span class="p">)</span>
+<span class="n">bw_box</span> <span class="o">=</span> <span class="n">tk</span><span class="o">.</span><span class="n">Entry</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span>
+<span class="n">bw_box</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">column</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">sticky</span><span class="o">=</span><span class="s2">"W"</span><span class="p">)</span>
+<span class="n">bw_box</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="s2">"50"</span><span class="p">)</span>
+
+<span class="c1"># add a button for viewing simulation</span>
+<span class="n">view_button</span> <span class="o">=</span> <span class="n">tk</span><span class="o">.</span><span class="n">Button</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="s2">"View simulation"</span><span class="p">,</span> <span class="n">command</span><span class="o">=</span><span class="n">plot_sim</span><span class="p">)</span>
+<span class="n">view_button</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">column</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">sticky</span><span class="o">=</span><span class="s2">"E"</span><span class="p">)</span>
+
+<span class="c1"># add a button for running simulation</span>
+<span class="n">run_button</span> <span class="o">=</span> <span class="n">tk</span><span class="o">.</span><span class="n">Button</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="s2">"Run simulation"</span><span class="p">,</span> <span class="n">command</span><span class="o">=</span><span class="n">plot_result</span><span class="p">)</span>
+<span class="n">run_button</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">column</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">sticky</span><span class="o">=</span><span class="s2">"E"</span><span class="p">)</span>
+
+<span class="c1"># add a plot for xy cross section</span>
+<span class="n">fig1</span><span class="p">,</span> <span class="n">ax1</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">tight_layout</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">xy_canvas</span> <span class="o">=</span> <span class="n">FigureCanvasTkAgg</span><span class="p">(</span><span class="n">fig1</span><span class="p">,</span> <span class="n">master</span><span class="o">=</span><span class="n">root</span><span class="p">)</span>
+<span class="n">xy_canvas_widget</span> <span class="o">=</span> <span class="n">xy_canvas</span><span class="o">.</span><span class="n">get_tk_widget</span><span class="p">()</span>
+<span class="n">xy_canvas_widget</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">column</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="n">columnspan</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">fig1</span><span class="p">)</span> 
+
+<span class="c1"># add a plot for bending loss spectrum</span>
+<span class="n">fig2</span><span class="p">,</span> <span class="n">ax2</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">tight_layout</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">result_canvas</span> <span class="o">=</span> <span class="n">FigureCanvasTkAgg</span><span class="p">(</span><span class="n">fig2</span><span class="p">,</span> <span class="n">master</span><span class="o">=</span><span class="n">root</span><span class="p">)</span>
+<span class="n">result_canvas_widget</span> <span class="o">=</span> <span class="n">result_canvas</span><span class="o">.</span><span class="n">get_tk_widget</span><span class="p">()</span>
+<span class="n">result_canvas_widget</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">column</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="n">columnspan</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">fig2</span><span class="p">)</span> 
+
+<span class="c1"># add a plot for yz cross section</span>
+<span class="n">fig3</span><span class="p">,</span> <span class="n">ax3</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">tight_layout</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">yz_canvas</span> <span class="o">=</span> <span class="n">FigureCanvasTkAgg</span><span class="p">(</span><span class="n">fig3</span><span class="p">,</span> <span class="n">master</span><span class="o">=</span><span class="n">root</span><span class="p">)</span>
+<span class="n">yz_canvas_widget</span> <span class="o">=</span> <span class="n">yz_canvas</span><span class="o">.</span><span class="n">get_tk_widget</span><span class="p">()</span>
+<span class="n">yz_canvas_widget</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">column</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span> <span class="n">columnspan</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">fig3</span><span class="p">)</span> 
+
+<span class="c1"># add a text box to display information</span>
+<span class="n">text_widget</span> <span class="o">=</span> <span class="n">tk</span><span class="o">.</span><span class="n">Text</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">text_widget</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">column</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span> <span class="n">columnspan</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">sticky</span><span class="o">=</span><span class="s2">"ew"</span><span class="p">)</span>
+<span class="n">default_text</span> <span class="o">=</span> <span class="s2">"Click `View simulation` to view the simulation setup.</span><span class="se">\n</span><span class="s2">"</span>
+<span class="n">text_widget</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s2">"1.0"</span><span class="p">,</span> <span class="n">default_text</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=a9fc9730">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>With everything ready, we can now launch the GUI.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=12be563a">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[9]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">root</span><span class="o">.</span><span class="n">mainloop</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=7f6212dd">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>In conclusion, this notebook demonstrates how to make a simple purpose-specific GUI for Tidy3D. By following this workflow, users have the full freedom to create GUIs that suit their particular workflow and experience level. More complex features and visualizations can be implemented to further enhance the usability of the GUI if desired. Simple GUIs are a great way to get inexperienced users around you to get started with Tidy3D.</p>
+<p>For easier distribution, one can package this GUI into a stand-alone executable following tutorials such as <a href="https://www.pythonguis.com/tutorials/packaging-tkinter-applications-windows-pyinstaller/" target="_blank">here</a>.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=afa4cd4c">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[ ]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body>
+</html>

@@ -1,0 +1,47 @@
+{
+  "title": "Tidy3D GUI: Tutorial 5",
+  "pages": [
+    {
+      "id": "",
+      "title": "",
+      "transcript": "The proper selection of mode properties is crucial when setting up mode sources and monitors in FDTD simulations. When designing photonic devices like directional couplers, mode converters, or mode de-multiplexers, conducting a mode analysis is also an essential task. So, in this tutorial, we will guide you through the process of using the mode solver feature to obtain field distributions and effective indices of guided waveguide modes."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "Let's begin by analyzing the modes of a silicon nitride waveguide that is 1.5 microns wide and 0.75 micron thick, with a refractive index of 2, just like this example. After creating this waveguide, set the simulation domain to 20 microns in the x-direction, 5 microns in the y-direction, and 5 microns in the z-direction."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "Additionally, include a field monitor to visualize the fields propagating on the xy plane in the center of the waveguide. Then, adjust its wavelength to 1.55 microns."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "This waveguide has multiple guided modes with both transverse electric (TE) and transverse magnetic (TM) polarizations. Here, you can the first two TE and two TM guided modes. So, as an example, let's add a mode source to inject the TM1 mode into the waveguide."
+    },
+    {
+      "id": "",
+      "title": "",
+      "paragraphs": [
+        {
+          "title": "",
+          "transcript":"Add a new source, name it \"mode_source\", and choose the ModeSource type. Adjust its x-position to -9 microns and set its size to 0 in the x-direction, and 5 microns in the y-, and z-directions. Select the positive propagation direction. The \"num_freqs\" parameter accounts for the mode frequency dependency approximation. Set it to 7 for an accurate broadband simulation, and adjust the wavelength range between 1.5 and 1.6 microns. When you click the \"Apply\" button, you will see the source plane positioned at the end of the waveguide. The “mode_index” parameter defines which optical mode will be injected into the waveguide. As you will see later, the TM1 optical mode has the lowest effective index among those calculated by the mode solver, so set the \"mode_index\" to 3."
+        }, {
+          "title": "",
+          "transcript":"Now, click on the \"Add ModeSolver\" command. A new mode solver will be added under the \"Studies\" tab. When you select \"Configuration\", you can see that this solver is associated with the previously included mode source. Under \"Mode Specification\", set the \"num_modes\" to 4 and the \"target_neff\" to 3.47. This means we are searching for the four waveguide modes with the highest effective indices. Sometimes, you may need to limit the mode solver solutions to a specific polarization, which can be done using the \"filter_pol\" selection list. In this example, leave it at the default value. The \"Frequencies\" panel is pre-filled with the mode source parameters, so you can simply confirm it by clicking the \"Apply\" button."
+        }, {
+          "title": "",
+          "transcript":"Before running the mode solver, rename it to \"ModeAnalysis\", or other name you want. Then, click on the \"Run\" command. The solver status window will appear. Once the simulation is complete, click \"Go To Post Run Results\". The first plot you'll see is the electric field distribution of the TE0 waveguide mode. By cycling through the \"Mode Index\" selection list in ascending order, you will see the TM0, TE1, and finally, the TM1 mode. Selecting the \"Ez\" field component, you can easily verify that this mode exhibits odd symmetry about the z-axis. If you select the \"Effective index\" option, you'll find that this mode has an effective index of 1.55 at the center wavelength. Another important observation here is the decaying trend of all the effective index curves."
+        }, {
+          "title": "",
+          "transcript":"To conclude this example, select and run the FDTD study. Wait a few seconds for the task to finish, and navigate to the post run results. There, you can observe the TM1 mode being injected and propagating along the silicon nitride waveguide."
+        }, {
+          "title": "",
+          "transcript":"A similar procedure can be employed to set up mode monitors at different locations within an electromagnetic device and acquire as much information as needed."
+        }
+      ]
+    }
+  ]
+}

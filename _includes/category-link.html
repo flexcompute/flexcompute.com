@@ -1,0 +1,13 @@
+{% assign categories = include.categories %}
+{% assign size = categories | size %}
+{% if size > 0 %}
+{% if categories[0]!='' and categories[0] != nil %}
+ <a href="/blog/category/{{categories[0] | slugify}}/" class="{%if include.class%}{{include.class}}{%else%}badge badge-pill bg-brown{%endif%}">
+    {{categories[0]}}
+  </a>
+{% else %}
+<a href="/blog/category/{{categories[size] | slugify}}/" class="{%if include.class%}{{include.class}}{%else%}badge badge-pill bg-brown{%endif%}">
+  {{categories[size]}}
+</a>
+{% endif %}
+{% endif %}

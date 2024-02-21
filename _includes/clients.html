@@ -1,0 +1,17 @@
+{% assign clients = site.data.clients.data %}
+<div class="our-clients">
+
+  <div class="d-flex flex-wrap justify-content-around logo align-items-center" style="row-gap: 30px">
+    {% for client in clients %}
+    {% if client.enable %}
+    {% if client.type== 'txt' %}
+    <h2 class="font-size-50 text-center mb-0 title color-dark">{{client.name}}</h2>
+    {% else %}
+    <div class="item">
+      <img width="{{client.width}}" src="{{client.logo}}" alt="{{client.name}}">
+    </div>
+    {% endif %}
+    {% endif %}
+    {% endfor %}
+  </div>
+</div>

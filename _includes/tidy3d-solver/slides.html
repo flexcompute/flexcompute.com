@@ -1,0 +1,31 @@
+{% assign slides = include.slides %}
+<div class="carousel-slide">
+  <div class="left-control d-none d-md-flex">
+    <i class="jam jam-chevron-left font-size-32"></i>
+  </div>
+  <div class="slides">
+    <div class="content story-list-wrapper">
+      {% for slide in slides %}
+      <div class="item">
+        <div class="logo">
+          {%include webp-tag.html src=slide.logo class="aspect-ratio"%}
+        </div>
+        <div class="item-container text-left">
+          <div class="space70"></div>
+          <p class="font-size-16 line-height-24 color-dark-5 mb-0 p-24">{{slide.description}}</p>
+          {% if slide.link %}
+          <div class="link-mask">
+            <a id="{{slide.link_id}}" class="color-white" aria-label="Read more about customer success story" href="{{slide.link}}" target="{{slide.target}}">
+              <i class="jam jam-arrow-right"></i>
+            </a>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+      {%endfor%}
+    </div>
+  </div>
+  <div class="right-control d-none d-md-flex">
+    <i class="jam jam-chevron-right font-size-32"></i>
+  </div>
+</div>

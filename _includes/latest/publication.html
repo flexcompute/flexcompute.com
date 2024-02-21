@@ -1,0 +1,44 @@
+<div>
+  <h2 class="font-size-30 line-height-36 color-dark mb-30">Latest Publication</h2>
+  {% assign posts = site.publications | sort: "date" | reverse %}
+  {% for item in posts limit:1 %}
+  <div class="latest-card">
+    <div onclick="window.open('{{item.backlink}}','_self')" class="latest-card-first d-flex flex-column justify-content-between pt-40 pl-40 pr-40 text-center" style="min-height: 497px">
+      <div>
+        <img width="456" height="249" style="height: 249px" class="aspect-ratio" src="{{item.post_image}}" alt="{{item.title}}"/>
+        <div class="space30"></div>
+        <h3 class="post-title text-left font-size-20 line-height-28">{{item.title}}</h3>
+      </div>
+      <div class="latest-card-first-footer text-right">
+        {% assign newTitle = item.title | split: " " | join:"-" | split: "," %}
+        {% assign link_click_view = 'link,click-view' | split:"," %}
+        {% assign click_view_id = "_,pg,newsroom" | split: "," | concat: newTitle | concat: link_click_view | join: "_" | downcase %}
+        <a id="{{click_view_id}}" class="color-primary-hover d-flex align-items-center justify-content-end" href="{{item.backlink}}">
+          Learn More
+          <i class="jam jam-arrow-right"></i>
+        </a>
+      </div>
+    </div>
+    <div class="latest-card-extend pt-30 pb-30 pl-40 pr-40 d-flex">
+      <div class="row">
+        {% for post in posts offset:1 limit:2 %}
+        <div class="extend-item col-md-6 col-12">
+          {% assign extendTitle = post.title | split: " " | join:"-" | split: "," %}
+          {% assign link_title = 'link,title' | split:"," %}
+          {% assign link_title_id = "_,pg,newsroom" | split: "," | concat: extendTitle | concat: link_title | join: "_" | downcase %}
+          <a id="{{link_title_id}}" href="{{post.backlink}}" class="d-flex flex-column justify-content-between align-items-center" style="height: 100%">
+            <p class="line-height-28 font-size-18 color-dark-4" title="{{post.title}}">
+              {{post.title | strip_html | truncatewords: "6"}}
+            </p>
+            <div class="d-flex justify-content-center align-items-center extend-item-img">
+              <img width="100" height="100" class="aspect-ratio" style="width: 90%; height: 90%; object-fit: scale-down" src="{{post.post_image}}" alt="{{post.post_title | default: post.title}}">
+            </div>
+          </a>
+        </div>
+        {% endfor %}
+      </div>
+
+    </div>
+  </div>
+  {% endfor %}
+</div>

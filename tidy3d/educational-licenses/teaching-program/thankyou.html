@@ -1,0 +1,32 @@
+---
+layout: default
+custom_font: font2
+page_header:
+  enable: true
+  title: "Thank you"
+  sub_title: "Thank you for applying to the Tidy3D Teaching Program! Our representatives will be in touch within 2 business days with further information about the next steps."
+---
+
+{% include header.html extra_class="absolute transparent" logo_class="logo fc-logo" container_class="container" %}
+{% if page.page_header.enable %}
+{% assign page_d = page.page_header %}
+<div class="wrapper bg-opacity-default"
+     data-image-src="{{page_d.background_image}}">
+  <div class="container inner text-center">
+    <div class="space90"></div>
+    {% if page_d.title %}
+    <h1 class="page-title">{{page_d.title}}</h1>
+    {% endif %}
+    {% if page_d.sub_title %}
+    <p class="lead mb-30">{{page_d.sub_title}}</p>
+    {% endif %}
+    {% if page_d.button_text != null %}
+    <a href="{{page_d.button_url}}" class="btn btn-white btn-strong-hover">{{page_d.button_text}}</a>
+    {% endif %}
+  </div>
+  <!-- /.container -->
+</div>
+<!-- /.wrapper -->
+{% endif %}
+
+{% include footer_2.html %}

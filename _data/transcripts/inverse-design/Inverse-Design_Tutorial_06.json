@@ -1,0 +1,60 @@
+{
+  "title": "Inverse Design: Lecture 6",
+  "pages": [
+    {
+      "id": "",
+      "title": "",
+      "transcript": "Today we continue our discussion of inverse design in photonics by introducing another important method called “level set”."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "Thus far, we have discussed various ways to define the structure we wish to optimize through the inverse design process. Ultimately, one wants to adjust the dielectric function of a device until one achieves a structure with high performance. The use of gradient descent is an effective approach to generate this structure, and requires a representation of the dielectric function that is differentiable. Up to this point, we discussed two approaches to defining the device design region. Firstly, using topology optimization, where we describe the permittivity on a grid of pixels and continuously adjust the value of each pixel, applying filters and projections for feature size constraints. Secondly, we talked about shape optimization, where we parameterize certain geometric parameters describing the boundary of the device. For example, in the waveguide taper example, our parameter could be the thickness of the dielectric region in each vertical slice. The gradient is then computed with respect to these parameters. Today,we're going to introduce a new method “level set”, which is another way to parameterize the structure. In some sense, you can think of it as somewhat of an intermediate between topology optimization and shape optimization. It tends to produce structures that are more regular compared to topology optimization. On the other hand, it has a richer set of possible designs compared to shape optimization."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "Generally, the idea of the level set method is to define a continuous function over space. We can use this function to define a shape by choosing a threshold value. When the value of the function crosses that threshold, it becomes the boundary of the shape, as visualized in the figure above."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "As an example, suppose you have a complicated function, phi, as a function of x and y in this case (a two-dimensional space). The function value fluctuates below and above zero. You choose the threshold to be zero. When this function is above zero, you set the dielectric function or the permittivity to that of silicon. If it's below zero, you set it to the air. In this case, this function, together with the threshold, defines the dielectric structure."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "More specifically, we can use a function that is a sum of a set of Gaussian radial basis functions. Each of these basis functions is a Gaussian function defined by the center position and the width. The gaussian centers are distributed on a rectangular grid. We assign an amplitude to each base function, add them up, and produce a smooth level set function. Then, one can choose a threshold for defining the device. When optimizing the device, we keep these radial basis functions fixed. Instead, we vary the amplitude of each basis function using the gradient computed with respect to these quantities."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "As emphasized throughout these lectures, a significant challenge in inverse design is to specify constraints due to fabrication requirements. For example, you often must avoid a minimum feature size that is too small. Very typically, you also want the radius of curvature of the edges to be sufficiently large so that the structure does not have sharp kinks. In level set, one can modify the objective function to add terms that penalize the presence of troublesome features."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "Here is an example using a splitter. On the left is a structure that one could generate using the level set method. You can observe that the structure has holes on the order of a diameter of 100 nanometers and the minimum feature size here, the distance between two surfaces, is about 100 nanometers. It also has some regions with sharp curvatures and sharp corners. We can evaluate a penalty function on the level set function that looks at these two quantities. On the left we plot the penalty function for minimum feature size and on the right we plot the penalty function for local curvature. You can see that whenever the minimum feature size becomes small, the value of the penalty function starts to deviate from zero. Similarly, you can also define a penalty function associated with curvature. Again, whenever you have sharp corners, you can see the value of the penalty function increase."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "Now we show an example with optimization. Our goal is to design a compact waveguide splitter. We start with a single-mode waveguide, sending a fundamental mode in, and aim to design a region to split the input wave with as high efficiency as possible into two output waveguides. Considering a symmetric structure for efficient splitting, the initial structure generated by a specific level set function has a coupling efficiency of -6 dB, with a field distribution as shown. While it operates as a splitter, it's not ideal. An ideal splitter would distribute 50% of the input into each output waveguide, resulting in a desired coupling efficiency of -3 dB."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "Next, we apply gradient based optimization to the level set function without any feature size penalties. We show just the top half of the coupling region as the bottom half is hidden by mirror symmetry. The final structure is reached after about 40 iterations of gradient descent and achieves close to the desired coupling efficiency of -3 dB, showcasing an efficient power splitting into the two outgoing waveguides. However, the structure showcases small details like tiny air holes, small silicon regions, and regions with sharp curvatures."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "To address these problematic features, we combine the level set method with penalty functions designed to eliminate small features and smooth the boundaries at the silicon-air interface. Implementing this combination produces a structure with performance not far from the ideal -3 dB. The resulting design, also achieved in around 40 to 50 iterations, is more amenable to nanofabrication. Specifically, it contains only one sizable hole (about 127 nanometers), and the interface between silicon and air is much smoother."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "In summary, we discussed the level set method as another approach to parameterize device design. Level set tends to generate a richer set of structures than many shape optimization methods while also being generally smoother than pixel-by-pixel topology optimization. Specifically, this method directly produces a binary structure consisting only of, for example, silicon and air. As such, it is a valuable method for inverse design in photonics, as illustrated by its use in many on-chip integrated circuits."
+    }
+  ]
+}

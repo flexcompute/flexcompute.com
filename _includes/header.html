@@ -1,0 +1,169 @@
+<nav class="navbar {% if include.extra_class %} {{include.extra_class}} {% endif %} navbar-hover-opacity navbar-expand-lg" style="z-index: 1040">
+    <div class="{% if include.container_class %} {{include.container_class}} {% else %} container-fluid {% endif %} flex-row justify-content-center">
+        <div class="navbar-brand">
+            <a href="{{site.url}}" id="__g_header_home_btn">
+                {% if include.light_logo %}
+                <!--        <img src="{{site.data.general_settings.light_logo_1x}}"-->
+                <!--          srcset="{{site.data.general_settings.light_logo_1x}} 1x, {{site.data.general_settings.light_logo_2x}} 2x"-->
+                <!--          class="{% if include.logo_class %} {{include.logo_class}} {% else %} logo-light {% endif %}"-->
+                <!--          alt="{{site.data.general_settings.title}}" />-->
+                <img loading="eager" src="{{site.data.general_settings.light_logo_1x}}"
+                     class="aspect-ratio {% if include.logo_class %} {{include.logo_class}} logo-light {% else %} logo-light {% endif %}"
+                     alt="{{site.data.general_settings.title}}"/>
+                {% endif %}
+                <!--        <img src="{{site.data.general_settings.black_logo_1x}}"-->
+                <!--          srcset="{{site.data.general_settings.black_logo_1x}} 1x, {{site.data.general_settings.black_logo_2x}} 2x"-->
+                <!--          class="{% if include.logo_class %} {{include.logo_class}} {% else %} logo-dark {% endif %} {% if include.black_logo_disable %} d-none {% endif %}"-->
+                <!--          alt="{{site.data.general_settings.title}}" />-->
+                <img loading="eager" src="{{site.data.general_settings.black_logo_1x}}"
+                     class="aspect-ratio {% if include.logo_class %} {{include.logo_class}} logo-dark {% else %} logo-dark {% endif %} {% if include.black_logo_disable %} d-none {% endif %}"
+                     alt="{{site.data.general_settings.title}}"/>
+            </a>
+        </div>
+        <div class="navbar-other ml-auto order-lg-3">
+            <ul class="navbar-nav flex-row align-items-center">
+                <li class="nav-item">
+                    <div class="navbar-hamburger d-lg-none d-xl-none ml-auto">
+                        <a id="{{site.data.general_settings.sign_up.id}}_collapse" href="{{site.sign_up}}" class="btn btn-s btn-sm btn-fc-primary mb-0 mr-15" style="padding: 6px 10px">{{ site.data.general_settings.sign_up.text}}</a>
+                        <button class="hamburger animate plain" data-toggle="offcanvas-nav"><span></span></button>
+                    </div>
+                </li>
+
+                <!-- Sign Up for free -->
+                <li class="nav-item d-none d-lg-block pl-0">
+                    <a id="{{site.data.general_settings.sign_up.id}}" href="{{site.sign_up}}" class="btn btn-s btn-sm btn-fc-primary mb-0 mr-15" style="padding: 6px 10px">{{ site.data.general_settings.sign_up.text}}</a>
+                </li>
+                <!-- Log in -->
+                <li class="nav-item dropdown d-none d-lg-block pl-0">
+                    <a id="{{site.data.general_settings.login.id}}" class="btn btn-s btn-sm btn-dashed-primary dropdown-toggle d-flex mb-0 mr-15" href="{{site.sign_in}}" style="padding: 6px 10px">{{site.data.general_settings.login.text}}</a>
+                </li>
+
+                <!-- <li class="nav-item d-none d-xl-block pl-0">
+                    <a id="{{site.data.general_settings.contact_us.id}}" href="{{site.data.general_settings.contact_us.url}}" class="btn btn-s btn-sm btn-dashed-primary mb-0 mr-0" style="padding: 6px 10px">{{ site.data.general_settings.contact_us.text}}</a>
+                </li> -->
+            </ul>
+            <!-- /.navbar-nav -->
+        </div>
+        <!-- /.navbar-other -->
+        <div class="navbar-collapse offcanvas-nav">
+            <div class="offcanvas-header d-lg-none d-xl-none">
+                <a href="{{site.url}}" id="__g_header_collapse_home_btn">
+                    <!--          <img src="{{site.data.general_settings.light_logo_1x}}"-->
+                    <!--            srcset="{{site.data.general_settings.light_logo_1x}} 1x, {{site.data.general_settings.light_logo_2x}} 2x"-->
+                    <!--            alt="{{site.data.general_settings.title}}" />-->
+                    <img loading="eager" src="{{site.data.general_settings.light_logo_1x}}" alt="{{site.data.general_settings.title}}"/>
+                </a>
+                <button class="plain offcanvas-close offcanvas-nav-close"><i class="jam jam-close"></i></button>
+            </div>
+            <ul class="navbar-nav {% if include.alignment_class %} {{include.alignment_class}} {% else %} mx-auto {% endif %}">
+                {% for menu in site.data.site_map.main_menu %}
+                {% assign check_menu = menu.menu_type %}
+                {% case check_menu %}
+                {% when "megamenu" %}
+                <li class="nav-item">
+                    {% if menu.url %}
+                    <a class="nav-link" id="__g_header_{{menu.click_id}}" href="{{menu.url}}">{{menu.text}}</a>
+                    {% endif %}
+                    <ul class="dropdown-menu mega-menu boxed list-view text-left">
+                        <li class="mega-menu-content">
+                            <div class="row">
+                                {% for column in menu.submenu cols: 4 %}
+                                {% unless column.header_hide %}
+                                <div class="col-lg-3">
+                                    <ul class="list-unstyled">
+                                        <li><a class="dropdown-item" id="__g_header_{{column.click_id}}" href="{{column.url}}">{{column.text}}</a></li>
+                                    </ul>
+                                </div>
+                                {% endunless %}
+                                <!--/column -->
+                                {% endfor %}
+                            </div>
+                            <!--/.row -->
+                        </li>
+                        <!--/.mega-menu-content-->
+                    </ul>
+                    <!--/.dropdown-menu -->
+                </li>
+                {% when "dropdown"  %}
+                {% if menu.header_enable %}
+                <li class="nav-item dropdown {{ menu.class }}">
+                    {% if menu.url %}
+                    <a class="nav-link dropdown-toggle d-flex" id="__g_header_{{menu.click_id}}" href="{{menu.url}}">
+                        {{menu.text}}
+                        <i class="jam jam-chevron-down d-lg-block d-none" style="vertical-align: inherit;"></i>
+                    </a>
+                    {% else %}
+                    <a class="nav-link dropdown-toggle d-flex" id="__g_header_{{menu.click_id}}" style="cursor: pointer">
+                        {{menu.text}}
+                        <i class="jam jam-chevron-down d-lg-block d-none" style="vertical-align: inherit;"></i>
+                    </a>
+                    {% endif %}
+                    <ul class="dropdown-menu">
+                        {% for label_two in menu.label_two %}
+                        <li class="dropdown"><a class="dropdown-item dropdown-toggle" href="#">{{label_two.sub_menu_text}}</a>
+                            <ul class="dropdown-menu">
+                                {% for sub_menu in label_two.sub_menu %}
+                                <li class="nav-item"><a class="dropdown-item"
+                                                        id="__g_header_{{sub_menu.click_id}}"
+                                                        href="{{sub_menu.url}}">{{sub_menu.text}}</a></li>
+                                {% endfor %}
+                            </ul>
+                        </li>
+                        {% endfor %}
+                        {% if menu.submenu %}
+                        {% for label_one in menu.submenu %}
+                        {% unless label_one.header_hide %}
+                        <li class="{{label_one.headerClass}}">
+                            <a class="dropdown-item" id="__g_header_{{label_one.click_id}}" href="{{label_one.url}}" target="{{label_one.target}}">{{label_one.text}}</a>
+                        </li>
+                        {% endunless %}
+                        {% endfor %}
+                        {% endif %}
+                    </ul>
+                </li>
+                {% endif %}
+                {% when "onlyfrist" %}
+                <li class="nav-item dropdown {{ menu.class }}"><a id="__g_header_{{menu.click_id}}" class="nav-link dropdown-toggle" href="{{menu.url}}">{{menu.text}}</a></li>
+                {% else %}
+                <li class="nav-item dropdown {{ menu.class }}">
+                    <a id="__g_header_{{menu.click_id}}" class="nav-link dropdown-toggle d-flex align-items-center" href="{{menu.url}}">
+                        {% if menu.icon %}
+                        <i class="{{menu.icon}}"></i>
+                        {% endif %}
+                        {{menu.text}}
+                    </a>
+                    {% if menu.submenu %}
+                    <ul class="dropdown-menu">
+                        {% if menu.label_two %}
+                        {% for label_two in menu.label_two %}
+                        <li class="dropdown"><a id="__g_header_{{label_two.click_id}}" class="dropdown-item dropdown-toggle" href="#">{{label_two.sub_menu_text}}</a>
+                            <ul class="dropdown-menu">
+                                {% for sub_menu in label_two.sub_menu %}
+                                <li class="nav-item">
+                                    <a class="dropdown-item" id="__g_header_{{sub_menu.click_id}}" href="{{sub_menu.url}}">{{sub_menu.text}}</a>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </li>
+                        {% endfor %}
+                        {% endif %}
+                        {% if menu.submenu %}
+                        {% for label_one in menu.submenu %}
+                        {% unless label_one.header_hide %}
+                        <li><a class="dropdown-item" id="__g_header_{{label_one.click_id}}" href="{{label_one.url}}">{{label_one.text}}</a></li>
+                        {% endunless %}
+                        {% endfor %}
+                        {% endif %}
+                    </ul>
+                    {% endif %}
+                </li>
+                {% endcase %}
+                {% endfor %}
+            </ul>
+            <!-- /.navbar-nav -->
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container-fluid -->
+</nav>
+<!-- /.navbar -->

@@ -1,0 +1,125 @@
+---
+layout: default
+title: 'Tidy3D Technical Support | Flexcompute'
+description: Tidy3D Technical Support Form and Ticketing
+
+custom_font: font2
+enable_hubspot_form: true
+summary_section:
+  enable: true
+  small_description: Technical Support
+  title: "Tidy3D Customer Technical Support"
+  paragraph_list:
+    - text: "If you encounter any technical difficulties or have inquiries related to using Tidy3D, kindly submit a Customer Technical Support form, available on the right side of the page. To ensure efficient assistance, please provide a thorough description of the issue or question, along with relevant screenshots or a link to a <a class='color-primary-hover' href='https://www.loom.com/'>Loom Recording</a>."
+    - text: "As a token of our appreciation, For well-documented and confirmed bug report, we will reward you with up to <strong>50</strong> FlexCredits for verified bug reports."
+form_area:
+  enable: true
+  list:
+    - label: Summary
+      field_tag: input
+      field_type: text
+      field_name: SingleLine
+      checktype: c1
+      maxlength: 255
+      required: true
+      error_message: Summary is required
+      description: 'Please summarize your questions or findings briefly.'
+    - label: Description
+      field_tag: textarea
+      field_name: MultiLine
+      checktype: c1
+      maxlength: 5000
+      required: true
+      error_message: Description is required
+      description: 'Please describe your questions or findings in detail.'
+    - label: Tidy3D Version
+      field_tag: input
+      field_type: text
+      field_name: SingleLine1
+      checktype: c1
+      maxlength: 255
+      required: false
+      error_message: Tidy3D Version is required
+      description: 'Please specify the Tidy3D version your questions or findings are associated with.'
+    - label: Name
+      field_tag: input
+      field_type: text
+      field_name: Name_First
+      maxlength: 255
+      placeholder: First Name
+      class: 'col-lg-12 col-xl-6'
+      required: true
+      fieldType: 7
+      error_message: First Name Version is required
+    - field_tag: input
+      field_type: text
+      field_name: Name_Last
+      maxlength: 255
+      fieldType: 7
+      placeholder: Last Name
+      class: 'col-lg-12 col-xl-6'
+      required: true
+      error_message: Last Name Version is required
+    - label: Email
+      field_tag: input
+      field_type: email
+      maxlength: "255"
+      checktype: c5
+      field_name: Email
+      required: true
+      error_message: Email is required
+    - label: "Attachments (Images)"
+      field_tag: input
+      field_type: image
+      field_accept: image/jpeg,image/jpg,image/png,image/gif
+      checktype: c1
+      field_multiple: true
+      field_name: ImageUpload
+      change: "updateImageDisplay('ImageUpload',event)"
+      error_message: Choose any file for this field.
+      description: "Please upload image in .jpeg, .jpg, .png, or .gif format. You may upload up to 2 images. The size of each image should be no greater than 10 MB."
+---
+{% include header.html extra_class="absolute transparent" logo_class="logo fc-logo" container_class="container" %}
+<script async src="{{relative_url}}/assets/js/support/validation.js"></script>
+<div class="wrapper bg-opacity-default">
+  <div class="container inner pt-200">
+    <div class="row">
+      {%if page.summary_section.enable%}
+      <div class="col-lg-6 position-relative" style="top: -68px">
+        {%if page.summary_section.small_description%}
+        <p class="font-size-20 color-dark-5 mb-0">{{page.summary_section.small_description}}</p>
+        {%endif%}
+        {%if page.summary_section.title%}
+        <div class="space40"></div>
+        <h1 class="font-size-36 line-height-46">{{page.summary_section.title}}</h1>
+        {%endif%}
+
+        {%if page.summary_section.paragraph_list%}
+        <div class="space40"></div>
+        {%for paragraph in page.summary_section.paragraph_list %}
+        <p class="font-size-19 color-dark-5 mb-0 pr-0">{{paragraph.text}}</p>
+        <div class="space40"></div>
+        {%endfor%}
+        {%endif%}
+      </div>
+      {%endif%}
+      <div class="{%if page.summary_section.enable%}col-lg-6{%else%}col-lg-6{%endif%}">
+        <div class="fdtd-banner">
+          {% if page.form_area.enable %}
+          <div class="row justify-content-between align-items-start">
+            <div class="col-12 bg-white" style="padding: 0;">
+              <div class="pl-10 pr-10 position-relative">
+                <!-- using: https://forms.zohopublic.com/cms6/form/Tidy3DCustomerTechnicalSupport/formperma/vfuFnNOb5mWEmudkHOhaQnnl5XBt5vXrf_7c1GcZlK0/htmlRecords/submit-->
+                <!-- test: https://forms.zohopublic.com.cn/test20/form/Untitled/formperma/9_H5vXttRXHmWF4DgvN63QBX3X54a1OemkWhdT54UcE/htmlRecords/submit-->
+                {% include technical-support/tidy3d.html %}
+              </div>
+            </div>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="space80"></div>
+{% include footer_2.html %}

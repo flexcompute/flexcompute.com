@@ -1,0 +1,143 @@
+{
+  "title": "FDTD 101: Lecture 8",
+  "pages": [
+    {
+      "id": "intro-to-fdtd",
+      "title": "",
+      "transcript": "Today we will continue to talk about some of the more detailed issues regarding the FDTD simulation, and in particular the issue related to numerical dispersion."
+    },
+    {
+      "id": "",
+      "title": "Theory of transmission peaks in a dielectric slab",
+      "transcript": "As an illustration of the issue, Let’s go back to the example in <a id='_pg_fdtd101_Lecture-8_Lecture-2_link' href='/fdtd101/Lecture-2-Using-FDTD-to-Compute-a-Transmission-Spectrum/' class='color-primary-hover stop-propagation'>Lecture 2</a> where we compute the transmission of light normally incident on a silicon slab. We assume that the refractive index of silicon is 3.5, and the thickness of the slab $$d=500 nm$$. The figure on the right shows the analytic result. There are a series of resonant peaks where the transmission reaches 100%. The frequencies of these peaks can be easily predicted: the round trip phase $$2k_{z}d$$ at each peak needs to be multiples of $$2\\pi$$. Next, let’s try to simulate with the <a id='_pg_fdtd101_Lecture-8_FDTD-method_link' href='/tidy3d/learning-center/fdtd101/' class='color-primary-hover stop-propagation'>FDTD method</a>."
+    },
+    {
+      "id": "",
+      "title": "Why do transmission peaks computed with FDTD deviate from theory?",
+      "paragraphs": [
+        {
+          "title": "Why do transmission peaks computed with FDTD deviate from theory?",
+          "transcript": "First, we apply periodic boundary conditions at the four boundaries (YZ and XZ planes), and place PML at the top and the bottom of the computational domain. Next, we place a plane wave source, and a monitor to record the transmission spectrum."
+        },
+        {
+          "title": "",
+          "transcript": "The simulation result is shown as the blue dashed line in the figure on the right. We choose a spatial discretization level where the grid step size corresponds to 25 nm. As you can see, the result is not too bad. You also see a series of transmission peaks, but the detailed positions of these peaks shift a little bit from the exact analytic results. Also, if you look more carefully, you can see that the difference between the FDTD and the analytics is smaller on the low frequency side, and gradually grows towards higher frequencies."
+        },
+        {
+          "title": "",
+          "transcript": "It is important to understand where some of these numerical errors come from. The numerical error actually comes from numerical dispersion that arises due to the discretization of both space and time. So here I would like to give a brief discussion on the issue related to this numerical dispersion.\n"
+        }
+      ]
+    },
+    {
+      "id": "",
+      "title": "Dispersion relation of a physical wave in 1D",
+      "transcript": "As an introduction, in the previous slides we consider a simple problem where the light of a particular polarization is normally incident in vacuum. In that case, you can convert Maxwell's equation to a 1D wave equation. The solution is a monochromic traveling planewave. It contains the wavevector “k” that tells you about the spatial variation of the field, as well as the frequency ⍵ that tells the temporal variation. The wavevector factor and the frequency are related by the dispersion relation. The dispersion relation here is simply a straight line. This is physically what we would like to study. Now in the FDTD simulation, what we do numerically is to discretize this wave equation."
+    },
+    {
+      "id": "",
+      "title": "Numerical dispersion of FDTD in 1D",
+      "transcript": "Numerically, the spatial derivative operator and the temporal derivative operator are approximated with finite difference. In doing so, the wave is propagating on the discretized lattice as indicated in this figure. Both space and time are discretized. The solution of this discretized system is also a planewave characterized by the wavevector and the frequency. And again, there is a relation between the frequency and the wavevector. But the important point here is that the dispersion relation is no longer identical to the dispersion relation of the physical wave."
+    },
+    {
+      "id": "",
+      "title": "Mismatch of dispersion relations between physical and numerical waves",
+      "paragraphs": [
+        {
+          "title": "Mismatch of dispersion relations between physical and numerical waves",
+          "transcript": "Here is the figure illustrating the two dispersion relations for the physical system and the discretized numerical system. We're plotting the frequency as a function of the wavevector for these two relations. As you can see, in the physical system the $$\\omega-\\kappa$$ relation corresponds to straight lines. As for the discretized numerical system, at low frequency or at fine discretization level where $$Δx$$ is small in comparison to the wavelength, the numerical wave dispersion is very close to the physical wave dispersion. This is a regime that you would like the simulation to be in, because the wave propagation characteristic of the numerical system is very similar to the physical system."
+        },
+        {
+          "title": "",
+          "transcript": "On the other hand, as you increase frequency, or increase the spatial step size in comparison to the wavelength, the numerical wave dispersion can deviate from the physical wave dispersion. In this case, you will start to see more significant errors in the simulation. This is the issue that we refer to as numerical dispersion where the dispersion relation of the numerical system is different from the physical system."
+        }
+      ]
+    },
+    {
+      "id": "",
+      "title": "How does the numerical dispersion of FDTD affect simulation results?",
+      "transcript": "The deviation of the transmission spectrum in the FDTD simulation from the exact analytic result can be understood by analyzing the numerical dispersion relation. To highlight the issue of the numerical dispersion, we choose an even coarser spatial discretization where the grid step size is $$50 nm$$. Now, you can see that there is substantial difference between the FDTD and analytic results, in particular in terms of the frequency position of these resonance peaks. The difference can be understood by analyzing the corresponding numerical dispersion relation. The resonance corresponds to a fixed wavevector where the round trip phase is multiple of $$2\\pi$$. As you can see, at these wavevectors, the frequency differences in the left figure that plots the dispersion relation match exactly the frequency difference of transmission peaks in the right figure. At a low frequency, the difference is small; but as the frequency increases, the difference"
+    },
+    {
+      "id": "",
+      "title": "Finer resolution helps to reduce the impact of numerical dispersion",
+      "transcript": "At a finer resolution where the grid step size is $$25 nm$$, you can see that the dispersion relations become closer. Also in the transmission spectrum, the peak locations also become closer."
+    },
+    {
+      "id": "",
+      "title": "Transmission peaks match well at even finer resolution",
+      "transcript": "If you choose the grid step size to be $$12.5 nm$$, which corresponds to about 23 grid points per wavelength inside silicon around 300 THz, you can see that the FDTD simulation and the analytic calculation become very close to each other. This is consistent with the fact that the dispersion relations now become fairly close to each other."
+    },
+    {
+      "id": "",
+      "title": "Measuring numerical error of FDTD with RMS",
+      "transcript": "To give a more quantitative view of the error that results from numerical dispersion, we sample about 300 frequencies in the transmission spectrum here; and then measure root mean square error between the transmission from the FDTD results and the transmission from the analytic results across all these frequencies."
+    },
+    {
+      "id": "",
+      "title": "Convergence behavior of numerical dispersion",
+      "paragraphs": [
+        {
+          "title": "Convergence behavior of numerical dispersion",
+          "transcript": "Here is a plot showing the convergence of the error as a function of the number of grid points per wavelength inside silicon at the frequency in the middle of the spectrum. In general, you see that the error goes down as the number of grid points goes up. This is a plot in log-scale, and the slope here gives you the exponent of how the error depends on the grid step size. As you can infer from the slope here, this turns out to be a 2nd order scheme."
+        },
+        {
+          "title": "",
+          "transcript": "The numerical observation here indicates that if you want to achieve an error less than 1% averaged in this wavelength range, the number of grid points per wavelength in the middle of this wavelength range is about 30. This gives you an indication of the effect of the numerical dispersion, and the choice of number of grid points that you need to do to suppress the effect of numerical dispersion."
+        },
+        {
+          "title": "",
+          "transcript": "So up to this point, we have talked about the effect of numerical dispersion in one dimension. And this comes from the difference between the dispersion relations in one dimension. One of the main effects is the shift of the resonant frequencies in the transmission spectrum of light passing through a slab."
+        }
+      ]
+    },
+    {
+      "id": "",
+      "title": "Numerical dispersion relation of FDTD in 2D",
+      "transcript": "In higher dimensions, there are additional effects associated with numerical dispersion. Here we provide an illustration in 2D. The dispersion relations of the physical and the numerical waves are described by the two equations."
+    },
+    {
+      "id": "",
+      "title": "The anisotropy of numerical dispersion relation of FDTD",
+      "paragraphs": [
+        {
+          "title": "The anisotropy of numerical dispersion relation of FDTD",
+          "transcript": "You can visualize the dispersion relations in a so-called constant-frequency contour plot where a contour is depicted for selected frequencies. The contour describes the wave that satisfies the dispersion relation. For the physical system, at every frequency the contour of wavevector $$k_{x}$$ and $$k_{y}$$ lie on a circle, and the radii of these circles increase as the frequency increases. The left figure shows three contours corresponding to three different frequencies when the spatial discretization $$\u0394x$$ is fixed. Alternatively, you can interpret it as different discretization levels under a fixed frequency."
+        },
+        {
+          "title": "",
+          "transcript": "Similarly, one can plot the constant-frequency contour for the numerical dispersion. And again, you will get a set of closed Curves in the $$k_{x}$$ and $$k_{y}$$ space corresponding to different frequencies. For low frequencies, the contour is essentially a circle that is very close to the physical system. This is a regime that you would like to be in. On the other hand, as you increase the frequency or use a coarser grid, the shape of the contour deviates from the circular shape.This indicates that the numerical lattice has numerical anisotropy. For example, the phase velocity of the wave propagating along the x or y axis is different from that along the diagonal direction between x and y axis."
+        }
+      ]
+    },
+    {
+      "id": "",
+      "title": "Ideal wavefront pattern of dipole radiation",
+      "transcript": "This effect can be observed in FDTD simulations. As an illustration, one can look at the radiation pattern from a dipole. Here a dipole is assumed to lie along the z-direction, and oscillate at a particular frequency. We are interested in looking at the distribution of the electric field in the XY plane that cuts through the center of the dipole. As shown in the left figure, you can see a cylindrical wave going away from the dipole. The value of the field amplitude varies between positive and negative values in space, and one can define the wavefront by finding where the field takes the value zero. For the ideal case, these wave fronts are concentric circles centered at where the dipole is."
+    },
+    {
+      "id": "",
+      "title": "Wavefront of dipole radiation at fine resolution/low frequency",
+      "transcript": "One can look at the FDTD simulation by putting a dipole at the center of a computational cell that is surrounded by perfectly matched layers (PMLs). Here we examine the waveform plot, which shows you where the electric field takes the value of zero. For a given discretization at low frequency or for a given frequency at a fine resolution, you can find that the wave front, as indicated by the black line in the right figure, is very close to a circle.This indicates that numerical anisotropy is weak: the phase velocity in every direction in this plane is very similar to each other."
+    },
+    {
+      "id": "",
+      "title": "Wavefront of dipole radiation at coarse resolution/high frequency",
+      "paragraphs": [
+        {
+          "title": "Wavefront of dipole radiation at coarse resolution/high frequency",
+          "transcript": "On the other hand, if you increase the frequency for a given discretization or reduce the resolution of the discretization for a given frequency, the wavefront plot turns into the right figure. As indicated by the black line, the wavefront deviates from the ideal circular shape (red dashed line) that you would expect from ideal analytic results. In other words, the phase velocity of the wave along different directions becomes different to each other."
+        },
+        {
+          "title": "",
+          "transcript": "Therefore, in two dimensions as well as in three dimensions, one of the numerical dispersion effects is the numerical anisotropy: waves propagating along different directions have different phase velocities."
+        }
+      ]
+    },
+    {
+      "id": "",
+      "title": "Rule of thumb for choosing the spatial resolution in FDTD",
+      "transcript": "A brief summary: 1) a key source of error in FDTD simulations is related to numerical dispersion. It arises from the fact that the dispersion relation or the velocity of the wave in the numerical lattice is not identical to that of a physical system. 2) As a general rule of thumb to suppress numerical dispersion, one will need a fine spatial discretization. From experience, to have acceptable or relatively small numerical dispersion errors, it is usually sufficient to have the grid step size to be less than one twenties of the wavelength in material. However, it is important to really keep this kind of issue in mind as you design your simulation."
+    }
+  ]
+}

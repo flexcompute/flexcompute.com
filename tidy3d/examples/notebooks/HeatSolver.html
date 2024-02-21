@@ -1,0 +1,1876 @@
+---
+author: Tom Chen
+custom_css:
+- learning-center/fdtd101
+- learning-center/menu
+- learning-center/home
+custom_font: font2
+layout: learning-center/example-library
+menu_config:
+  collapsed: true
+  selected: Tidy3D Python
+metadata:
+  category: Heat Solver
+  enable_more_examples: false
+  more_examples:
+  - name: Thermally tuned waveguide
+    path: notebooks/MetalHeaterPhaseShifter/
+  - name: Thermally tuned ring resonator
+    path: notebooks/ThermallyTunedRingResonator/
+  - name: Fitting dispersive material models
+    path: notebooks/Fitting/
+  pagination:
+    next:
+      name: Thermally tuned waveguide
+      path: notebooks/MetalHeaterPhaseShifter/
+    previous:
+      name: Adjoint inverse design of a quantum emitter light extractor
+      path: notebooks/AdjointPlugin12LightExtractor/
+  type: python-tutorial
+page_title: Heat solver
+source_link: https:/docs.flexcompute.com/projects/tidy3d/en/latest/_sources/notebooks/HeatSolver.ipynb
+title: Heat solver
+---
+
+
+<html lang="en">
+<head><meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="/assets/tidy3d/examples/css/example-notebook.css" rel="stylesheet"/>
+
+
+
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS_CHTML-full,Safe"> </script>
+
+<script type="text/x-mathjax-config">
+    init_mathjax = function() {
+        if (window.MathJax) {
+        // MathJax loaded
+            MathJax.Hub.Config({
+                TeX: {
+                    equationNumbers: {
+                    autoNumber: "AMS",
+                    useLabelIds: true
+                    }
+                },
+                tex2jax: {
+                    inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+                    displayMath: [ ['$$','$$'], ["\\[","\\]"] ],
+                    processEscapes: true,
+                    processEnvironments: true
+                },
+                displayAlign: 'center',
+                CommonHTML: {
+                    linebreaks: {
+                    automatic: true
+                    }
+                }
+            });
+
+            MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
+        }
+    }
+    init_mathjax();
+    </script>
+<script type="module">
+  document.addEventListener("DOMContentLoaded", async () => {
+    const diagrams = document.querySelectorAll(".jp-Mermaid > pre.mermaid");
+    // do not load mermaidjs if not needed
+    if (!diagrams.length) {
+      return;
+    }
+    const mermaid = (await import("https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.7.0/mermaid.esm.min.mjs")).default;
+    const parser = new DOMParser();
+
+    mermaid.initialize({
+      maxTextSize: 100000,
+      maxEdges: 100000,
+      startOnLoad: false,
+      fontFamily: window
+        .getComputedStyle(document.body)
+        .getPropertyValue("--jp-ui-font-family"),
+      theme: document.querySelector("body[data-jp-theme-light='true']")
+        ? "default"
+        : "dark",
+    });
+
+    let _nextMermaidId = 0;
+
+    function makeMermaidImage(svg) {
+      const img = document.createElement("img");
+      const doc = parser.parseFromString(svg, "image/svg+xml");
+      const svgEl = doc.querySelector("svg");
+      const { maxWidth } = svgEl?.style || {};
+      const firstTitle = doc.querySelector("title");
+      const firstDesc = doc.querySelector("desc");
+
+      img.setAttribute("src", `data:image/svg+xml,${encodeURIComponent(svg)}`);
+      if (maxWidth) {
+        img.width = parseInt(maxWidth);
+      }
+      if (firstTitle) {
+        img.setAttribute("alt", firstTitle.textContent);
+      }
+      if (firstDesc) {
+        const caption = document.createElement("figcaption");
+        caption.className = "sr-only";
+        caption.textContent = firstDesc.textContent;
+        return [img, caption];
+      }
+      return [img];
+    }
+
+    async function makeMermaidError(text) {
+      let errorMessage = "";
+      try {
+        await mermaid.parse(text);
+      } catch (err) {
+        errorMessage = `${err}`;
+      }
+
+      const result = document.createElement("details");
+      result.className = 'jp-RenderedMermaid-Details';
+      const summary = document.createElement("summary");
+      summary.className = 'jp-RenderedMermaid-Summary';
+      const pre = document.createElement("pre");
+      const code = document.createElement("code");
+      code.innerText = text;
+      pre.appendChild(code);
+      summary.appendChild(pre);
+      result.appendChild(summary);
+
+      const warning = document.createElement("pre");
+      warning.innerText = errorMessage;
+      result.appendChild(warning);
+      return [result];
+    }
+
+    async function renderOneMarmaid(src) {
+      const id = `jp-mermaid-${_nextMermaidId++}`;
+      const parent = src.parentNode;
+      let raw = src.textContent.trim();
+      const el = document.createElement("div");
+      el.style.visibility = "hidden";
+      document.body.appendChild(el);
+      let results = null;
+      let output = null;
+      try {
+        let { svg } = await mermaid.render(id, raw, el);
+        svg = cleanMermaidSvg(svg);
+        results = makeMermaidImage(svg);
+        output = document.createElement("figure");
+        results.map(output.appendChild, output);
+      } catch (err) {
+        parent.classList.add("jp-mod-warning");
+        results = await makeMermaidError(raw);
+        output = results[0];
+      } finally {
+        el.remove();
+      }
+      parent.classList.add("jp-RenderedMermaid");
+      parent.appendChild(output);
+    }
+
+
+    /**
+     * Post-process to ensure mermaid diagrams contain only valid SVG and XHTML.
+     */
+    function cleanMermaidSvg(svg) {
+      return svg.replace(RE_VOID_ELEMENT, replaceVoidElement);
+    }
+
+
+    /**
+     * A regular expression for all void elements, which may include attributes and
+     * a slash.
+     *
+     * @see https://developer.mozilla.org/en-US/docs/Glossary/Void_element
+     *
+     * Of these, only `<br>` is generated by Mermaid in place of `\n`,
+     * but _any_ "malformed" tag will break the SVG rendering entirely.
+     */
+    const RE_VOID_ELEMENT =
+      /<\s*(area|base|br|col|embed|hr|img|input|link|meta|param|source|track|wbr)\s*([^>]*?)\s*>/gi;
+
+    /**
+     * Ensure a void element is closed with a slash, preserving any attributes.
+     */
+    function replaceVoidElement(match, tag, rest) {
+      rest = rest.trim();
+      if (!rest.endsWith('/')) {
+        rest = `${rest} /`;
+      }
+      return `<${tag} ${rest}>`;
+    }
+
+    void Promise.all([...diagrams].map(renderOneMarmaid));
+  });
+</script>
+
+</head>
+<body class="jp-Notebook" data-jp-theme-light="true" data-jp-theme-name="JupyterLab Light">
+<main>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=c73a3470-150b-41c7-ba62-b6ea65a6b367">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>This notebook demonstrates basic usage of Tidy3D's heat solver. We will consider three simple multimaterial setups, planar, cylindrical, and spherical, and compare results to analytical solutions.</p>
+<p>Tidy3D's heat feature solves a steady-state heat equation:
+$$ - k \nabla^2 T = s $$
+with temperature and flux continuity conditions on the interfaces between different materials:
+$$ T_1 = T_2 $$
+$$ k_1 \frac{\partial T_1}{\partial n} = k_2 \frac{\partial T_2}{\partial n} $$
+and subject to a set of boundary conditions on the simulation domain boundary consisting of the following types:</p>
+<ul>
+<li>Temperature (Dirichlet): $\displaystyle T = T_0$</li>
+<li>Heat flux (Neumann): $\displaystyle k \frac{\partial T}{\partial n} = f$</li>
+<li>Convection (Robin): $\displaystyle k \frac{\partial T}{\partial n} = c (T-T_0)$</li>
+</ul>
+<p>Here, $k$ is the thermal conductivity, $s$ is the volumetric heat source, $T_0$ is the prescribed temperature value, $f$ is the prescribed heat flux, and $c$ is the convection heat transfer coefficient.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=4c9bfaa0-3d7d-4404-8e34-ec5f3a770fe6">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>Package <a href="https://pypi.org/project/tidy3d/" target="_blank">tidy3d</a> contains all necessary API for defining and running heat simulation on our servers. Note that to use full visualization capabilities of heat solver data one needs package <code>vtk</code>. To install a compatible version of <code>vtk</code> one can use <code>pip install tidy3d[vtk]</code> command.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=410ae59c-a597-44f4-a761-0cc425eb4c8d">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[1]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">xarray</span> <span class="k">as</span> <span class="nn">xr</span>
+
+<span class="kn">import</span> <span class="nn">tidy3d</span> <span class="k">as</span> <span class="nn">td</span>
+<span class="kn">import</span> <span class="nn">tidy3d.web</span> <span class="k">as</span> <span class="nn">web</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=b030f382-1814-45ac-8155-e2812ec0e598">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="Defining-Simulation-Scene">Defining Simulation Scene<a class="anchor-link" href="#Defining-Simulation-Scene">¶</a></h2><p>First, we define basic parameter of the simulation setups. In all three cases, we will consider two material layers: one from coordinate <code>r1</code> to <code>r0</code>, and the second one from <code>r0</code> to <code>r2</code>. Thermal conductivities of the two layers are defined by parameters <code>conductivity1</code> and <code>conductivity2</code>. Each layer contains a volumetric heat source with rate given by <code>source1</code> and <code>source2</code>, correspondingly. Finally, the temperature at the bottom of the first layer is set to <code>temperature1</code> while the temperature at the top of the second layer is <code>temperature2</code>. Parameters must be provided in units consistent with the spatial units used in Tidy3D, microns. In these tests we do not simulate some specific material, thus, vales of material properties are rather arbitrary.</p>
+<img alt="Schematic of heat simulation setups" src="/assets/tidy3d/examples/image/heat_solver_schematic.png" width="700"/>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=12b6338e-b18d-46a2-8a3f-655a41202570">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[2]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># basic parameters of simulation setups</span>
+<span class="n">r1</span> <span class="o">=</span> <span class="mf">0.2</span>  <span class="c1"># um</span>
+<span class="n">r0</span> <span class="o">=</span> <span class="mf">0.5</span>  <span class="c1"># um</span>
+<span class="n">r2</span> <span class="o">=</span> <span class="mf">0.9</span>  <span class="c1"># um</span>
+<span class="n">conductivity1</span> <span class="o">=</span> <span class="mi">15</span>  <span class="c1"># W / (um * K)</span>
+<span class="n">conductivity2</span> <span class="o">=</span> <span class="mi">2</span>  <span class="c1"># W / (um * K)</span>
+<span class="n">source1</span> <span class="o">=</span> <span class="mi">1000</span>  <span class="c1"># J / (um^3 * K)</span>
+<span class="n">source2</span> <span class="o">=</span> <span class="mi">300</span>  <span class="c1"># J / (um^3 * K)</span>
+<span class="n">temperature1</span> <span class="o">=</span> <span class="mi">400</span>  <span class="c1"># K</span>
+<span class="n">temperature2</span> <span class="o">=</span> <span class="mi">300</span>  <span class="c1"># K</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=765cc2e9-ebc1-4988-b57f-74755c4ddc9a">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>To create materials for heat simulations, one must use <code>heat_spec</code> field of medium classes. Acceptable types for this field are <a href="https://docs.flexcompute.com/projects/tidy3d/en/latest/_autosummary/tidy3d.SolidSpec.html" target="_blank">SolidSpec</a> and <a href="https://docs.flexcompute.com/projects/tidy3d/en/latest/_autosummary/tidy3d.FluidSpec.html" target="_blank">FluidSpec</a> that define solid and fluid materials from the point of view of heat simulation. Note that the heat equation is only solved inside materials with <a href="https://docs.flexcompute.com/projects/tidy3d/en/latest/_autosummary/tidy3d.SolidSpec.html" target="_blank">SolidSpec</a>, regions with <a href="https://docs.flexcompute.com/projects/tidy3d/en/latest/_autosummary/tidy3d.FluidSpec.html" target="_blank">FluidSpec</a> or for which <code>heat_spec</code> is not provided at all are excluded in heat solver. Note that since currently Tidy3D supports only steady-state heat simulation parameter <code>capacity</code> will not have an effect on simulation results.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=47c25513-877e-494f-ac77-abdc91c1447c">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[3]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">medium1</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">Medium</span><span class="p">(</span>
+    <span class="n">heat_spec</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">SolidSpec</span><span class="p">(</span>
+        <span class="n">capacity</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">conductivity</span><span class="o">=</span><span class="n">conductivity1</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">"solid1"</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">medium2</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">Medium</span><span class="p">(</span>
+    <span class="n">heat_spec</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">SolidSpec</span><span class="p">(</span>
+        <span class="n">capacity</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">conductivity</span><span class="o">=</span><span class="n">conductivity2</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">"solid2"</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">background_medium</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">Medium</span><span class="p">(</span>
+    <span class="n">heat_spec</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">FluidSpec</span><span class="p">(),</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">"fluid"</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=6462e888-4557-4eff-8a30-234bf55b9253">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>Let us first consider constructing structures for the planar case. We define three overlapping boxes, such that in the region from <code>x=0</code> to <code>x=1</code> we have a two layers consisting made of materials <code>medium1</code> and <code>medium2</code> on the background of <code>background_medium</code>.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=297b95d5-2038-4c59-b348-cf44a345c9a1">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[4]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">planar_top_layer</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">Structure</span><span class="p">(</span>
+    <span class="n">geometry</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">Box</span><span class="p">(</span><span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">r2</span><span class="p">,</span> <span class="n">td</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">td</span><span class="o">.</span><span class="n">inf</span><span class="p">)),</span>
+    <span class="n">medium</span><span class="o">=</span><span class="n">medium2</span><span class="p">,</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">"top_layer"</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">planar_bottom_layer</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">Structure</span><span class="p">(</span>
+    <span class="n">geometry</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">Box</span><span class="p">(</span><span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">r0</span><span class="p">,</span> <span class="n">td</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">td</span><span class="o">.</span><span class="n">inf</span><span class="p">)),</span>
+    <span class="n">medium</span><span class="o">=</span><span class="n">medium1</span><span class="p">,</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">"bottom_layer"</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">planar_core</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">Structure</span><span class="p">(</span>
+    <span class="n">geometry</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">Box</span><span class="p">(</span><span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">r1</span><span class="p">,</span> <span class="n">td</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">td</span><span class="o">.</span><span class="n">inf</span><span class="p">)),</span>
+    <span class="n">medium</span><span class="o">=</span><span class="n">background_medium</span><span class="p">,</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">"core"</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=e48b8a36-d8c3-4072-8b1e-904ff782f1dd">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>Now we can define a <a href="https://docs.flexcompute.com/projects/tidy3d/en/latest/_autosummary/tidy3d.Scene.html" target="_blank">Scene</a> that specifies problem geometry for the planar case and visualize it. The purpose of class <a href="https://docs.flexcompute.com/projects/tidy3d/en/latest/_autosummary/tidy3d.Scene.html" target="_blank">Scene</a> is to allow visualization of simulation setups without providing physics-specific details such as sources, monitors, grid specifications, etc, and to provide an easy way to transfer simulation setups between different solvers.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=f5186819-6e49-4bc5-84d9-0c6c6049720d">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[5]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">scene_planar</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">Scene</span><span class="p">(</span>
+    <span class="n">structures</span><span class="o">=</span><span class="p">[</span><span class="n">planar_top_layer</span><span class="p">,</span> <span class="n">planar_bottom_layer</span><span class="p">,</span> <span class="n">planar_core</span><span class="p">],</span>
+    <span class="n">medium</span><span class="o">=</span><span class="n">background_medium</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=2a196772-9bae-452c-92ce-e3c587256a5b">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>Note that by default the region of plotting is determined automatically based on present in <a href="https://docs.flexcompute.com/projects/tidy3d/en/latest/_autosummary/tidy3d.Scene.html" target="_blank">Scene</a> structures. If all structures have infinite extent along a given axis (y in this particular case), the plotting limits are set to (-1, 1).</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=c3033acc-1c3e-46cf-9a09-5de81b82221c">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[6]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">scene_planar</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">z</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedImage jp-OutputArea-output" tabindex="0">
+<img alt="No description has been provided for this image" class="" src="/assets/tidy3d/examples/image/HeatSolver/HeatSolver_2.png"/>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=eaa6d372-63c3-4a7c-a9e9-580873d02283">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>Custom plotting limits can be specified by using arguments <code>vlim</code> and <code>hlim</code>.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=03233170-1243-4b2c-8856-f1f65b7c2e08">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[7]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">scene_planar</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">z</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">vlim</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">],</span> <span class="n">hlim</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedImage jp-OutputArea-output" tabindex="0">
+<img alt="No description has been provided for this image" class="" src="/assets/tidy3d/examples/image/HeatSolver/HeatSolver_3.png"/>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=e887a394-8c75-40ff-9233-52902d9b043a">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>Analogously, we create three cylinders and three spheres in cylindrical and spherical cases, respectively.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=e0b4019f-7fff-49ce-854f-bdd6fe97b847">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[8]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">cyl_top_layer</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">Structure</span><span class="p">(</span>
+    <span class="n">geometry</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">Cylinder</span><span class="p">(</span><span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">length</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">radius</span><span class="o">=</span><span class="n">r2</span><span class="p">),</span>
+    <span class="n">medium</span><span class="o">=</span><span class="n">medium2</span><span class="p">,</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">"top_layer"</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">cyl_bottom_layer</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">Structure</span><span class="p">(</span>
+    <span class="n">geometry</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">Cylinder</span><span class="p">(</span><span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">length</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">radius</span><span class="o">=</span><span class="n">r0</span><span class="p">),</span>
+    <span class="n">medium</span><span class="o">=</span><span class="n">medium1</span><span class="p">,</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">"bottom_layer"</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">cyl_core</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">Structure</span><span class="p">(</span>
+    <span class="n">geometry</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">Cylinder</span><span class="p">(</span><span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">length</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">radius</span><span class="o">=</span><span class="n">r1</span><span class="p">),</span>
+    <span class="n">medium</span><span class="o">=</span><span class="n">background_medium</span><span class="p">,</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">"core"</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">scene_cyl</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">Scene</span><span class="p">(</span>
+    <span class="n">structures</span><span class="o">=</span><span class="p">[</span><span class="n">cyl_top_layer</span><span class="p">,</span> <span class="n">cyl_bottom_layer</span><span class="p">,</span> <span class="n">cyl_core</span><span class="p">],</span>
+    <span class="n">medium</span><span class="o">=</span><span class="n">background_medium</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=371a4cbd-f57f-4315-a7bb-1103d130470d">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[9]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">sphere_top_layer</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">Structure</span><span class="p">(</span>
+    <span class="n">geometry</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">Sphere</span><span class="p">(</span><span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">radius</span><span class="o">=</span><span class="n">r2</span><span class="p">),</span>
+    <span class="n">medium</span><span class="o">=</span><span class="n">medium2</span><span class="p">,</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">"top_layer"</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">sphere_bottom_layer</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">Structure</span><span class="p">(</span>
+    <span class="n">geometry</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">Sphere</span><span class="p">(</span><span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">radius</span><span class="o">=</span><span class="n">r0</span><span class="p">),</span>
+    <span class="n">medium</span><span class="o">=</span><span class="n">medium1</span><span class="p">,</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">"bottom_layer"</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">sphere_core</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">Structure</span><span class="p">(</span>
+    <span class="n">geometry</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">Sphere</span><span class="p">(</span><span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">radius</span><span class="o">=</span><span class="n">r1</span><span class="p">),</span>
+    <span class="n">medium</span><span class="o">=</span><span class="n">background_medium</span><span class="p">,</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">"core"</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">scene_sphere</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">Scene</span><span class="p">(</span>
+    <span class="n">structures</span><span class="o">=</span><span class="p">[</span><span class="n">sphere_top_layer</span><span class="p">,</span> <span class="n">sphere_bottom_layer</span><span class="p">,</span> <span class="n">sphere_core</span><span class="p">],</span>
+    <span class="n">medium</span><span class="o">=</span><span class="n">background_medium</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=bcc5449d-b894-4836-aaa5-5ce15ac37e0c">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>Note that besides function <code>.plot()</code> that paints structures with colors not related to physical properties, there is also function <code>.plot_heat_conductivity()</code> that uses the heat conductivity of each structure to select a grayscale color for it. Note that regions where the heat equation is not solved (<a href="https://docs.flexcompute.com/projects/tidy3d/en/latest/_autosummary/tidy3d.FluidSpec.html" target="_blank">FluidSpec</a> or <code>heat_spec=None</code>) are displayed using light blue hatching.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=d25c5525-8e7e-4740-a290-36461c15a84f">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[10]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+<span class="n">scene_cyl</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">z</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<span class="n">scene_sphere</span><span class="o">.</span><span class="n">plot_heat_conductivity</span><span class="p">(</span><span class="n">z</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedImage jp-OutputArea-output" tabindex="0">
+<img alt="No description has been provided for this image" class="" src="/assets/tidy3d/examples/image/HeatSolver/HeatSolver_4.png"/>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=440eeb31-f1cb-49cb-85a6-916e0381a97e">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="Defining-Heat-Simulation">Defining Heat Simulation<a class="anchor-link" href="#Defining-Heat-Simulation">¶</a></h2>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=ca09bb68-dfce-4174-821d-73fe1eca2cb5">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>Now we proceed to defining a specification for actual heat simulations. We begin with setting simulation domain sizes for each case. Since planar and cylindrical cases are essentially one- and two-dimensional setups, correspondingly, we set a small domain size along invariant directions.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=9efe625d-6931-44b8-bb95-5397989395ee">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[11]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># simulation domain parameters</span>
+
+<span class="n">planar_sim_center</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="n">planar_sim_size</span> <span class="o">=</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">)</span>
+
+<span class="n">cyl_sim_center</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="n">cyl_sim_size</span> <span class="o">=</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">)</span>
+
+<span class="n">sphere_sim_center</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="n">sphere_sim_size</span> <span class="o">=</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=bd29940f-667f-4fe2-99ef-5c719ef7890f">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h3 id="Boundary-Conditions">Boundary Conditions<a class="anchor-link" href="#Boundary-Conditions">¶</a></h3><p>Boundary conditions for heat simulation are defined using class <a href="https://docs.flexcompute.com/projects/tidy3d/en/latest/_autosummary/tidy3d.HeatBoundarySpec.html" target="_blank">HeatBoundarySpec</a> that has two required field <code>condition</code> and <code>placement</code>. The first one defines what boundary conditions should be imposed and accept types <a href="https://docs.flexcompute.com/projects/tidy3d/en/latest/_autosummary/tidy3d.TemperatureBC.html" target="_blank">TemperatureBC</a>, <a href="https://docs.flexcompute.com/projects/tidy3d/en/latest/_autosummary/tidy3d.TemperatureBC.html" target="_blank">HeatFluxBC</a>, or <a href="https://docs.flexcompute.com/projects/tidy3d/en/latest/_autosummary/tidy3d.TemperatureBC.html" target="_blank">ConvectionBC</a>. While the second one specifies where exactly it should be applied. Available options for that are:</p>
+<ul>
+<li><a href="https://docs.flexcompute.com/projects/tidy3d/en/latest/_autosummary/tidy3d.StructureBoundary.html" target="_blank">StructureBoundary</a>: boundary of a structure. Only the portion of boundary not covered by subsequent structures is implied.</li>
+<li><a href="https://docs.flexcompute.com/projects/tidy3d/en/latest/_autosummary/tidy3d.StructureStructureInterface.html" target="_blank">StructureStructureInterface</a>: interface between two structures. Specifically, the portion of boundary of the succeeding structure inside the preceding structure is implied.</li>
+<li><a href="https://docs.flexcompute.com/projects/tidy3d/en/latest/_autosummary/tidy3d.MediumMediumInterface.html" target="_blank">MediumMediumInterface</a>: interface between two media.</li>
+<li><a href="https://docs.flexcompute.com/projects/tidy3d/en/latest/_autosummary/tidy3d.SimulationBoundary.html" target="_blank">SimulationBoundary</a>: boundary of heat simulation domain. Note that specific surfaces of simulation box can be chosen using field <code>surfaces</code>. For example: <code>SimulationBoundary(surfaces=["z+", "z-"])</code>. By default, all surfaces are selected.</li>
+<li><a href="https://docs.flexcompute.com/projects/tidy3d/en/latest/_autosummary/tidy3d.StructureSimulationBoundary.html" target="_blank">StructureSimulationBoundary</a>: part of boundary of heat simulation domain covered by a structure. Again, only the portion of boundary not covered by subsequent structures is implied.</li>
+</ul>
+<p>Note that to point at a particular structure or medium, one must set in their definitions field <code>name</code> and use it when creating a boundary condition placement.</p>
+<p>For these simulations we set temperature boundary conditions on the top of upper layer and the bottom of the lower layer. We also explicitly set adiabatic boundary conditions on the simulation domain boundary. Note that any solution domain boundaries, which include simulation domain boundary and boundaries facing mediums with empty or <a href="https://docs.flexcompute.com/projects/tidy3d/en/latest/_autosummary/tidy3d.FluidSpec.html" target="_blank">FluidSpec</a> type <code>heat_spec</code>, are assigned adiabatic boundary conditions if no other boundary conditions is specified. Thus, setting adiabatic boundary conditions on the simulation domain boundary is not necessary in these simulations and is only done for demonstration purposes.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=ec7bc0ee-1d64-4537-9735-84d372d7309f">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[12]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">bc_side</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">HeatBoundarySpec</span><span class="p">(</span>
+    <span class="n">condition</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">HeatFluxBC</span><span class="p">(</span><span class="n">flux</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span>
+    <span class="n">placement</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">SimulationBoundary</span><span class="p">(),</span>
+<span class="p">)</span>
+
+<span class="n">bc_top</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">HeatBoundarySpec</span><span class="p">(</span>
+    <span class="n">condition</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">TemperatureBC</span><span class="p">(</span><span class="n">temperature</span><span class="o">=</span><span class="n">temperature2</span><span class="p">),</span>
+    <span class="n">placement</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">StructureBoundary</span><span class="p">(</span><span class="n">structure</span><span class="o">=</span><span class="s2">"top_layer"</span><span class="p">),</span>
+<span class="p">)</span>
+
+<span class="n">bc_bottom</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">HeatBoundarySpec</span><span class="p">(</span>
+    <span class="n">condition</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">TemperatureBC</span><span class="p">(</span><span class="n">temperature</span><span class="o">=</span><span class="n">temperature1</span><span class="p">),</span>
+    <span class="n">placement</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">StructureStructureInterface</span><span class="p">(</span><span class="n">structures</span><span class="o">=</span><span class="p">[</span><span class="s2">"core"</span><span class="p">,</span> <span class="s2">"bottom_layer"</span><span class="p">]),</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=230f8b37-609d-41fb-b3b0-203528cfecc3">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>Note also that, for example, in case of <code>bc_bottom</code> we could have equivalently set <code>placement</code> to be <code>td.StructureBoundary(structure="core")</code> or <code>td.MediumMediumInterface(mediums=["solid1", "fluid"])</code>.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=a5946c21-9594-4880-93b7-8c3e722c2cf1">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h3 id="Sources">Sources<a class="anchor-link" href="#Sources">¶</a></h3><p>We define volumetric heat source in each of the layers using <a href="https://docs.flexcompute.com/projects/tidy3d/en/latest/_autosummary/tidy3d.UniformHeatSource.html" target="_blank">UniformHeatSource</a>. Similarly to boundary conditions placement, heat sources are assigned to structures by using their names.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=ac3cf25d-185e-4db7-90c9-087339b85e8e">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[13]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">source_bottom</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">UniformHeatSource</span><span class="p">(</span><span class="n">structures</span><span class="o">=</span><span class="p">[</span><span class="s2">"bottom_layer"</span><span class="p">],</span> <span class="n">rate</span><span class="o">=</span><span class="n">source1</span><span class="p">)</span>
+<span class="n">source_top</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">UniformHeatSource</span><span class="p">(</span><span class="n">structures</span><span class="o">=</span><span class="p">[</span><span class="s2">"top_layer"</span><span class="p">],</span> <span class="n">rate</span><span class="o">=</span><span class="n">source2</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=1474d47c-eb4e-49d5-8602-99a1ccb63139">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h3 id="Monitors">Monitors<a class="anchor-link" href="#Monitors">¶</a></h3><p>Like in optic Tidy3D simulations, the results of calculations are stored using monitors. Currently, heat simulations support <a href="https://docs.flexcompute.com/projects/tidy3d/en/latest/_autosummary/tidy3d.TemperatureMonitor.html" target="_blank">TemperatureMonitor</a> that record spatial temperature distributions in chosen rectangular region. For convenience, even though the heat equation is solved on unstructured grids, <a href="https://docs.flexcompute.com/projects/tidy3d/en/latest/_autosummary/tidy3d.TemperatureMonitor.html" target="_blank">TemperatureMonitor</a>'s return simulation results on equivalent Cartesian grids.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=3c926f82-90f2-4d41-a865-4ec21f0a274a">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[14]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">temp_mnt</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">TemperatureMonitor</span><span class="p">(</span>
+    <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">td</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">td</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">td</span><span class="o">.</span><span class="n">inf</span><span class="p">),</span> <span class="n">name</span><span class="o">=</span><span class="s2">"temperature"</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=283eb648-74a6-43e4-9136-7edc9ee85d58">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h3 id="HeatSimulation-class"><a href="https://docs.flexcompute.com/projects/tidy3d/en/latest/_autosummary/tidy3d.HeatSimulation.html" target="_blank">HeatSimulation</a> class<a class="anchor-link" href="#HeatSimulation-class">¶</a></h3><p>Combining purely geometric information about the simulation setup (<a href="https://docs.flexcompute.com/projects/tidy3d/en/latest/_autosummary/tidy3d.Scene.html" target="_blank">Scene</a>) and heat solver specific definitions we can create <a href="https://docs.flexcompute.com/projects/tidy3d/en/latest/_autosummary/tidy3d.HeatSimulation.html" target="_blank">HeatSimulation</a> instance for each of the three cases. Structures and background medium of a <a href="https://docs.flexcompute.com/projects/tidy3d/en/latest/_autosummary/tidy3d.Scene.html" target="_blank">Scene</a> can either passed directly to a <a href="https://docs.flexcompute.com/projects/tidy3d/en/latest/_autosummary/tidy3d.HeatSimulation.html" target="_blank">HeatSimulation</a> instance or a convenience method <code>.from_scene()</code> can be used. Note that in these examples we can make use of field <code>symmetry</code> to reduce the size and cost of simulations.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=d5b766c7-a714-43ab-865a-b48fe5d397b3">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[15]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">heat_sim_planar</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">HeatSimulation</span><span class="p">(</span>
+    <span class="n">center</span><span class="o">=</span><span class="n">planar_sim_center</span><span class="p">,</span>
+    <span class="n">size</span><span class="o">=</span><span class="n">planar_sim_size</span><span class="p">,</span>
+    <span class="n">medium</span><span class="o">=</span><span class="n">scene_planar</span><span class="o">.</span><span class="n">medium</span><span class="p">,</span>
+    <span class="n">structures</span><span class="o">=</span><span class="n">scene_planar</span><span class="o">.</span><span class="n">structures</span><span class="p">,</span>
+    <span class="n">boundary_spec</span><span class="o">=</span><span class="p">[</span><span class="n">bc_top</span><span class="p">,</span> <span class="n">bc_bottom</span><span class="p">,</span> <span class="n">bc_side</span><span class="p">],</span>
+    <span class="n">sources</span><span class="o">=</span><span class="p">[</span><span class="n">source_bottom</span><span class="p">,</span> <span class="n">source_top</span><span class="p">],</span>
+    <span class="n">grid_spec</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">UniformUnstructuredGrid</span><span class="p">(</span><span class="n">dl</span><span class="o">=</span><span class="mf">0.02</span><span class="p">),</span>
+    <span class="n">monitors</span><span class="o">=</span><span class="p">[</span><span class="n">temp_mnt</span><span class="p">],</span>
+    <span class="n">symmetry</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+<span class="p">)</span>
+
+<span class="n">heat_sim_cyl</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">HeatSimulation</span><span class="o">.</span><span class="n">from_scene</span><span class="p">(</span>
+    <span class="n">center</span><span class="o">=</span><span class="n">cyl_sim_center</span><span class="p">,</span>
+    <span class="n">size</span><span class="o">=</span><span class="n">cyl_sim_size</span><span class="p">,</span>
+    <span class="n">scene</span><span class="o">=</span><span class="n">scene_cyl</span><span class="p">,</span>
+    <span class="n">boundary_spec</span><span class="o">=</span><span class="p">[</span><span class="n">bc_top</span><span class="p">,</span> <span class="n">bc_bottom</span><span class="p">,</span> <span class="n">bc_side</span><span class="p">],</span>
+    <span class="n">sources</span><span class="o">=</span><span class="p">[</span><span class="n">source_bottom</span><span class="p">,</span> <span class="n">source_top</span><span class="p">],</span>
+    <span class="n">grid_spec</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">UniformUnstructuredGrid</span><span class="p">(</span><span class="n">dl</span><span class="o">=</span><span class="mf">0.02</span><span class="p">),</span>
+    <span class="n">monitors</span><span class="o">=</span><span class="p">[</span><span class="n">temp_mnt</span><span class="p">],</span>
+    <span class="n">symmetry</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+<span class="p">)</span>
+
+<span class="n">heat_sim_sphere</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">HeatSimulation</span><span class="o">.</span><span class="n">from_scene</span><span class="p">(</span>
+    <span class="n">center</span><span class="o">=</span><span class="n">sphere_sim_center</span><span class="p">,</span>
+    <span class="n">size</span><span class="o">=</span><span class="n">sphere_sim_size</span><span class="p">,</span>
+    <span class="n">scene</span><span class="o">=</span><span class="n">scene_sphere</span><span class="p">,</span>
+    <span class="n">boundary_spec</span><span class="o">=</span><span class="p">[</span><span class="n">bc_top</span><span class="p">,</span> <span class="n">bc_bottom</span><span class="p">,</span> <span class="n">bc_side</span><span class="p">],</span>
+    <span class="n">sources</span><span class="o">=</span><span class="p">[</span><span class="n">source_bottom</span><span class="p">,</span> <span class="n">source_top</span><span class="p">],</span>
+    <span class="n">grid_spec</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">UniformUnstructuredGrid</span><span class="p">(</span><span class="n">dl</span><span class="o">=</span><span class="mf">0.02</span><span class="p">),</span>
+    <span class="n">monitors</span><span class="o">=</span><span class="p">[</span><span class="n">temp_mnt</span><span class="p">],</span>
+    <span class="n">symmetry</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=199aac97-7b8c-4ca0-82eb-a5656cd9de96">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>Plotting function of <a href="https://docs.flexcompute.com/projects/tidy3d/en/latest/_autosummary/tidy3d.HeatSimulation.html" target="_blank">HeatSimulation</a> displays heat conductivity information of structures using gray scale colors, assigned boundary conditions using thick lines (orange for <a href="https://docs.flexcompute.com/projects/tidy3d/en/latest/_autosummary/tidy3d.TemperatureBC.html" target="_blank">TemperatureBC</a>, green for <a href="https://docs.flexcompute.com/projects/tidy3d/en/latest/_autosummary/tidy3d.HeatFluxBC.html" target="_blank">HeatFluxBC</a>, and brown for <a href="https://docs.flexcompute.com/projects/tidy3d/en/latest/_autosummary/tidy3d.ConvectionBC.html" target="_blank">ConvectionBC</a>), and heat sources as colored dots. Specifying <code>colorbar="conductivity"</code> or <code>colorbar="source"</code> changes the colorbar accordingly.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=92ca500b-64e5-4730-95b4-429a71cc0635">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[16]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+<span class="n">heat_sim_planar</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">z</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<span class="n">heat_sim_cyl</span><span class="o">.</span><span class="n">plot_heat_conductivity</span><span class="p">(</span><span class="n">z</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">colorbar</span><span class="o">=</span><span class="s2">"conductivity"</span><span class="p">)</span>
+<span class="n">heat_sim_sphere</span><span class="o">.</span><span class="n">plot_heat_conductivity</span><span class="p">(</span><span class="n">z</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">colorbar</span><span class="o">=</span><span class="s2">"source"</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedImage jp-OutputArea-output" tabindex="0">
+<img alt="No description has been provided for this image" class="" src="/assets/tidy3d/examples/image/HeatSolver/HeatSolver_5.png"/>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=d35764d5-eb4c-4e5b-99c6-d4c05a87ead2">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="Solving">Solving<a class="anchor-link" href="#Solving">¶</a></h2><p>Now we can submit the three heat simulation to our servers for solving. Heat simulations share the same web API as optic simulations. That is, we can submit simulations to servers in three ways.</p>
+<p>The first way is to use function <a href="https://docs.flexcompute.com/projects/tidy3d/en/latest/_autosummary/tidy3d.web.run.html" target="_blank">web.run()</a>, which returns simulation results as a <a href="https://docs.flexcompute.com/projects/tidy3d/en/latest/_autosummary/tidy3d.HeatSimulationData.html" target="_blank">HeatSimulationData</a> instance.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=56dd07cd-33b4-4de7-8fcf-0b9085d05100">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[17]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">heat_sim_data_planar</span> <span class="o">=</span> <span class="n">web</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">simulation</span><span class="o">=</span><span class="n">heat_sim_planar</span><span class="p">,</span> <span class="n">task_name</span><span class="o">=</span><span class="s2">"heat_sim_planar"</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">17:51:16 CST </span>Created task <span style="color: #008000; text-decoration-color: #008000">'heat_sim_planar'</span> with task_id                        
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">             </span><span style="color: #008000; text-decoration-color: #008000">'he-8a572c99-409f-4ea2-aab5-ebf6d8657ef9'</span> and task_type <span style="color: #008000; text-decoration-color: #008000">'HEAT'</span>.    
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">             </span>Tidy3D's heat solver is currently in the beta stage. All heat      
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">             </span>simulations are charged a flat fee of <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0.025</span> FlexCredit.            
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Output()</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">17:51:18 CST </span>Heat solver status: queued                                         
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">17:51:22 CST </span>Heat solver status: preprocess                                     
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">17:51:31 CST </span>Heat solver status: running                                        
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">17:51:35 CST </span>Heat solver status: postprocess                                    
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">17:51:42 CST </span>Heat solver status: success                                        
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Output()</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">17:51:43 CST </span>loading simulation from simulation_data.hdf5                       
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=86f3a7b5-cfba-4108-86d2-62feb1ba0854">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>Alternatively, one can use <a href="https://docs.flexcompute.com/projects/tidy3d/en/latest/_autosummary/tidy3d.web.Job.html" target="_blank">Job</a> container.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=670ad927-f6e3-42c3-8cad-9fa62bc3667d">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[18]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">job</span> <span class="o">=</span> <span class="n">web</span><span class="o">.</span><span class="n">Job</span><span class="p">(</span><span class="n">simulation</span><span class="o">=</span><span class="n">heat_sim_cyl</span><span class="p">,</span> <span class="n">task_name</span><span class="o">=</span><span class="s2">"heat_sim_cyl"</span><span class="p">)</span>
+<span class="n">estimate_cost</span> <span class="o">=</span> <span class="n">job</span><span class="o">.</span><span class="n">estimate_cost</span><span class="p">()</span>
+<span class="n">heat_sim_data_cyl</span> <span class="o">=</span> <span class="n">job</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">             </span>Created task <span style="color: #008000; text-decoration-color: #008000">'heat_sim_cyl'</span> with task_id                           
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">             </span><span style="color: #008000; text-decoration-color: #008000">'he-658764d9-abfc-43d6-9591-a01b6fa72c22'</span> and task_type <span style="color: #008000; text-decoration-color: #008000">'HEAT'</span>.    
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">             </span>Tidy3D's heat solver is currently in the beta stage. All heat      
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">             </span>simulations are charged a flat fee of <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0.025</span> FlexCredit.            
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Output()</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">17:51:44 CST </span>Maximum FlexCredit cost: <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0.025</span>. Minimum cost depends on task       
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">             </span>execution details. Use <span style="color: #008000; text-decoration-color: #008000">'web.real_cost(task_id)'</span> to get the billed  
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">             </span>FlexCredit cost after a simulation run.                            
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">             </span>Heat solver status: queued                                         
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">17:51:48 CST </span>Heat solver status: preprocess                                     
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">17:51:55 CST </span>Heat solver status: running                                        
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">17:51:58 CST </span>Heat solver status: postprocess                                    
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">17:52:03 CST </span>Heat solver status: success                                        
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Output()</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">17:52:04 CST </span>loading simulation from simulation_data.hdf5                       
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=fca5fe86-1d6a-4eff-978f-5ff64c464eb8">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>Finally, class <a href="https://docs.flexcompute.com/projects/tidy3d/en/latest/_autosummary/tidy3d.web.Batch.html" target="_blank">Batch</a> facilitates a convenient submission of multiple simulations. Let us, for example, submit the spherical case at several different mesh resolutions.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=cec97c0e-22bf-46e2-ad6a-c86434d57318">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[19]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">dl_refine</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.04</span><span class="p">,</span> <span class="mf">0.02</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">,</span> <span class="mf">0.005</span><span class="p">]</span>
+<span class="n">heat_sim_sphere_refine</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"heat_sim_sphere_"</span>
+    <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">dl</span><span class="p">):</span> <span class="n">heat_sim_sphere</span><span class="o">.</span><span class="n">updated_copy</span><span class="p">(</span><span class="n">grid_spec</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">UniformUnstructuredGrid</span><span class="p">(</span><span class="n">dl</span><span class="o">=</span><span class="n">dl</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">dl</span> <span class="ow">in</span> <span class="n">dl_refine</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=796b1ef2-c9a4-41f3-9455-7c74f0d11ba8">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[20]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">batch</span> <span class="o">=</span> <span class="n">web</span><span class="o">.</span><span class="n">Batch</span><span class="p">(</span><span class="n">simulations</span><span class="o">=</span><span class="n">heat_sim_sphere_refine</span><span class="p">)</span>
+<span class="n">batch_data</span> <span class="o">=</span> <span class="n">batch</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+<span class="n">heat_sim_data_sphere</span> <span class="o">=</span> <span class="n">batch_data</span><span class="p">[</span><span class="s2">"heat_sim_sphere_0.02"</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">17:52:05 CST </span>Created task <span style="color: #008000; text-decoration-color: #008000">'heat_sim_sphere_0.04'</span> with task_id                   
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">             </span><span style="color: #008000; text-decoration-color: #008000">'he-f756ad56-296a-45c9-b3ce-bd9eecfccc05'</span> and task_type <span style="color: #008000; text-decoration-color: #008000">'HEAT'</span>.    
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">             </span>Tidy3D's heat solver is currently in the beta stage. All heat      
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">             </span>simulations are charged a flat fee of <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0.025</span> FlexCredit.            
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Output()</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">             </span>Created task <span style="color: #008000; text-decoration-color: #008000">'heat_sim_sphere_0.02'</span> with task_id                   
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">             </span><span style="color: #008000; text-decoration-color: #008000">'he-cee86e93-9476-481a-b8e8-06996df5f8b5'</span> and task_type <span style="color: #008000; text-decoration-color: #008000">'HEAT'</span>.    
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">             </span>Tidy3D's heat solver is currently in the beta stage. All heat      
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">             </span>simulations are charged a flat fee of <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0.025</span> FlexCredit.            
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Output()</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">17:52:06 CST </span>Created task <span style="color: #008000; text-decoration-color: #008000">'heat_sim_sphere_0.01'</span> with task_id                   
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">             </span><span style="color: #008000; text-decoration-color: #008000">'he-868788d7-3e93-4ef1-911e-a7392874b42b'</span> and task_type <span style="color: #008000; text-decoration-color: #008000">'HEAT'</span>.    
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">             </span>Tidy3D's heat solver is currently in the beta stage. All heat      
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">             </span>simulations are charged a flat fee of <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0.025</span> FlexCredit.            
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Output()</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">17:52:07 CST </span>Created task <span style="color: #008000; text-decoration-color: #008000">'heat_sim_sphere_0.005'</span> with task_id                  
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">             </span><span style="color: #008000; text-decoration-color: #008000">'he-0efec419-22ac-43b3-a675-052fbf26d2a5'</span> and task_type <span style="color: #008000; text-decoration-color: #008000">'HEAT'</span>.    
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">             </span>Tidy3D's heat solver is currently in the beta stage. All heat      
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">             </span>simulations are charged a flat fee of <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0.025</span> FlexCredit.            
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Output()</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">17:52:09 CST </span>Started working on Batch.                                          
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">17:52:10 CST </span>Maximum FlexCredit cost: <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0.100</span> for the whole batch.                
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">             </span>Use <span style="color: #008000; text-decoration-color: #008000">'Batch.real_cost()'</span> to get the billed FlexCredit cost after the
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">             </span>Batch has completed.                                               
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Output()</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">17:56:56 CST </span>Batch complete.                                                    
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Output()</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">17:56:58 CST </span>loading simulation from                                            
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">             </span>.<span style="color: #800080; text-decoration-color: #800080">/</span><span style="color: #ff00ff; text-decoration-color: #ff00ff">he-cee86e93-9476-481a-b8e8-06996df5f8b5.hdf5</span>                     
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=abb02e1d-1fa9-4532-8e91-8cdc6697e8e3">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>For more details on Tidy3D's web API see <a href="https://www.flexcompute.com/tidy3d/examples/notebooks/WebAPI/" target="_blank">the corresponding tutorial</a>.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=f68de674-b957-4fcc-9606-1e1e27cf35af">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="Data-Visualization-and-Analysis">Data Visualization and Analysis<a class="anchor-link" href="#Data-Visualization-and-Analysis">¶</a></h2><p>The solution data to the heat equation is stored in <a href="https://docs.flexcompute.com/projects/tidy3d/en/latest/_autosummary/tidy3d.HeatSimulationData.html" target="_blank">HeatSimulationData</a> object. Its field <code>.data</code> contains <code>HeatMonitorData</code> instances corresponding to each monitor from <code>HeatSimulation.monitor</code>. Note that the heat equation is solved on an unstructured mesh, however, for a more convenient manipulation of data in the Tidy3D python client, the solution results are transferred onto a Cartesian grid. Temperature distribution corresponding to a given monitor can be visualized using function <code>HeatSimulationData.plot_data()</code>. Note that numerical solutions are slightly extrapolated outside of solution domains, such that interpolation can be accurately performed anywhere in the vicinity of the solution domain. Additionally, data in monitor data objects are automatically expanded with the respect to the symmetry of the original simulation.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=ff9265f8-f2de-4da5-ae75-07cd30d8f109">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[21]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+
+<span class="n">heat_sim_data_planar</span><span class="o">.</span><span class="n">plot_field</span><span class="p">(</span><span class="s2">"temperature"</span><span class="p">,</span> <span class="n">z</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+<span class="n">heat_sim_data_cyl</span><span class="o">.</span><span class="n">plot_field</span><span class="p">(</span><span class="s2">"temperature"</span><span class="p">,</span> <span class="n">z</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+<span class="n">heat_sim_data_sphere</span><span class="o">.</span><span class="n">plot_field</span><span class="p">(</span><span class="s2">"temperature"</span><span class="p">,</span> <span class="n">z</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedImage jp-OutputArea-output" tabindex="0">
+<img alt="No description has been provided for this image" class="" src="/assets/tidy3d/examples/image/HeatSolver/HeatSolver_6.png"/>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=cafce68d-9f4a-46e4-8817-dfb1f3af6f12">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>Now let us compare the numerical results to analytical solutions. The general solution to the quasi one-dimensional steady-state heat equation in 1, 2 and 3 dimensions can be written as
+$$ T_a(r) = - \frac1{2N} \frac{s}{k} r^2 + A u_N(r) + B,$$
+where $N$ is the problem's dimensionality, $s$ is the source term, $k$ is the heat conductivity, $A$ and $B$ are coefficients defined by boundary conditions, and $u_N(r)$ is the Green function, which is given by
+$$ u_1(r) = r, \quad u_2(r) = \log(r), \quad u_3(r) = - \frac{1}{r}, $$
+in one, two, and three dimensions, respectively.</p>
+<p>The analytical solutions $T(r)$ for the considered two-layer setups can be decomposed into two parts $T_1(r)$ and $T_2(r)$ such that
+$$ T(r) = T_1(r),\, r &lt; r_0$$
+$$ T(r) = T_2(r),\, r &gt; r_0$$
+and each of which are given by the form $T_a(r)$ but with different coefficients $A_1$, $B_1$ and $A_2$, $B_2$. These are defined from boundary conditions:
+$$T_1(r_1) = t_1,$$
+$$T_2(r_2) = t_2,$$
+$$T_1(r_0) = T_2(r_0),$$
+$$k_1 \frac{d}{dr} T_1(r_0) = k_2\frac{d}{dr} T_2(r_0).$$
+Thus, coefficients $A_1$, $A_2$, $B_1$, and $B_2$ can be found by solving linear system
+$$
+\begin{pmatrix}
+u_N(r_1)&amp; 1&amp; 0&amp; 0 \\
+0&amp; 0&amp; u_N(r_2)&amp; 1 \\
+u_N(r_0)&amp; 1&amp; -u(r_0)&amp; -1 \\
+k_1 \frac{du_N}{dr}(r_0)&amp; 0&amp; -k_2 * \frac{du_N}{dr}(r_0)&amp; 0
+\end{pmatrix}
+\begin{pmatrix}
+A_1 \\ B_1 \\ A_2 \\ B_2
+\end{pmatrix}
+=
+\begin{pmatrix}
+t_1 + \frac1{2N} \frac{s_1}{k_1} r_1^2 \\
+t_2 + \frac1{2N} \frac{s_2}{k_2} r_2^2 \\
+\frac1{2N}  r_0^2 \left(\frac{s_1}{k_1} - \frac{s_2}{k_2}\right) \\
+\frac1{N} r_0 (s_1 - s_2),
+\end{pmatrix}
+$$</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=9c2da341-ae50-487e-80ab-051029e6ee5b">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[22]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># green functions of steady state heat equations in 1, 2, and 3 dimensions</span>
+<span class="n">u</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="k">lambda</span> <span class="n">r</span><span class="p">:</span> <span class="n">r</span><span class="p">,</span>
+    <span class="k">lambda</span> <span class="n">r</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">r</span><span class="p">),</span>
+    <span class="k">lambda</span> <span class="n">r</span><span class="p">:</span> <span class="o">-</span><span class="mf">1.0</span> <span class="o">/</span> <span class="n">r</span><span class="p">,</span>
+<span class="p">]</span>
+
+<span class="c1">#  and their derivatives</span>
+<span class="n">du</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="k">lambda</span> <span class="n">r</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="k">lambda</span> <span class="n">r</span><span class="p">:</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">r</span><span class="p">,</span>
+    <span class="k">lambda</span> <span class="n">r</span><span class="p">:</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">r</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=f4046bd7-dffe-45be-a9e8-640bc5416b6b">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>Let us define a helper function that finds coefficients $A$ and $B$ from given boundary conditions.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=6422b156-173c-49be-a69a-93ec4632b7da">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[23]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">get_coeffs</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">du</span><span class="p">,</span> <span class="n">N</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""A helper function that finds coefficients of analytical solution in N dimensions."""</span>
+
+    <span class="c1"># construct matrix</span>
+    <span class="n">mat</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">[</span><span class="n">u</span><span class="p">(</span><span class="n">r1</span><span class="p">),</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+        <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">u</span><span class="p">(</span><span class="n">r2</span><span class="p">),</span> <span class="mi">1</span><span class="p">],</span>
+        <span class="p">[</span><span class="n">u</span><span class="p">(</span><span class="n">r0</span><span class="p">),</span> <span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="n">u</span><span class="p">(</span><span class="n">r0</span><span class="p">),</span> <span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+        <span class="p">[</span><span class="n">conductivity1</span> <span class="o">*</span> <span class="n">du</span><span class="p">(</span><span class="n">r0</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="n">conductivity2</span> <span class="o">*</span> <span class="n">du</span><span class="p">(</span><span class="n">r0</span><span class="p">),</span> <span class="mi">0</span><span class="p">],</span>
+    <span class="p">]</span>
+
+    <span class="c1"># construct right-hand side</span>
+    <span class="n">rhs</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">temperature1</span> <span class="o">+</span> <span class="mf">0.5</span> <span class="o">/</span> <span class="n">N</span> <span class="o">*</span> <span class="n">source1</span> <span class="o">/</span> <span class="n">conductivity1</span> <span class="o">*</span> <span class="n">r1</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span>
+        <span class="n">temperature2</span> <span class="o">+</span> <span class="mf">0.5</span> <span class="o">/</span> <span class="n">N</span> <span class="o">*</span> <span class="n">source2</span> <span class="o">/</span> <span class="n">conductivity2</span> <span class="o">*</span> <span class="n">r2</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span>
+        <span class="mf">0.5</span> <span class="o">/</span> <span class="n">N</span> <span class="o">*</span> <span class="n">r0</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">source1</span> <span class="o">/</span> <span class="n">conductivity1</span> <span class="o">-</span> <span class="n">source2</span> <span class="o">/</span> <span class="n">conductivity2</span><span class="p">),</span>
+        <span class="mi">2</span> <span class="o">*</span> <span class="mf">0.5</span> <span class="o">/</span> <span class="n">N</span> <span class="o">*</span> <span class="n">r0</span> <span class="o">*</span> <span class="p">(</span><span class="n">source1</span> <span class="o">-</span> <span class="n">source2</span><span class="p">),</span>
+    <span class="p">]</span>
+
+    <span class="n">A1</span><span class="p">,</span> <span class="n">B1</span><span class="p">,</span> <span class="n">B2</span><span class="p">,</span> <span class="n">A2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">mat</span><span class="p">,</span> <span class="n">rhs</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">A1</span><span class="p">,</span> <span class="n">B1</span><span class="p">,</span> <span class="n">B2</span><span class="p">,</span> <span class="n">A2</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=28ccb560-f24b-4266-905a-a46cf5553b94">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>And another helper function that samples analytical solution at given coordinate points.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=82f29f6a-905c-4094-b1d6-bc6eebd7994b">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[24]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">get_analytical</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""A helper function that samples N-dimensional analytical solution at coordinates x."""</span>
+
+    <span class="n">A1</span><span class="p">,</span> <span class="n">B1</span><span class="p">,</span> <span class="n">A2</span><span class="p">,</span> <span class="n">B2</span> <span class="o">=</span> <span class="n">get_coeffs</span><span class="p">(</span><span class="n">u</span><span class="p">[</span><span class="n">N</span> <span class="o">-</span> <span class="mi">1</span><span class="p">],</span> <span class="n">du</span><span class="p">[</span><span class="n">N</span> <span class="o">-</span> <span class="mi">1</span><span class="p">],</span> <span class="n">N</span><span class="p">)</span>
+
+    <span class="n">x1_inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">r1</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">r0</span><span class="p">)</span>
+    <span class="n">x2_inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">r0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">r2</span><span class="p">)</span>
+
+    <span class="n">x1</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="n">x1_inds</span><span class="p">]</span>
+    <span class="n">x2</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="n">x2_inds</span><span class="p">]</span>
+
+    <span class="n">T1</span> <span class="o">=</span> <span class="o">-</span><span class="mf">0.5</span> <span class="o">/</span> <span class="n">N</span> <span class="o">*</span> <span class="n">source1</span> <span class="o">/</span> <span class="n">conductivity1</span> <span class="o">*</span> <span class="n">x1</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">A1</span> <span class="o">*</span> <span class="n">u</span><span class="p">[</span><span class="n">N</span> <span class="o">-</span> <span class="mi">1</span><span class="p">](</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">x1</span><span class="p">))</span> <span class="o">+</span> <span class="n">B1</span>
+    <span class="n">T2</span> <span class="o">=</span> <span class="o">-</span><span class="mf">0.5</span> <span class="o">/</span> <span class="n">N</span> <span class="o">*</span> <span class="n">source2</span> <span class="o">/</span> <span class="n">conductivity2</span> <span class="o">*</span> <span class="n">x2</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">A2</span> <span class="o">*</span> <span class="n">u</span><span class="p">[</span><span class="n">N</span> <span class="o">-</span> <span class="mi">1</span><span class="p">](</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">x2</span><span class="p">))</span> <span class="o">+</span> <span class="n">B2</span>
+
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">x1</span><span class="p">,</span> <span class="n">x2</span><span class="p">)),</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">T1</span><span class="p">,</span> <span class="n">T2</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=314cb414-bad9-498f-a16d-10a956c2807b">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>Now we can easily find analytical solution for each of the cases and compare them to the numerical ones. Let us first perform this comparison for all three cases at resolution <code>dl = 0.02</code>.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=b3a58d54-11ce-4b55-bda2-2cfc6b108d7a">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[25]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">x</span> <span class="o">=</span> <span class="n">heat_sim_data_planar</span><span class="p">[</span><span class="s2">"temperature"</span><span class="p">]</span><span class="o">.</span><span class="n">temperature</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="s2">"x"</span><span class="p">]</span>
+<span class="n">x_exact_planar</span><span class="p">,</span> <span class="n">temperature_exact_planar</span> <span class="o">=</span> <span class="n">get_analytical</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+
+<span class="n">x</span> <span class="o">=</span> <span class="n">heat_sim_data_cyl</span><span class="p">[</span><span class="s2">"temperature"</span><span class="p">]</span><span class="o">.</span><span class="n">temperature</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="s2">"x"</span><span class="p">]</span>
+<span class="n">x_exact_cyl</span><span class="p">,</span> <span class="n">temperature_exact_cyl</span> <span class="o">=</span> <span class="n">get_analytical</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+
+<span class="n">x</span> <span class="o">=</span> <span class="n">heat_sim_data_sphere</span><span class="p">[</span><span class="s2">"temperature"</span><span class="p">]</span><span class="o">.</span><span class="n">temperature</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="s2">"x"</span><span class="p">]</span>
+<span class="n">x_exact_sphere</span><span class="p">,</span> <span class="n">temperature_exact_sphere</span> <span class="o">=</span> <span class="n">get_analytical</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=25843fdc-f797-4224-a411-0379b536fca3">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>As one can see the solver accurately reproduces analytical solutions.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=0052abf4-2b1c-44ba-81db-83bbb5d9051d">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[26]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x_exact_planar</span><span class="p">,</span> <span class="n">temperature_exact_planar</span><span class="p">,</span> <span class="s2">"."</span><span class="p">)</span>
+<span class="n">heat_sim_data_planar</span><span class="p">[</span><span class="s2">"temperature"</span><span class="p">]</span><span class="o">.</span><span class="n">temperature</span><span class="o">.</span><span class="n">sel</span><span class="p">(</span><span class="n">z</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">"nearest"</span><span class="p">)</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+    <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">legend</span><span class="p">([</span><span class="s2">"numerical"</span><span class="p">,</span> <span class="s2">"analytical"</span><span class="p">])</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">([</span><span class="mi">300</span><span class="p">,</span> <span class="mi">400</span><span class="p">])</span>
+
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x_exact_cyl</span><span class="p">,</span> <span class="n">temperature_exact_cyl</span><span class="p">,</span> <span class="s2">"."</span><span class="p">)</span>
+<span class="n">heat_sim_data_cyl</span><span class="p">[</span><span class="s2">"temperature"</span><span class="p">]</span><span class="o">.</span><span class="n">temperature</span><span class="o">.</span><span class="n">sel</span><span class="p">(</span><span class="n">z</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">"nearest"</span><span class="p">)</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+    <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+<span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">legend</span><span class="p">([</span><span class="s2">"numerical"</span><span class="p">,</span> <span class="s2">"analytical"</span><span class="p">])</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">([</span><span class="mi">300</span><span class="p">,</span> <span class="mi">400</span><span class="p">])</span>
+
+<span class="n">ax</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x_exact_sphere</span><span class="p">,</span> <span class="n">temperature_exact_sphere</span><span class="p">,</span> <span class="s2">"."</span><span class="p">)</span>
+<span class="n">heat_sim_data_sphere</span><span class="p">[</span><span class="s2">"temperature"</span><span class="p">]</span><span class="o">.</span><span class="n">temperature</span><span class="o">.</span><span class="n">sel</span><span class="p">(</span><span class="n">z</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">"nearest"</span><span class="p">)</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+    <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+<span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">legend</span><span class="p">([</span><span class="s2">"numerical"</span><span class="p">,</span> <span class="s2">"analytical"</span><span class="p">])</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">([</span><span class="mi">300</span><span class="p">,</span> <span class="mi">400</span><span class="p">])</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedImage jp-OutputArea-output" tabindex="0">
+<img alt="No description has been provided for this image" class="" src="/assets/tidy3d/examples/image/HeatSolver/HeatSolver_7.png"/>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=5d0059b1-51cf-4968-b229-eb470cd057d0">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>Now, let us look at the convergence of numerical solutions in the spherical case. Plotting the dependence of the solution error (in the $L_\infty$ norm) on the grid resolution we confirm the second order of convergence of the solver.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=eb6497d6-31e0-488f-86cf-03076cb0a09e">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[27]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+<span class="n">errors</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">ind</span><span class="p">,</span> <span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">sim_data</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">batch_data</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">sim_data</span><span class="p">[</span><span class="s2">"temperature"</span><span class="p">]</span><span class="o">.</span><span class="n">temperature</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="s2">"x"</span><span class="p">]</span>
+    <span class="n">x_exact_sphere</span><span class="p">,</span> <span class="n">temperature_exact_sphere</span> <span class="o">=</span> <span class="n">get_analytical</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+    <span class="n">temperature_numerical</span> <span class="o">=</span> <span class="n">sim_data</span><span class="p">[</span><span class="s2">"temperature"</span><span class="p">]</span><span class="o">.</span><span class="n">temperature</span><span class="o">.</span><span class="n">interp</span><span class="p">(</span>
+        <span class="n">z</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="n">x_exact_sphere</span>
+    <span class="p">)</span>
+    <span class="n">error</span> <span class="o">=</span> <span class="p">(</span><span class="n">temperature_numerical</span> <span class="o">-</span> <span class="n">temperature_exact_sphere</span><span class="p">)</span><span class="o">.</span><span class="n">abs</span>
+    <span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">error</span><span class="p">))</span>
+    <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">x_exact_sphere</span><span class="p">,</span> <span class="n">error</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">"dl = </span><span class="si">{</span><span class="n">dl_refine</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_yscale</span><span class="p">(</span><span class="s2">"log"</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">"x position [um]"</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">"Solution error"</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">loglog</span><span class="p">(</span><span class="n">dl_refine</span><span class="p">,</span> <span class="n">errors</span><span class="p">,</span> <span class="s2">".-"</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">"Solution error"</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">loglog</span><span class="p">(</span>
+    <span class="n">dl_refine</span><span class="p">,</span>
+    <span class="n">errors</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">data</span> <span class="o">*</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">dl_refine</span><span class="p">)</span> <span class="o">/</span> <span class="n">dl_refine</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span>
+    <span class="s2">"-k"</span><span class="p">,</span>
+    <span class="n">label</span><span class="o">=</span><span class="s2">"Slope 2"</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">"Mesh resolution"</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">"Solution error (L_inf norm)"</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Output()</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">17:57:00 CST </span>loading simulation from                                            
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">             </span>.<span style="color: #800080; text-decoration-color: #800080">/</span><span style="color: #ff00ff; text-decoration-color: #ff00ff">he-f756ad56-296a-45c9-b3ce-bd9eecfccc05.hdf5</span>                     
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">             </span>loading simulation from                                            
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">             </span>.<span style="color: #800080; text-decoration-color: #800080">/</span><span style="color: #ff00ff; text-decoration-color: #ff00ff">he-cee86e93-9476-481a-b8e8-06996df5f8b5.hdf5</span>                     
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Output()</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">17:57:02 CST </span>loading simulation from                                            
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">             </span>.<span style="color: #800080; text-decoration-color: #800080">/</span><span style="color: #ff00ff; text-decoration-color: #ff00ff">he-868788d7-3e93-4ef1-911e-a7392874b42b.hdf5</span>                     
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Output()</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">17:57:11 CST </span>loading simulation from                                            
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">             </span>.<span style="color: #800080; text-decoration-color: #800080">/</span><span style="color: #ff00ff; text-decoration-color: #ff00ff">he-0efec419-22ac-43b3-a675-052fbf26d2a5.hdf5</span>                     
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedImage jp-OutputArea-output" tabindex="0">
+<img alt="No description has been provided for this image" class="" src="/assets/tidy3d/examples/image/HeatSolver/HeatSolver_8.png"/>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=2f60659f-fff8-443e-9bb6-0105bd86ec13">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[ ]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body>
+</html>

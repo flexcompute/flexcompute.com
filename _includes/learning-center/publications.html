@@ -1,0 +1,71 @@
+<div class="row mr-0 ml-0">
+  <div class="col-12 offset-0 col-lg-9 offset-lg-3 p-0" style="transform: translateX(-16px)">
+    <div class="d-flex justify-content-between align-items-center">
+      <h1 class="color-dark-3 font-size-32 line-height-50 mb-0">Publications</h1>
+      {% assign page_id = "__pg_tidy3d_learning-center_publications_btn_subscribe-to-receive-update" %}
+      {% include subscribe_btn.html title="Subscribe to Newsletter" extra_id=page_id %}
+    </div>
+    <div class="background-linear-white shadow-box">
+      <div class="tidy3d-learning-center-publications collapsed-container">
+        {% assign publications = site.publications | where: "type", page.publication_type | sort: "date" | reverse %}
+        {% for post in publications %}
+        {% assign newTitle = post.title | downcase | split: " " | join:"-" | split: "," %}
+        <div id="{{newTitle}}" class="collapsed-item collapsed" style="cursor: pointer">
+          {% assign currentPost = post.title | slugify | split: "," %}
+          {% assign idItem = '__pg_tidy3d-learning-center_publications_' | split: ',' | concat: currentPost | join:'' | downcase %}
+          {% assign expandHeader = '_header-expand' | split: ',' %}
+          {% assign expandHeaderId = idItem | split:',' | concat: expandHeader | join:'' | downcase %}
+          <div id="{{expandHeaderId}}" class="preview-header" onclick="collapseModule.onExpandAndClamp('{{expandHeaderId}}', 'collapsed-container')">
+            <div class="title d-flex align-items-start" style="column-gap: 20px">
+              <span class="d-inline-flex number-circle font-weight-600 justify-content-center align-items-center">{{forloop.index}}</span>
+              <div>
+                <div class="d-flex">
+                  <span class="d-flex justify-content-start align-items-center date color-dark-gray-10 font-size-14 font-weight-500 line-height-1">
+                    <i class="jam jam-clock" style="margin-right: 4px"></i>{{post.date | date_to_string}}
+                  </span>
+                  <span class="color-dark-gray-10 font-size-14 font-weight-500 line-height-1 ml-10">{{post.journal_name}}</span>
+                </div>
+                <h2 class="mb-0 font-size-20 higher-display-ellipsis ellipsis-line-2">{{post.title}}</h2>
+                {% if post.author %}
+                <span class="d-inline-block author reset-author color-dark-gray-11 font-size-12 line-height-1">
+                  <i class="jam jam-user"></i>By {{post.author}}
+                </span>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+          <div class="preview-body" onclick="window.open('{{post.backlink}}','_self')">
+            <div class="space10"></div>
+            {% assign link_read_more = 'link,read-more' | split:"," %}
+            {% assign read_more_id = "_,pg,publications" | split: "," | concat: newTitle | concat: link_read_more | join: "_" | downcase %}
+            {% assign link_view_notebook = 'link,view-notebook' | split:"," %}
+            {% assign view_notebook_id = "_,pg,publications" | split: "," | concat: newTitle | concat: link_view_notebook | join: "_" | downcase %}
+            <p
+              class="font-size-16 color-dark-gray ellipsis-clamp"
+              data-backlink="{{post.backlink}}"
+              data-clickId="{{read_more_id}}"
+              style="line-height: 24px;">
+              {{post.excerpt | strip_html }}
+            </p>
+            <div class="read-more-support d-none">
+              <a id="{{read_more_id}}" href="{{post.backlink}}" class="more color-primary color-primary-hover" style="display: inline" onclick="stopPropagation(event)">Read more</a>
+              <div class="space20"></div>
+            </div>
+            {% if post.notebook_link %}
+            <a
+              id="{{view_notebook_id}}"
+              class="btn btn-dashed-primary font-size-16 m-0 subscribe-btn"
+              href="{{post.notebook_link}}"
+              onclick="stopPropagation(event)"
+              >
+              VIEW NOTEBOOK
+            </a>
+            {% endif %}
+            <div class="space20"></div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>

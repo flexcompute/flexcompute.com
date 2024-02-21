@@ -1,0 +1,149 @@
+---
+layout: default
+title: Contact CFD EM Simulation Expert | Flexcompute
+description: Contact us today to see how our simulations can transform your process
+  and output in ways you never thought were possible.
+tags:
+- contact sales
+- Simulation
+- CFD
+- EM
+- FDTD
+- Contact CFD Expert
+- Contact EM Expert
+- Contact FDTD Expert
+author: Flexcompute
+custom_font: font2
+product:
+  enable: true
+  list:
+    - name: Tidy3D
+      enable: true
+      logo: '/assets/images/product/tidy3D/tidy3d-logo.svg'
+      bg_image: "/assets/images/product/tidy3D/electromagnetic-field-xl.png"
+      logo_alt: "FDTD for Electromagnetic Simulation"
+      title: "Faster, Larger Simulations"
+      class: "tidy3d-item"
+      description: "A new solver dedicated to next-generation chips has yielded a simulation breakthrough"
+      examples:
+       - name: "Lightning-fast"
+         description: "Open up new possibilities in device-level optimization and design with Tidy3D’s ultra-fast solver"
+         link: "/tidy3d/solver/"
+         link_text: "Fast FDTD"
+       - name: "Python-driven"
+         description: "Define, analyze, and store your entire simulation workflow in our Python API or web-based graphic user interface"
+         link: "/tidy3d/solver/"
+         link_text: "Python FDTD"
+       - name: "FDTD at scale"
+         description: "Simulate large devices beyond the reach of traditional FDTD solvers with Tidy3D"
+         link: "/tidy3d/solver/"
+         link_text: "Large FDTD"
+    - name: Flow360
+      enable: true
+      logo: '/assets/images/Flow360-logo.svg'
+      logo_alt: "The revolutionary CFD solver"
+      bg_image: "/assets/images/product/flow360/solver/solver-bg.png"
+      title: "A Scalable CFD Solver for Better Product Design"
+      class: "flow360-item"
+      description: "Flow360 Solver is a revolutionary CFD solver based on a breakthrough computing architecture that results in scalability of accurate aerodynamic simulations at unprecedented speeds."
+      examples:
+        - name: "Breakthrough computing technology"
+          description: "Complex flow simulations of real-world products have been prohibitive in terms of time and cost."
+          link: "https://simcloud-public-1.s3.amazonaws.com/publications/Flow360%20Technical%20Brief.pdf"
+          link_text: "Tech Brief"
+        - name: "Accurate rotorcraft simulations"
+          description: "Leverage state-of-the art solutions for complex rotorcraft behavior with a full range of model fidelities to meet different requirements."
+        - name: "Essential capabilities at unprecedented speed"
+          description: "The Flow360 Solver provides the capability and accuracy required for complex flow simulations at significantly lower cost and time."
+contact_area:
+  enable: true
+  form_header:
+    enable: true
+    logo: "/assets/images/logo.svg"
+    logo_title: "Get in Touch"
+    title: "Start to use next-gen simulation now"
+    sub_title: "Reach out to us below and our experts will get back to you shortly"
+  form_footer:
+    enable: true
+    logo: "/assets/images/logo.png"
+    logo_alt: "Aerodynamics &amp; Electromagnetic Simulation | Flexcompute"
+    email: info@flexcompute.com
+  forms_data:
+  - field_tag: input
+    field_type: text
+    field_name: Name_First
+    placeholder: First Name
+    required: true
+    error_message: First Name is required
+  - field_tag: input
+    field_type: text
+    field_name: Name_Last
+    placeholder: Last Name
+    required: true
+    error_message: Last Name is required
+  - field_tag: input
+    field_type: email
+    field_name: Email
+    placeholder: Email
+    required: true
+    error_message: Email is required
+  - field_tag: input
+    field_type: text
+    field_name: PhoneNumber_countrycode
+    placeholder: Phone Number
+    required: false
+    error_message: Phone Number is required
+  - field_tag: input
+    field_type: text
+    field_name: SingleLine
+    placeholder: Company Name
+    required: true
+    error_message: Company Name is required
+  - field_tag: input
+    field_type: text
+    field_name: SingleLine1
+    placeholder: Role in the Company
+    required: false
+    error_message: Role in the Company is required
+  - field_tag: select
+    field_type: select
+    field_name: Dropdown
+    placeholder: Product of Interest
+    required: true
+    source: product_of_interest
+    error_message: Product of Interest is required
+    description: What product or topic are you interested in?
+  - field_tag: textarea
+    field_name: MultiLine
+    placeholder: Message
+    required: true
+    error_message: Message is required
+
+---
+{% include header.html extra_class="absolute transparent" logo_class="logo fc-logo" container_class="container" %}
+<div class="wrapper bg-opacity-default">
+  <div class="container inner">
+    <div class="space50"></div>
+    <div class="contact-us-container">
+      {% if page.product.enable %}
+      {% include contact/components/products-slick.html %}
+      {% endif %}
+      {% if page.contact_area.enable %}
+      <div class="form-item box bg-white shadow p-0">
+        <div class="fdtd-banner" style="padding: 30px">
+          {% include contact/components/form-header.html %}
+          <div class="space40"></div>
+          {% include contact/components/form-area.html %}
+          {% if page.contact_area.form_footer.enable%}
+          {% assign form_footer = page.contact_area.form_footer %}
+          <div class="space40"></div>
+          {% include contact/components/form-footer.html %}
+          {% endif %}
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+<div class="space80"></div>
+{% include footer_2.html %}

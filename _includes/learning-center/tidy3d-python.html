@@ -1,0 +1,68 @@
+{% assign type = 'tidy3d-python' %}
+{% assign typeParameter = site.data.general_settings[type] %}
+{% assign base = page.url | remove_first: '/' | split:"/" %}
+{% assign tailType = base | last %}
+{% if type == tailType %}
+{% assign page_id = '__pg' | split: "," | concat: base | join:"_" %}
+{% else %}
+{% assign page_id = '__pg' | split: "," | concat: base | join:"_" | append: "_" | append: type %}
+{% endif %}
+<div class="row">
+  <div class="col-12 col-lg-7">
+    <div class="d-flex justify-content-start flex-wrap" style="column-gap: 24px">
+      <h1 class="m-0 color-dark-3 font-size-32">{{page.intro_section.title}}</h1>
+      {% if typeParameter.time_consuming %}
+      <span class="color-dark-gray-2 font-size-14 d-flex align-items-center" style="column-gap: 8px"><i class="jam jam-clock font-size-20"></i> {{typeParameter.time_consuming}}</span>
+      {% endif %}
+    </div>
+    {% if page.intro_section.authors %}
+    <span class="color-dark-gray-3">By {{page.intro_section.authors}}</span>
+    {% endif %}
+    <div class="space20"></div>
+    <p class="m-0 color-dark-gray">{{page.intro_section.description}}</p>
+    <div class="space10"></div>
+    <div class="text-left">
+      {% assign page_id = page_id | append: "_btn_subscribe-to-receive-update" %}
+      {% include subscribe_btn.html extra_id=page_id %}
+    </div>
+    <div class="space10"></div>
+  </div>
+  <div class="col-12 col-lg-5 pr-0 will-learn">
+    <div class="shadow-box background-white what-you-learn-box" style="height: fit-content;max-width: 100%">
+      <h3 class="mb-1 font-size-24 color-dark line-height-22" style="margin-bottom: 8px !important;">{{page.skill_section.title}}</h3>
+      <p class="color-dark-gray font-size-16">{{page.skill_section.sub_title}}</p>
+      {% for item in page.skill_section.skills %}
+      <div class="d-flex justify-content-start align-items-start font-size-16" style="column-gap: 8px">
+        <span class="icofont-check-alt color-dark font-size-20 line-height-20"></span>
+        <p class="color-dark-gray {% if forloop.last %} mb-0 {% endif %}">{{item.skill}}</p>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  <div class="col-12 pl-0 pl-lg-15 pr-0">
+    <div class="shadow-box background-white">
+      <div class="d-flex justify-content-between align-items-end pt-30 pl-30 pr-30 pb-0">
+        <h3 class="m-0 color-dark font-size-24">{{page.detail_section.title}}</h3>
+        <p class="m-0 color-dark font-size-18">{{page.detail_section.sub_title}}</p>
+      </div>
+      <div class="collapsed-container">
+        {% assign examples = site.data.notebooks.example %}
+        {% assign tutorialExamples = examples.example_menus | where: 'type', 'python-tutorial' %}
+        {% assign loopIndex = 0%}
+        {% for example in tutorialExamples %}
+        {% assign checkedExample = example.menus[0] %}
+        {% if checkedExample.path %}
+        {% assign loopIndex = loopIndex | plus: 1 %}
+        {% include learning-center/tidy3d-python/example-section.html loop_example=example loop_index=loopIndex %}
+        {% else %}
+        {% for secondary in example.menus %}
+        {% assign loopIndex = loopIndex | plus: 1 %}
+        {% include learning-center/tidy3d-python/example-section.html loop_example=secondary loop_index=loopIndex %}
+        {% endfor %}
+        {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+

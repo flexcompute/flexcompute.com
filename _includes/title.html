@@ -1,0 +1,17 @@
+{% if page.pagination_blog %}
+{% assign curr_page = page.pagination_info.curr_page %}
+{% assign total_pages = page.pagination_info.total_pages %}
+{% case curr_page %}
+{% when 1 %}
+<title>Flexcompute Simulation Blog | Flexcompute</title>
+<meta name="description" content="Flexcompute: Pioneering swift solvers for Fluid Dynamics & Electromagnetic simulations." />
+<meta property="og:description" content="Flexcompute: Pioneering swift solvers for Fluid Dynamics & Electromagnetic simulations." />
+{% else %}
+<meta name="robots" content="noindex">
+<title>Flexcompute Simulation Blog - Page {{curr_page}} of {{total_pages}} | Flexcompute</title>
+<meta name="description" content="Flexcompute: Pioneering swift solvers for Fluid Dynamics & Electromagnetic simulations." />
+<meta property="og:description" content="Flexcompute: Pioneering swift solvers for Fluid Dynamics & Electromagnetic simulations." />
+{% endcase %}
+{% else %}
+<title>{% if page.title %} {{ page.title }} {% else %} {{ site.data.general_settings.title }}{% endif %}</title>
+{% endif %}

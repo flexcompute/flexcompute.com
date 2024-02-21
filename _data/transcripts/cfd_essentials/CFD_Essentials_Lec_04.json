@@ -1,0 +1,45 @@
+{
+  "title": "CFD Essentials - Lecture 4",
+  "pages": [
+    {
+      "id": "",
+      "title": "",
+      "transcript": "Hello, my name is Thomas Fitzgibbon from Flexcompute and today I will present the second part of CFD Simulation Methods for High-Lift Aircraft Configurations focused on comparing RANS and DES results."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "As we saw in the first part of this video series, RANS based solutions exhibit significant modelling sensitivities. To provide an assessment of RANS for high-lift predictions, we compare RANS solutions with results from DES simulations at two angles of attack corresponding to CL max and stalled conditions using the ANSA C grid."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "The DES predictions lead to significant improvements compared to the best practice RANS results. At CLmax a higher lift and lower drag is seen, with a much milder stall at the highest angle of attack. Now, the main question that must be answered however is whether we get the correct answer for the correct reasons. For this purpose, we analyse the results at the highest angle of attack in greater detail."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "Firstly, we examine the DES surface pressure predictions and compare them with RANS results and data from experiments. Three slices are presented here at the most inboard stations, with Cut C, corresponding to the spanwise location behind the nacelle. Overall, excellent agreement is seen for the DES results when compared to experiments, as the separation on the main wing surface is significantly reduced when compared to RANS. The predictions on the flap are also improved significantly. The slat pressure prediction is slightly underpredicted at the most inboard station, however, the DES simulation did not include the effect of the wind tunnel walls."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "At the mid-span stations very good agreement was found for both RANS and DES, so we move straight to the two most outboard stations. Across the wing tip the RANS predictions led to highly unphysical separation due to the slat bracket wakes, which is not seen in the DES solutions. Here, once again significantly better agreement is obtained with experimental data for the DES solutions compared to RANS predictions."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "The improvements in the DES simulations can be examined in a more qualitative manner by looking at the surface streamline flow patterns. The DES results show very good correlation with the surface oil patterns from experiment, as the separation at the wing tip is significantly reduced when compared to RANS."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "Further inboard, once again very good correlation is obtained, with the inboard vortical structure showing high resemblance of the topology seen in experiments."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "Concluding this series, it has been demonstrated that RANS high lift predictions have significant modeling sensitivities. Some of these sensitivities can be alleviated, such as the mesh sensitivity with careful grid design or the use of grid adaptation. However, RANS appears to be unsuitable for some of the flow physics seen in high lift flows, which was especially seen in the wing tip regions where unphysical separation patterns were developed in the slat bracket wakes The DES results show very good correlation with experiments and most importantly, captured the correct flow physics, although the computational cost of such simulations is much higher when compared to RANS. The DES results were also obtained for the first mesh and simulation setup examined, showing the capability of scale resolving simulations for high lift predictions in blind case studies. Despite the increase in computational cost, with constantly growing computational power and need for accurate high-lift predictions, scale-resolving  simulations are likely to be more prominent in future high lift prediction workshops. Thank you for listening."
+    }
+  ]
+}

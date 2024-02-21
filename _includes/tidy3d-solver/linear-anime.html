@@ -1,0 +1,10 @@
+{% assign images = include.images %}
+<div class="anima-wrapper pt-24 pb-24" style="overflow: hidden">
+  <div class="anima-box">
+    {%for image in images%}
+    {% if image.enable %}
+    <img class="ml-32 mr-32" style="height: 46px; object-fit: scale-down" src="{{image.logo}}" alt="{{image.text}}">
+    {%endif%}
+    {%endfor%}
+  </div>
+</div>

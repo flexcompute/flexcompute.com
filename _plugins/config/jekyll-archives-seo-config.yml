@@ -1,0 +1,17 @@
+default_config:
+  title: Simulation Blog | ${tag|author|category} | Flexcompute
+  description: >-
+    Flexcompute: Pioneering swift solvers for Fluid Dynamics &amp;
+    Electromagnetic simulations.
+  feature_image:
+    image: /assets/images/default-feature-image.png
+    alt: ''
+categories:
+tags:
+  - name: Optical Nano-Imaging
+    title: this is a test title for Optical Nano-Imaging tag
+    description: this is a test description for Optical Nano-Imaging tag
+    feature_image:
+      image:
+      alt:
+authors:

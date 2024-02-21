@@ -1,0 +1,72 @@
+{% assign rows_1 = page.faq.rows_1 %}
+{% assign rows_2 = page.faq.rows_2 %}
+{% assign rows_3 = page.faq.rows_3 %}
+{% assign rows_4 = page.faq.rows_4 %}
+<div class="space100"></div>
+<section class="wrapper bg-opacity-default position-relative fdtd-faq-box pt-40 pb-40">
+  <div class="before position-absolute">
+    <div class="outside">
+      <div class="middle">
+        <div class="inside"></div>
+      </div>
+    </div>
+  </div>
+  <div class="container position-relative" style="z-index: 2">
+    <div class="row row-gap-16">
+      <div class="col pr-0">
+        {% for rows_1_item in rows_1 %}
+        <div class="d-flex align-items-start column-gap-8">
+          <span class="d-inline-block line-height-24 align-items-center">
+          {% svg "{{ site.baseurl }}/assets/svg-icon/checked-circle.svg" width=12 %}
+          </span>
+          <a id="__pg_fdtd_faq_{{rows_1_item.category|slugify}}_link" class="color-dark-3-hover font-weight-700 line-height-26" href="{{rows_1_item.link}}">{{rows_1_item.category}}</a>
+        </div>
+        {%endfor%}
+      </div>
+      <div class="col pl-0">
+        {% for rows_2_item in rows_2 %}
+        <div class="d-flex align-items-start column-gap-8">
+          <span class="d-inline-block line-height-24 align-items-center">
+            {% svg "{{ site.baseurl }}/assets/svg-icon/checked-circle.svg" width=12 %}
+          </span>
+          <a id="__pg_fdtd_faq_{{rows_2_item.category|slugify}}_link" class="color-dark-3-hover font-weight-700 line-height-26" href="{{rows_2_item.link}}">{{rows_2_item.category}}</a>
+        </div>
+        {%endfor%}
+      </div>
+      <div class="col-12 col-lg-2 pl-20 pr-20 d-flex align-items-center">
+        <h2 class="font-size-30 color-dark-3 line-height-36 text-center mb-0">
+          <a id="__pg_fdtd_faq_{{page.faq.title|slugify}}_link" class="color-dark-3-hover" href="{{page.faq.link}}">
+          {{page.faq.title}}
+          </a>
+        </h2>
+      </div>
+      <div class="col pl-24 pr-0">
+        {% for rows_3_item in rows_3 %}
+        <div class="d-flex align-items-start column-gap-8">
+          <span class="d-inline-block line-height-24 align-items-center">
+          {% svg "{{ site.baseurl }}/assets/svg-icon/checked-circle.svg" width=12 %}
+          </span>
+          <a id="__pg_fdtd_faq_{{rows_3_item.category|slugify}}_link" class="color-dark-3-hover font-weight-700 line-height-26" href="{{rows_3_item.link}}">{{rows_3_item.category}}</a>
+        </div>
+        {%endfor%}
+      </div>
+      <div class="col pl-0">
+        {% for rows_4_item in rows_4 %}
+        <div class="d-flex align-items-start column-gap-8">
+          <span class="d-inline-block line-height-24 align-items-center">
+          {% svg "{{ site.baseurl }}/assets/svg-icon/checked-circle.svg" width=12 %}
+          </span>
+          <a id="__pg_fdtd_faq_{{rows_4_item.category|slugify}}_link" class="color-dark-3-hover font-weight-700 line-height-26" href="{{rows_4_item.link}}">{{rows_4_item.category}}</a>
+        </div>
+        {%endfor%}
+      </div>
+    </div>
+  </div>
+  <div class="after position-absolute">
+    <div class="outside">
+      <div class="middle">
+        <div class="inside"></div>
+      </div>
+    </div>
+  </div>
+</section>

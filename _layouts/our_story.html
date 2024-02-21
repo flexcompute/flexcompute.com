@@ -1,0 +1,74 @@
+---
+layout: default
+
+custom_font: font2
+---
+<div class="content-wrapper">
+    {% include header.html extra_class="absolute transparent" logo_class="logo fc-logo" container_class="container" %}
+    <div
+      class="wrapper"
+      style="height: 335px; position: relative; top: 66px;"
+    >
+      <div class="container inner pt-60 pb-60">
+        {% if page.hero_section %}
+        <div class="text-center">
+          <h1 class="font-size-30 font-weight-bold mb-0">{{ page.hero_section.title }}</h1>
+          <div class="space30 d-none d-lg-block"></div>
+          <p class="font-size-20 color-dark-gray mb-0">{{ page.hero_section.description }}</p>
+        </div>
+        <div class="meta text-center mb-0">
+          {% if page.author %}
+           <span class="author"><i class="jam jam-user"></i>By {{page.author}}</span>
+          {% endif %}
+        </div>
+        {% endif %}
+      </div>
+
+    </div>
+
+    <div class="wrapper" style="position: relative; top: -100px">
+      <div class="space10"></div>
+        <div class="container">
+            {{page.content}}
+        </div>
+    </div>
+
+    {% if page.footer_section.enable %}
+    <div class="wrapper our-story-footer d-none">
+      <div class="container pt-60 pb-60">
+        <div class="row">
+          {% for item in page.footer_section.action_list %}
+          <div class="col-md-12 col-lg-6  bg-white" style="padding: 0 10px; height: 266px;">
+            <div class="box shadow flex-column justify-content-start" style="padding: 0; height: 100%;">
+              <div class="box-to-shadow"></div>
+              <div class="pt-40 pb-40 pl-40 pr-40 links_group">
+                {% if item.icon %}
+                <img src="{{item.icon}}" alt="" style="width: 52px;">
+                {% endif %}
+                {% if item.title %}
+                <span class="font-size-24 color-dark-gray">{{item.title}}</span>
+                {% endif %}
+                {% if item.description %}
+                <div class="space20"></div>
+                <p class="font-size-18 font-weight-bold mb-0">{{item.description}}</p>
+                {% endif %}
+                {% if item.author %}
+                <span class="font-size-14 color-dark-gray d-block">{{item.author}}</span>
+                {% else %}
+                <div class="space30"></div>
+                {% endif %}
+                {% if item.link %}
+                <div class="space20"></div>
+                <a href="{{item.link}}" class="{{item.class}} font-size-16">{{item.text}}</a>
+                {% endif %}
+              </div>
+
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    {% endif %}
+    {% include footer_2.html %}
+  </div>

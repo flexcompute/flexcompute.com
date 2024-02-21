@@ -1,0 +1,69 @@
+---
+layout: default
+title: "Search | Flexcompute"
+description: "Search"
+tags:
+author: Flexcompute
+custom_font: font2
+custom_css:
+  - search-engine
+  - unit-css
+custom_js:
+  - search-engine
+  - tabs
+search_title: How can we help you?
+
+search_categories:
+  - tab: Tidy3D
+    icon: '/assets/images/Tidy3D-logo.svg'
+    short_title: "EM"
+    categories: ['All', 'Tutorials', 'Applications', 'Lectures', 'Docs', 'Blog', 'Website']
+    enable: true
+  - tab: Flow360
+    icon: '/assets/images/Flow360-logo.svg'
+    short_title: "CFD"
+    categories: ['All-flow360', 'Tutorials', 'Applications', 'Lectures', 'Docs', 'Blog', 'Website']
+    enable: false
+
+
+
+---
+{% include header.html extra_class="absolute transparent" logo_class="logo fc-logo" container_class="container" %}
+<div class="wrapper bg-opacity-default">
+  <div class="container inner pt-100 pb-0">
+    {% if page.search_title %}
+    <h1 class="font-size-36 line-height-36 mb-20 color-dark-3 d-none">{{page.search_title}}</h1>
+    {% endif %}
+    <div class="search-panel">
+      <div class="search-panel__filters">
+        {% include search-engine/tabs.html tabs=page.search_categories %}
+        {% include search-engine/search-box.html %}
+        <div id="product-list" class="d-none"></div>
+        <div id="category-list" class="d-none"></div>
+      </div>
+
+      <div class="search-panel__results">
+        <div id="hits">
+          {% for product in page.search_categories %}
+          <div class="{%if forloop.first%}d-block{%else%}d-none{%endif%}" data-product-name="{{product.tab | slugify}}">
+            {% for category in product.categories %}
+            {% if category != "All" %}
+            <div class="d-block pt-32" data-category-name="{{product.tab|slugify}}-{{category | slugify}}">
+              <div class="d-flex justify-content-between align-items-end mb-24">
+                <h2 class="font-size-30 color-dark-3 mb-0 font-weight-500">{{category}}</h2>
+                <div id="{{product.tab|slugify}}-{{category | slugify}}-pagination"></div>
+              </div>
+              <div id="{{product.tab|slugify}}-{{category | slugify}}"></div>
+            </div>
+            {% endif %}
+            {% endfor %}
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="space80"></div>
+{% include footer_2.html %}
+

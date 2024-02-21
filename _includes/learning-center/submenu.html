@@ -1,0 +1,49 @@
+{% for item in include.menus %}
+<div class="title submenu" data-lecture-name="{{item.lecture_title | slugify}}" data-item-value="{{item.lecture_title | split: ': ' | last}}" onmouseenter="learnCenterMenu.onSubMenuMouseEnter(event)" onmouseleave="learnCenterMenu.onSubMenuMouseLeave(event)">
+  <div class="d-flex align-items-center" style="column-gap: 10px">
+    <span class="number-circle d-inline-flex font-weight-600 justify-content-center align-items-center color-dark" style="flex-shrink: 0">{{item.course_number}}</span>
+    <a href="{{item.permalink}}" class="line-height-18 submenu-title" style="flex: 1">{{item.lecture_title | split: ": " | last}}</a>
+  </div>
+  <div class="quick-links color-dark-gray-9">
+    {% if item.source_html_list %}
+    <div class="quick-links-item line-height-20 mb-8">
+      <span>&bull;</span>
+      <a class="color-dark-gray-9" href="{{item.permalink}}#introduction-content">Lecture Tutorial</a>
+    </div>
+    {% endif %}
+    {% if item.pdf_url %}
+    <div class="quick-links-item line-height-20 mb-8">
+      <span>&bull;</span>
+      <a class="color-dark-gray-9" href="{{item.permalink}}#presentation-slides">View Presentation Slides</a>
+    </div>
+    {% endif %}
+    {% if item.download_links %}
+    <div class="quick-links-item line-height-20 mb-8">
+      <span>&bull;</span>
+      {% assign links = "," | split: ',' %}
+      {% for link in item.download_links %}
+      {% assign _link = link.url | split: ',' %}
+      {% assign links = links | concat: _link | join: "##" %}
+      {% endfor %}
+      <span style="cursor: pointer" onclick="downloadAll('{{links}}')">
+        Download notebook
+        {% assign size = item.download_links | size %}
+        {% if size > 1 %} ({{size}}) {% endif %}
+      </span>
+    </div>
+    {% endif %}
+    {% if item.pdf_url %}
+    <div class="quick-links-item line-height-20 mb-8">
+      <span>&bull;</span>
+      {% assign download_btn = 'btn,download-pdf,by-sub-menus' | split: ',' %}
+      {% assign download_prefix = item.click_id_prefix | split: '_' | concat:download_btn | join: '_'  %}
+      {% include download_pdf_by_submenu.html
+        extra_id=download_prefix
+        url=item.pdf_url
+        title=item.download_pdf_title
+      %}
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endfor %}

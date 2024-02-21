@@ -1,0 +1,39 @@
+---
+layout: default
+---
+
+{% include header.html extra_class="absolute transparent" logo_class="logo fc-logo" container_class="container" %}
+<div class="wrapper bg-opacity-default">
+    <!--    <div class="wrapper image-wrapper bg-image page-title-wrapper inverse-text"-->
+    <!--         data-image-src="{{site.data.general_settings.author_page_header.header_background_image}}">-->
+
+    <div class="container inner text-center pb-0">
+        <div class="row">
+            <div class="col-md-8 mx-auto">
+                <h1 class="page-title text-capitalize">{{page.page_title}}</h1>
+            </div>
+        </div>
+    </div>
+    <!-- /.container -->
+</div>
+<!-- /.wrapper -->
+<div class="wrapper bg-opacity-default">
+    <div class="container inner">
+        <div class="blog grid grid-view">
+            <div class="row">
+                {%assign posts = page.posts | sort: "date" | reverse%}
+                {% for post in posts %}
+                <div class="item post grid-sizer col-md-6 col-lg-4">
+                    {% include post_loop.html %}
+                </div>
+                <!-- /.post -->
+                {% endfor %}
+            </div>
+            <!-- /.row -->
+        </div>
+        <!-- /.blog -->
+    </div>
+    <!-- /.container -->
+</div>
+<!-- /.wrapper -->
+{% include footer_2.html light_logo="false" %}

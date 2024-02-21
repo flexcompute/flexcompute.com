@@ -1,0 +1,28 @@
+{% assign path = include.path %}
+{% assign categoryName = include.category %}
+{% assign faqs = site.faqs | sort: "date" %}
+{% assign faqResults = faqs | where: "path", path %}
+{% assign _faq = faqResults[0] %}
+{% if _faq.enabled %}
+{% assign faqTitle = _faq.title | slugify %}
+{% assign categoryFaqTitle = categoryName | slugify | append: '_' | append: faqTitle %}
+<div id="{{faqTitle}}" data-category-value="faq_category_{{categoryName | slugify}}" class="collapsed-item pl-0 pr-0 collapsed">
+  {% assign currentFaq = categoryFaqTitle | split: "," %}
+  {% assign idItem = '__pg_tidy3d-learning-center_faqs_' | split: ',' | concat: currentFaq | join:'' | downcase %}
+  {% assign expandHeader = '_header-expand' | split: ',' %}
+  {% assign expandHeaderId = idItem | split:',' | concat: expandHeader | join:'' | downcase %}
+  <div id="{{expandHeaderId}}" class="preview-header disabled-hover p-0" onclick="collapseModule.onExpandAndScrollTop('{{expandHeaderId}}', 'collapsed-container')" style="cursor: pointer">
+    <div class="title d-flex align-items-center">
+      <i class="expand-icon font-size-18 jam jam-chevron-right"></i>
+      <h3 class="mb-0 font-size-18 higher-display-ellipsis ellipsis-line-2">{{_faq.title}}</h3>
+    </div>
+  </div>
+  <div class="preview-body line-height-24 color-dark-gray" style="padding: 0 18px">
+    <div class="space10"></div>
+    <div class="markdown-parsing">
+      {{_faq.content | markdownify}}
+    </div>
+    <div class="space20"></div>
+  </div>
+</div>
+{%endif%}

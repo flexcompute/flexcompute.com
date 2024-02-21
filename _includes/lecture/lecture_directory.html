@@ -1,0 +1,21 @@
+
+{% assign lecture_section = include.data %}
+{% if lecture_section.enable %}
+<ul class="nav nav-tabs nav-tabs-bg flex-column {% if include.extra_class %} {{include.extra_class}} {% else %} tabs-header {% endif %}">
+    {% for tabHeader in lecture_section.tabs_headers %}
+    {% if tabHeader.enable %}
+    <!-- {{tabHeader.class}} -->
+    <li class="nav-item mb-0 tabs-title">
+        <a
+        class="nav-link d-flex flex-column {% if include.tHeader_class%} {{tabHeader.class}} {% endif %} {% if page.active == tabHeader.id %} active {%endif%} pt-10 pb-10 pr-10"
+        href="{{tabHeader.url}}"
+        id="{%if include.extra_id_prefix%}{{include.extra_id_prefix}}_{%endif%}{{tabHeader.click_id}}"
+        >
+        <span class="pl-15 d-block font-size-14 font-weight-400" style="line-height: 22px !important;">{{ tabHeader.title }}</span>
+        <span class="pl-15 font-size-12 color-dark-gray-6 font-weight-400" style="line-height: 14px">{{ tabHeader.full_name }}</span>
+        </a>
+    </li>
+    {% endif %}
+    {% endfor %}
+</ul>
+{% endif %}

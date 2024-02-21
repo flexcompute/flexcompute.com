@@ -1,0 +1,51 @@
+  <div class="post">
+    <div class="box bg-white shadow">
+      <div class="post-gallery light-gallery-wrapper">
+        <div class="tiles tiles-s">
+          <div class="items row">
+            {% for photos in post.gallery %}
+            {% if forloop.index < 3%}
+            <div class="item col-md-6">
+              <figure class="overlay overlay1 rounded"><a href="{{photos.img}}" class="lightbox">
+                <img src="{{photos.img}}" alt="{{photos.img}}"></a>
+                <figcaption>
+                  <h5 class="from-top mb-0">View Larger</h5>
+                </figcaption>
+              </figure>
+            </div>
+            {% else %}
+            <div class="item col-md-4">
+              <figure class="overlay overlay1 rounded"><a href="{{photos.img}}" class="lightbox">
+                <img src="{{photos.img}}" alt="{{photos.img}}"></a>
+                <figcaption>
+                  <h5 class="from-top mb-0">View Larger</h5>
+                </figcaption>
+              </figure>
+            </div>
+            {% endif %}
+            {% endfor %}
+            <!--/.item -->
+          </div>
+          <!--/.items -->
+        </div>
+        <!--/.tiles -->
+      </div>
+      <!--/.post-gallery -->
+      <div class="space40"></div>
+      <div class="post-content" onclick="window.open('{{post.url}}','_self')">
+        {% include category-link.html categories=post.categories class="badge badge-pill bg-meander" %}
+        <h2 class="post-title text-center"><a href="{{post.url}}">{{post.post_title | default: post.title}}</a></h2>
+        <div class="meta text-center d-flex align-items-center justify-content-center">
+          <span class="date"><i class="jam jam-clock"></i>{{post.date | date_to_string}}</span>
+          {% if post.author %}
+          <!-- <a href="/{{post.author | slugify}}">By {{post.author}}</a> -->
+          {%include authors.html authors=post.author%}
+          {% endif %}
+          {% include social_link.html icon-class="box-none" %}
+        </div>
+        <p>{{post.excerpt | strip_html | truncatewords: "100"}}</p>
+        <div class="text-center"><a href="{{post.url}}" class="more">Read more</a></div>
+      </div>
+    </div>
+    <!-- /.post -->
+  </div>

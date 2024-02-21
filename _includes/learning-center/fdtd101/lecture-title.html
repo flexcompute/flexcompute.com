@@ -1,0 +1,7 @@
+{% assign titleSplit = include.lecture_title | split: ": " %}
+{% assign titleSplitSize = titleSplit | size %}
+{% if titleSplitSize > 2 %}
+{{ titleSplit | slice: 1,titleSplitSize | join: ": "}}
+{%else%}
+{{ titleSplit | last }}
+{%endif%}

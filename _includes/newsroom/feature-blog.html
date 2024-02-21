@@ -1,0 +1,81 @@
+{% assign newsHighlight = site.data.newsroom.news_highlight %}
+{% assign newsHighlightPath = '' %}
+{% if newsHighlight.enable %}
+{% assign newsHighlightPath = newsHighlight.publication %}
+{% if newsHighlight.enable_blog %}
+{% assign newsHighlightPath = newsHighlight.blog %}
+{% endif %}
+{% endif %}
+{% assign featureBlog = site.data.newsroom.feature_blog %}
+{%if featureBlog.enable%}
+{% assign featuredPost = site.posts | sort: "date" | reverse | first %}
+{% for post in site.posts %}
+{% if post.path == featureBlog.content %}
+{% assign featuredPost = post %}
+{% endif %}
+{% endfor %}
+{% if featuredPost.path %}
+{% assign default_post_image = "/uploads/tutorial-03.png" %}
+{% assign img_src = default_post_image  %}
+{% assign post_image_length = featuredPost.post_image | size %}
+{% if post_image_length > 0 %}
+{% assign img_src = featuredPost.post_image %}
+{% endif %}
+<section>
+  <h2>{{featureBlog.title}}</h2>
+  <div class="row align-items-start">
+    <div class="col-12 col-lg-6">
+      <div id="__pg_newsroom_feature-blog_{{featuredPost.post_title | slugify}}__card_link" class="p-24 d-flex align-items-center border-1 border-radius-20 position-relative newsroom-featured-card cursor-point" onclick="window.open('{{featuredPost.url}}','_self')">
+        <img class="aspect-ratio" src="{{img_src}}" alt="{{featuredPost.post_title | default: featuredPost.title}}">
+        <h2 class="position-absolute post-title font-size-18 line-height-20 mb-0 higher-display-ellipsis ellipsis-line-2 l-16 t-16">
+          <a id="__pg_newsroom_feature-blog_{{featuredPost.post_title | slugify}}_link" href="{{featuredPost.url}}" class="color-dark-3 color-primary-hover" onclick="stopPropagation()">
+            {{featuredPost.post_title | default: featuredPost.title}}
+          </a>
+        </h2>
+      </div>
+    </div>
+    <div class="col-12 col-lg-6">
+      {% assign posts = site.posts | sort: "date" | reverse %}
+      {% assign index = 1 %}
+      {% for post in posts %}
+      {% if post.path != featuredPost.path and post.path != newsHighlightPath and index < 4 %}
+      {% assign index = index | plus: 1 %}
+      <div id="__pg_newsroom_feature-blog_{{post.post_title | slugify}}_card_link" class="feature-box pt-16 pb-16 pl-32 pr-32 mb-15 cursor-point newsroom-featured-item" onclick="window.open('{{post.url}}','_self')">
+        <span class="date font-size-14" style="color: #999999"><i class="jam jam-clock"></i>{{post.date | date_to_string}}</span>
+        <h2 class="post-title font-size-20 line-height-24 mb-0 higher-display-ellipsis ellipsis-line-2">
+          <a id="__pg_newsroom_feature-blog_{{post.post_title | slugify}}_link" href="{{post.url}}" class="color-dark-3 color-primary-hover" onclick="stopPropagation()">
+            {{post.post_title | default: post.title}}
+          </a>
+        </h2>
+        <div class="d-flex justify-content-start align-items-end flex-wrap column-gap-24">
+          {% if post.author != nil %}
+          {% assign authorSize = post.author | size%}
+          {% if authorSize>0  %}
+          {% assign authors = post.author | split: ',' %}
+          <span class="author font-size-14 line-height-16 d-inline-block" style="color: #787878">
+            <i class="jam jam-user"></i>By
+            {% for author in authors %}
+            <a id="__pg_newsroom_feature-blog_{{post.post_title | slugify}}_{{author | slugify}}_link" class="color-primary-hover" href="/blog/author/{{author | slugify}}/" onclick="stopPropagation()" style="color: #787878">{{author}}</a>{%unless forloop.last%},&nbsp;&nbsp;{%endunless%}
+            {% endfor %}
+          </span>
+          {% endif %}
+          {% endif %}
+          <span class="d-inline-block">
+            {% for category in post.categories %}
+            {% if category!='' and category != nil %}
+            <a id="__pg_newsroom_feature-blog_{{post.post_title | slugify}}_{{category | slugify}}_link" href="/blog/category/{{category | slugify}}/" class="badge badge-pill bg-hibiscus mr-8" style="font-size: 8px; padding-top: 6px" onclick="stopPropagation()">{{category}}</a>
+            {%endif%}
+            {% endfor %}
+          </span>
+        </div>
+      </div>
+      {% endif %}
+      {% endfor %}
+      <a id="__pg_newsroom_feature-blog_read-more_link" class="more color-primary btn btn-md btn-dashed-primary color-primary-hover font-size-16 font-weight-400 mb-0" href="/blog/" style="padding: 6px 24px">Read More</a>
+    </div>
+  </div>
+
+</section>
+{%endif%}
+{%endif%}
+

@@ -1,0 +1,186 @@
+---
+layout: default
+author: Flexcompute
+custom_font: font2
+title: "Flexcompute, Inc Trust Guide | Flexcompute"
+password_construction:
+  enable: ture;
+  desc: "The following statements apply to the construction of passwords for network devices:"
+  list:
+    - content: "Passwords should be comprised of a mix of letters, numbers and special characters (punctuation marks and symbols)"
+      enable: true
+    - content: "Passwords should be comprised of a mix of upper and lower case characters"
+      enable: true
+    - content: "Passwords should not be comprised of, or otherwise utilize, words that can be found in a dictionary"
+      enable: true
+    - content: "Passwords should not be comprised of an obvious keyboard sequence (i.e., qwerty)"
+      enable: true
+    - content: 'Passwords should not include "guessable" data such as personal information like birthdays, addresses, phone numbers, locations, etc.'
+      enable: true
+software_use_policy:
+  enable: ture
+  desc: "Software applications can create risk in a number of ways, and thus certain aspects of software use must be covered by this policy. The company provides the following requirements for the use of software applications:"
+  list:
+    - content: "Only legally licensed software may be used. Licenses for the company's software must be stored in a secure location."
+      enable: true
+    - content: "Software should be kept reasonably up-to-date by installing new patches and releases from the manufacturer."
+      enable: true
+    - content: "Vulnerability alerts should be monitored for all software products that the company uses. Any patches that fix vulnerabilities or security holes must be installed expediently."
+      enable: true
+log_management:
+  enable: true
+  desc: "While logging is important to the company's network security, log management can become burdensome if not implemented appropriately. As logs grow, so does the time required to review the logs. For this reason, the company recommends that a log management application be considered."
+networking_hardware:
+  enable: true
+  desc: "Networking hardware, such as routers, switches, hubs, bridges, and access points, should be implemented in a consistent manner. The following statements apply to the company's implementation of networking hardware:"
+  list:
+    - content: "Networking hardware must provide secure administrative access (through the use of encryption) with management access limited, if possible, to only networks where management connections would be expected to originate."
+      enable: true
+    - content: "Clocks on all network hardware should be synchronized using NTP or another means. Among other benefits, this will aid in problem resolution and security incident investigation."
+      enable: true
+    - content: "If possible for the application, switches are preferred over hubs. When using switches the company should use VLANs to separate networks if it is reasonable and possible to do so."
+      enable: true
+    - content: "Unused services and ports should be disabled on networking hardware."
+      enable: true
+    - content: "Access to administrative ports on networking hardware should be restricted to known management hosts and otherwise blocked with a firewall or access control list."
+      enable: true
+firewalls:
+  enable: true
+  desc: "Firewalls are arguably the most important component of a sound security strategy. Internet connections and other unsecured networks must be separated from the company network through the use of a firewall."
+security_testing:
+  enable: true
+  desc: "Security testing, also known as a vulnerability assessment, a security audit, or penetration testing, is an important part of maintaining the company's network security. Security testing can be provided by IT Staff members, but is often more effective when performed by a third party with no connection to the company's day-to-day Information Technology activities. The following sections detail the company's requirements for security testing."
+
+administrative_access:
+  enable: true
+  list:
+    - content: "Firewalls must provide secure administrative access (through the use of encryption) with management access limited, if possible, to only networks where management connections would be expected to originate"
+      enable: true
+    - content: "Networking hardware must provide secure administrative access (through the use of encryption) with management access limited, if possible, to only networks where management connections would be expected to originate."
+      enable: true
+    - content: "Access to administrative ports on networking hardware should be restricted to known management hosts and otherwise blocked with a firewall or access control list"
+      enable: true
+    - content: "If a company network or system administrator leaves the company, all passwords to which the administrator could have had access must be changed immediately. This statement also applies to any consultant or contractor who has access to administrative passwords."
+      enable: true
+it_asset_disposal:
+  enable: true
+  desc: "IT assets, such as network servers and routers, often contain sensitive data about the company's network communications. When such assets are decommissioned, the following guidelines must be followed:"
+  list:
+    - content: "Any asset tags or stickers that identify the company must be removed before disposal."
+      enable: true
+    - content: "Any configuration information must be removed by deletion or, if applicable, resetting the device to factory defaults."
+      enable: true
+    - content: "The company should consider the use of data wiping technology. Simply reformatting a drive or erasing data does not make the data unrecoverable. If the company chooses to use data wiping technology, it should use the most secure commercially-available methods for data wiping if possible. Alternatively, destroying the device's data storage mechanism (such as its hard drive or solid state memory) will make the data unrecoverable."
+      enable: true
+network_documentation:
+  enable: true
+  desc: "Network documentation, specifically as it relates to security, is important for efficient and successful network management. Further, the process of regularly documenting the network ensures that the company's IT Staff has a firm understanding of the network architecture at any given time. The intangible benefits of this are immeasurable. <br> Network documentation should include:"
+  after_desc: "The company requires network documentation."
+  list:
+    - content: "Network diagram(s)"
+      enable: true
+    - content: "System configurations"
+      enable: true
+    - content: "Firewall ruleset"
+      enable: true
+    - content: "IP Addresses"
+      enable: true
+    - content: "Access Control Lists"
+      enable: true
+network_servers:
+  enable: true
+  desc: "We discourage any use of network servers other than those hosted on the GovCloud section of Amazon Web Service.<br><br>
+  Servers typically accept connections from a number of sources, both internal and external. As a general rule, the more sources that connect to a system, the more risk that is associated with that system, so it is particularly important to secure network servers. The following statements apply to the company's use of network servers:"
+  list:
+    - content: "Unnecessary files, services, and ports should be removed or blocked. If possible, follow a server-hardening guide, which is available from the leading operating system manufacturers."
+      enable: true
+    - content: "Network servers, even those meant to accept public connections, must be protected by a firewall or access control list."
+      enable: true
+    - content: "If possible, a standard installation process should be developed for the company's network servers. This will provide consistency across servers no matter what employee or contractor handles the installation."
+      enable: true
+    - content: "Clocks on network servers should be synchronized with the company's other networking hardware using NTP or another means. Among other benefits, this will aid in problem resolution and security incident investigation."
+      enable: true
+outbound_traffic_filtering:
+  enable: true
+  desc: 'Firewalls are often configured to block only inbound connections from external sources; however, by filtering outbound connections from the network, security can be greatly improved. This practice is also referred to as "Egress Traffic Filtering." <br><br>
+Blocking outbound traffic prevents users from accessing unnecessary, and many times, dangerous services. By specifying exactly what outbound traffic to allow, all other outbound traffic is blocked. This type of filtering would block root kits, viruses, and other malicious tools if a host were to become compromised.<br><br>
+The company requires that permitted outbound traffic be limited to only known services currently being used. All other outbound traffic must be blocked at the firewall unless an exception is granted from the IT Manager.'
+suspected_security_incidents:
+  enable: true
+  desc: "When a security incident is suspected that may impact a network device, the IT Staff should refer to the company's Incident Response policy for guidance."
+manufacturer_support_contracts:
+  enable: true
+  desc: "Outdated products can result in a serious security breach. When purchasing critical hardware or software, the company should consider purchasing a maintenance plan, support agreement, or software subscription that will allow the company to receive updates to the software and/or firmware for a specified period of time. If such a plan is purchased, it should meet the following standards:<br><br>
+Hardware: The arrangement should allow for repair/replacement of the device within an acceptable time period, as determined by the IT Manager, as well as firmware or embedded software updates.<br><br>
+Software: The arrangement should allow for updates, upgrades, and hotfixes for a specified period of time."
+maintenance_windows:
+  enable: true
+  desc: "Certain tasks require that network devices be taken offline, either for a simple re-boot, an upgrade, or other maintenance. When this occurs, the IT Staff should make every effort to perform the tasks at times when they will have the least impact on network users."
+
+network_compartmentalization:
+  enable: true
+  desc: "Good network design is integral to network security. By implementing network compartmentalization, which is separating the network into different segments, the company will reduce its network-wide risk from an attack or virus outbreak. Further, security can be increased if traffic must traverse additional enforcement/inspection points. The company requires the following with regard to network compartmentalization:"
+  paragraphs:
+    - title: "4.9.1 Higher Risk Networks"
+      desc: "Examples: Guest network, wireless network<br><br>Requirements: Segmentation of higher risk networks from the company's internal network is required, and must be enforced with a firewall or router that provides access controls."
+      enable: true
+    - title: "4.9.2 Externally-Accessible Systems"
+      desc: "Examples: Email servers, web servers<br><br>Requirements: Segmentation of externally-accessible systems from the company's internal network is required, and must be enforced with a firewall or router that provides access controls."
+      enable: true
+    - title: "4.9.3 Internal Networks"
+      desc: "Examples: Sales, Finance, Human Resources<br><br>Requirements: Segmentation of internal networks from one another can improve security as well as reduce chances that a user will access data that he or she has no right to access. The company encourages, but does not require, such segmentation."
+      enable: true
+
+intrusion_detection:
+  enable: true
+  desc: 'Intrusion Detection System (IDS) and Intrusion Prevention System (IPS) technology can be useful in network monitoring and security. The tools differ in that an IDS alerts to suspicious activity whereas an IPS blocks the activity. When tuned correctly, IDSs are useful but can generate a large amount of data that must be evaluated for the system to be of any use. IPSs automatically take action when they see suspicious events, which can be both good and bad, since legitimate network traffic can be blocked along with malicious traffic. <br><br>
+The company requires the use of either an IDS or IPS on critical or high-risk network segments. If an IDS is used, procedures must be implemented to review and act on the alerts expediently. If an IPS is used, procedures must be implemented that provide a mechanism for emergency unblocking if the IPS obstructs legitimate traffic. Also, if an IPS is used, it should be audited and documented according to the standards detailed in the "Firewalls" section of this document.'
+
+security_policy_compliance:
+  enable: true
+  desc: "It is the company's intention to comply with this policy not just on paper but in its everyday processes as well. With that goal in mind the company requires the following:"
+  paragraphs:
+    - title: "4.17.1 Security Program Manager"
+      enable: ture
+      desc: "An employee must be designated as a manager for the company's security program. He or she will be responsible for the company's compliance with this security policy and any applicable security regulations. This employee must be responsible for A) the initial implementation of the security policies, B) ensuring that the policies are disseminated to employees, C) training and retraining of employees on the company's information security program (as detailed below), D) any ongoing testing or analysis of the company's security in compliance with this policy, E) updating the policy as needed to adhere with applicable regulations and the changing information security landscape."
+    - title: "4.17.2 Security Training"
+      enable: ture
+      desc: "A training program must be implemented that will detail the company's information security program to all users and/or employees covered by the policy, as well as the importance of data security. Employees must sign off on the receipt of, and in agreement to, the user-oriented policies. Re-training should be performed at least annually."
+    - title: "4.17.3 Security Policy Review"
+      enable: ture
+      desc: "The company's security policies should be reviewed at least annually. Additionally, the policies should be reviewed when there is an information security incident or a material change to the company's security policies. As part of this evaluation the company should review:"
+      list:
+        - content: "Any applicable regulations for changes that would affect the company's compliance or the effectiveness of any deployed security controls."
+          enable: true
+        - content: "If the company's deployed security controls are still capable of performing their intended functions."
+          enable: true
+        - content: "If technology or other changes may have an effect on the company's security strategy."
+          enable: true
+        - content: "If any changes need to be made to accommodate future IT security needs."
+          enable: true
+change_management:
+  enable: true
+  desc: 'Documenting changes to network devices is a good management practice and can help speed resolution in the event of an incident. The IT Staff should make a reasonable effort to document hardware and/or configuration changes to network devices in a "change log." If possible, network devices should bear a sticker or tag indicating essential information, such as the device name, IP address, Mac address, asset information, and any additional data that may be helpful, such as information about cabling.'
+
+antivirus:
+  enable: true
+  desc: "Computer viruses and malware are pressing concerns in today's threat landscape. If a machine or network is not properly protected, a virus outbreak can have devastating effects on the machine, the network, and the entire company. The company provides the following guidelines on the use of antivirus/anti-malware software:"
+  list:
+    - content: "All company-provided Windows workstations must have antivirus/anti-malware software installed."
+      enable: true
+    - content: 'Workstation software must maintain a current "subscription" to receive patches and virus signature/definition file updates.'
+      enable: true
+    - content: "Patches, updates, and antivirus signature file updates must be installed in a timely manner, either automatically or manually."
+      enable: true
+
+applicability_of_other_policies:
+  enable: true
+  desc: "This document is part of the company's cohesive set of security policies. Other policies may apply to the topics covered in this document and as such the applicable policies should be reviewed as needed."
+---
+{% include header.html extra_class="absolute transparent" logo_class="logo fc-logo" container_class="container" %}
+<div class="wrapper bg-opacity-default">
+    <div class="container inner pt-120 pb-120">
+       {% include privacy/trust-guide.html %}
+    </div>
+</div>
+{% include footer_2.html %}

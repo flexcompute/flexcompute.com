@@ -1,0 +1,46 @@
+{
+  "title": "Tidy3D GUI: Tutorial 12",
+  "pages": [
+    {
+      "id": "",
+      "title": "",
+      "transcript": "Welcome to this tutorial, where we'll guide you through importing geometries from existing 2D layouts or 3D CAD structures. This feature proves to be useful, allowing you to simulate final layouts of photonic devices in GDS files intended for fabrication or intricate 3D geometries in STL files."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "Let's begin with the GDS import feature. Here, we have images of the taper and the etch layer found in the GDS file of a focused apodized grating coupler. You can follow this link to access the step-by-step design of this device."
+    },
+    {
+      "id": "",
+      "title": "",
+      "paragraphs": [
+        {
+          "title": "",
+          "transcript": "To import the grating coupler geometry, click on \"Add Structure\" and choose to import a 2D layout from a GDS file. Name it \"gc_taper\". You can either upload the layout file or simply drag and drop the GDS file containing the grating coupler structure. After adding the file, a message might pop up if the structure dimensions surpass the current simulation domain. You have the option to keep the current domain size or expand it. This file comprises only one cell, as demonstrated in the \"cell\" drop-down menu. The two GDS layers are in the \"layer\" menu; you can keep the first one selected. Set the minimum \"slab_bounds\" to -0.11 micron and the maximum to 0.11, thus achieving a 0.22 micrometer thick device centered at the origin vertically."
+        },{
+          "title": "",
+          "transcript": "Proceed by selecting the silicon medium with a refractive index of 3.48. After applying these changes, you'll observe the grating coupler taper linked to a 0.5 micrometer wide waveguide. Repeat the process to incorporate the other GDS layer. Name it \"gc_etch,\" then opt for the second layer after choosing the same GDS file. This layer outlines the etched trenches of the grating coupler, which are 90 nanometers deep. Consequently, adjust the slab bounds to a minimum of 0.02 micron and a maximum of 0.11, or 0.12 micron for better trench visualization."
+        },{
+          "title": "",
+          "transcript": "To conclude, select a SiO2 medium that aligns with the material used to create the cladding layer. The grating coupler structure is now visible and accurately imported from the GDS file. Refer to the instructions in the Python notebook to complete the grating coupler structure by adding the substrate, the box, and the cladding layers and setting up the Gaussian source and frequency-domain monitors. Run the simulation and examine the results, which match those obtained from the Python notebook."
+        }
+      ]
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "When including the GDS layouts, there are some advanced parameters which allow you to change the sidewall angle and apply erosion or dilation to the layout. Those parameters help simulate the device response under the typical geometry deviations usually introduced in fabrication processes. See the help center for details on these parameters."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "Now, let's create a new simulation to replicate the two-by-two MMI power splitter results demonstrated in this notebook. Following the notebook's instructions, set up all the simulation parameters, including sources and monitors."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": " Next, click on \"Add Structure,\" but this time select the \"STL\" import option. Provide a name for the new structure, such as \"mmi\", and then pick the MMI STL file, downloadable through a link in that notebook. Once again, you can maintain or expand the current domain size; ensure it's appropriately configured. You can scale the geometry by adjusting the \"scale\" parameter or translate it along the x-, y-, and z-directions. However, that is not necessary in this case. If the STL file encompasses multiple solids, you can opt for a single one using the \"solid_index\" parameter. To wrap up, select a Silicon medium and apply the changes. The MMI structure will come into view, and you can verify the correct positions of the mode source and monitors. Run the simulation and analyze the results, comparing them with those derived from the Python notebook."
+    }
+  ]
+}

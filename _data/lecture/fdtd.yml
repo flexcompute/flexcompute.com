@@ -1,0 +1,209 @@
+lecture_section:
+  enable: true
+  tabs_headers:
+    - title: 'Lecture 1'
+      full_name: 'Introduction to FDTD Simulation'
+      id: Lecture-01
+      click_id: 'lecture-01'
+      class: active
+      url: '/fdtd101/Lecture-1-Introduction-to-FDTD-Simulation/'
+      enable: true
+    - title: "Lecture 2"
+      full_name: "Using FDTD to Compute a Transmission Spectrum"
+      id: Lecture-02
+      click_id: 'lecture-02'
+      url: '/fdtd101/Lecture-2-Using-FDTD-to-Compute-a-Transmission-Spectrum/'
+      enable: true
+    - title: "Lecture 3"
+      full_name: 'Applying FDTD to Photonic Crystal Slab Simulation'
+      id: Lecture-03
+      click_id: 'lecture-03'
+      url: '/fdtd101/Lecture-3-Applying-FDTD-to-Photonic-Crystal-Slab-Simulation/'
+      enable: true
+    - title: 'Lecture 4'
+      full_name: 'Prelude to Integrated Photonics Simulation: Mode Injection'
+      id: Lecture-04
+      click_id: 'lecture-04'
+      url: '/fdtd101/Lecture-4-Prelude-to-Integrated-Photonics-Simulation-Mode-Injection/'
+      enable: true
+    - title: 'Lecture 5'
+      full_name: 'Modeling dispersive material in FDTD'
+      id: Lecture-05
+      click_id: 'lecture-05'
+      url: '/fdtd101/Lecture-5-Modeling-dispersive-material-in-FDTD/'
+      enable: true
+    - title: 'Lecture 6'
+      full_name: 'Introduction to perfectly matched layer (PML)'
+      id: Lecture-06
+      click_id: 'lecture-06'
+      url: '/fdtd101/Lecture-6-Introduction-to-perfectly-matched-layer/'
+      enable: true
+    - title: 'Lecture 7'
+      full_name: 'Time step size and CFL condition in FDTD'
+      id: Lecture-07
+      click_id: 'lecture-07'
+      url: '/fdtd101/Lecture-7-Time-step-size-and-CFL-condition-in-FDTD/'
+      enable: true
+    - title: 'Lecture 8'
+      full_name: 'Numerical dispersion in FDTD'
+      id: Lecture-08
+      click_id: 'lecture-08'
+      url: '/fdtd101/Lecture-8-Numerical-dispersion-in-FDTD/'
+      enable: true
+    - title: 'Lecture 9'
+      full_name: 'Dielectric constant assignment on Yee grids'
+      id: Lecture-09
+      click_id: 'lecture-09'
+      url: '/fdtd101/Lecture-9-Dielectric-constant-assignment-on-Yee-grids/'
+      enable: true
+    - title: 'Lecture 10'
+      full_name: 'Introduction to subpixel averaging'
+      id: Lecture-10
+      click_id: 'lecture-10'
+      url: '/fdtd101/Lecture-10-Introduction-to-subpixel-averaging/'
+      enable: true
+    - title: 'Lecture 11'
+      full_name: 'Introduction to Inverse Design In Photonics'
+      id: Lecture-11
+      click_id: 'lecture-11'
+      url: '/tidy3d/learning-center/inverse-design/Lecture-1-Introduction-to-Inverse-Design-In-Photonics/'
+      enable: false
+    - title: 'Lecture 12'
+      full_name: 'Inverse Design in Photonics Lecture 2: Adjoint Method'
+      id: Lecture-12
+      click_id: 'lecture-12'
+      url: '/fdtd101/Lecture-12-Inverse-Design-in-Photonics-Lecture-2-Adjoint-Method/'
+      enable: false
+  tabs_body:
+    - id: Lecture-01
+      enable: true
+      class: active
+      dataSource:
+        - title: "Lecture 1: Introduction to FDTD Simulation"
+          click_id: 'lecture-01'
+          description: In this lecture, we will describe the basic concepts of EM simulation using FDTD.
+          thumbnail: '/assets/images/fdtd101/Lecture1.jpg'
+          class: tab-body-item-left
+          url: '/fdtd101/Lecture-1-Introduction-to-FDTD-Simulation/'
+          enable: true
+    - id: Lecture-02
+      enable: true
+      class: active
+      dataSource:
+        - title: "Lecture 2: Using FDTD to Compute a Transmission Spectrum"
+          click_id: 'lecture-02'
+          description: In this lecture, we show how to use FDTD to solve a basic EM problem involving the transmission of light though a slab of material.
+          thumbnail: '/assets/images/fdtd101/Lecture2.jpg'
+          class: tab-body-item-left
+          url: '/fdtd101/Lecture-2-Using-FDTD-to-Compute-a-Transmission-Spectrum/'
+          enable: true
+    - id: Lecture-03
+      enable: true
+      class: active
+      dataSource:
+        - title: "Lecture 3: Applying FDTD to Photonic Crystal Slab Simulation"
+          click_id: 'lecture-03'
+          description: "In this lecture, we show how to apply FDTD to solve a slightly more complicated EM problem involving a photonic crystal slab that supports guided resonance."
+          thumbnail: '/assets/images/fdtd101/Lecture3.jpg'
+          class: tab-body-item-left
+          url: '/fdtd101/Lecture-3-Applying-FDTD-to-Photonic-Crystal-Slab-Simulation/'
+          enable: true
+    - id: Lecture-04
+      enable: true
+      class: active
+      dataSource:
+        - title: 'Lecture 4: Prelude to Integrated Photonics Simulation: Mode Injection'
+          click_id: 'lecture-04'
+          thumbnail: '/assets/images/fdtd101/Lecture4.jpg'
+          description: 'In this lecture, we show how to perfectly inject a specific mode into a straight waveguide. This is helpful in decreasing computational cost, and having a clean simulation without unwanted electromagnetic interference in the computational domain.'
+          class: tab-body-item-left
+          url: '/fdtd101/Lecture-4-Prelude-to-Integrated-Photonics-Simulation-Mode-Injection/'
+          enable: true
+    - id: Lecture-05
+      enable: true
+      class: active
+      dataSource:
+        - title: 'Lecture 5: Modeling dispersive material in FDTD'
+          click_id: 'lecture-05'
+          thumbnail: '/assets/images/fdtd101/Lecture5.png'
+          description: "Material dispersion is a very common phenomenon in which the material responds differently to light of different color. In this lecture, we show how to include material dispersion in FDTD simulations."
+          class: tab-body-item-left
+          url: '/fdtd101/Lecture-5-Modeling-dispersive-material-in-FDTD/'
+          enable: true
+    - id: Lecture-06
+      enable: true
+      class: active
+      dataSource:
+        - title: 'Lecture 6: Introduction to perfectly matched layer (PML)'
+          click_id: 'lecture-06'
+          thumbnail: '/assets/images/fdtd101/Lecture6.png'
+          description: "Perfectly matched layer (PML) is commonly used to truncate unbounded computational region, since an ideal PML can completely absorb the incoming waves from all angles of the incidence without any reflection. In this lecture, we explain the basic idea behind PML, and show how to characterize the performance of PML."
+          class: tab-body-item-left
+          url: '/fdtd101/Lecture-6-Introduction-to-perfectly-matched-layer/'
+          enable: true
+    - id: Lecture-07
+      enable: true
+      class: active
+      dataSource:
+        - title: 'Lecture 7: Time step size and CFL condition in FDTD'
+          click_id: 'lecture-07'
+          thumbnail: '/assets/images/fdtd101/Lecture7.png'
+          description: "The choice of time step size can have a strong impact on the behavior of FDTD algorithms. In this lecture, we provide a simple and intuitive argument on deriving an important condition on choosing time step size, known as the Courant–Friedrichs–Lewy (CFL) condition."
+          class: tab-body-item-left
+          url: '/fdtd101/Lecture-7-Time-step-size-and-CFL-condition-in-FDTD/'
+          enable: true
+    - id: Lecture-08
+      enable: true
+      class: active
+      dataSource:
+        - title: 'Lecture 8: Numerical dispersion in FDTD'
+          click_id: 'lecture-08'
+          thumbnail: '/assets/images/fdtd101/Lecture8.png'
+          description: "A key source of error in FDTD simulations lies in the spatial and temporal discretization.The behavior of the wave propagating in such a discrete numerical lattice can deviatefrom that of the physical wave. This phenomenon is known as numerical dispersion. Inthis lecture, we derive and visualize the effect of numerical dispersion, as well asprovide a rule of thumb to suppress the error."
+          class: tab-body-item-left
+          url: '/fdtd101/Lecture-8-Numerical-dispersion-in-FDTD/'
+          enable: true
+    - id: Lecture-09
+      enable: true
+      class: active
+      dataSource:
+        - title: 'Lecture 9: Dielectric constant assignment on Yee grids'
+          click_id: 'lecture-09'
+          thumbnail: '/assets/images/fdtd101/Lecture9.png'
+          description: "In this lecture, we discuss another important source of error that arises from the imperfect description of the dielectric constant distribution of a photonic device on discrete Yee grids. We highlight some subtleties in the dielectric constant assignment on the grids that can lead to significant error. This motivates us to consider more advanced FDTD techniques such as subpixel averaging and nonuniform grid sizes."
+          class: tab-body-item-left
+          url: '/fdtd101/Lecture-9-Dielectric-constant-assignment-on-Yee-grids/'
+          enable: true
+    - id: Lecture-10
+      enable: true
+      class: active
+      dataSource:
+        - title: 'Lecture 10: Introduction to subpixel averaging'
+          click_id: 'lecture-10'
+          thumbnail: '/assets/images/fdtd101/Lecture10.png'
+          description: "In this lecture, we discuss a powerful method known as subpixel averaging that enables the FDTD algorithm to capture geometric features below the discretization level. We discuss the basic ideas as well as	some subtleties associated with subpixel averaging."
+          class: tab-body-item-left
+          url: '/fdtd101/Lecture-10-Introduction-to-subpixel-averaging/'
+          enable: true
+    - id: Lecture-11
+      enable: false
+      class: active
+      dataSource:
+        - title: 'Lecture 11: Introduction to Inverse Design In Photonics'
+          click_id: 'lecture-11'
+          thumbnail: '/assets/images/fdtd101/Lecture11.png'
+          description: "In this lecture, we give an introduction to inverse design in photonics. We explain how a computational design approach can be used to optimize complex photonic devices."
+          class: tab-body-item-left
+          url: '/tidy3d/learning-center/inverse-design/Lecture-1-Introduction-to-Inverse-Design-In-Photonics/'
+          enable: true
+    - id: Lecture-12
+      enable: false
+      class: active
+      dataSource:
+        - title: 'Lecture 12: Inverse Design in Photonics Lecture 2: Adjoint Method'
+          click_id: 'lecture-12'
+          thumbnail: '/assets/images/fdtd101/Lecture12.png'
+          description: "In this lecture, we show how to compute the gradient of our photonic device using the adjoint variable method for a simple example."
+          class: tab-body-item-left
+          url: '/fdtd101/Lecture-12-Inverse-Design-in-Photonics-Lecture-2-Adjoint-Method/'
+          enable: true

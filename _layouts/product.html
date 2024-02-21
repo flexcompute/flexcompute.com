@@ -1,0 +1,62 @@
+---
+layout: default
+
+custom_font: font2
+---
+{% include header.html extra_class="absolute transparent" logo_class="logo fc-logo" container_class="container" %}
+<div class="wrapper bg-opacity-default">
+    {% include tidy3d_hero_section.html %}
+    {% if page.featured_section.enable %}
+    {% assign featured = page.featured_section %}
+    <div class="container inner pt-0 pb-0">
+        {% if featured.lists %}
+        {% for item in featured.lists %}
+        {% if item.enable %}
+        <div class="row align-items-center justify-content-center">
+            {% if item.type == 'video' %}
+            {% assign left_class = "col-md-5" %}
+            {% assign right_class = "col-md-7 pl-0 pr-0" %}
+            {% assign pr = "pr-10" %}
+            {%else%}
+            {% assign left_class = "col-md-6" %}
+            {% assign right_class = "col-md-6" %}
+            {% assign pr = "pr-70" %}
+            {%endif%}
+            <div class="{%if item.class%} {{item.class}} {%else%} {{left_class}} {%endif%} {%if item.float=='right'%} {{pr}} pr-sm-0 order-md-1 {% else %} order-md-2 {%endif%}">
+                {% if item.title %}
+                <h2 class="font-size-42 line-height-51 pr-20 pr-sm-0 mb-0 {% if item.title_padding %} {{item.title_padding}} {%endif%}">{{item.title}}</h2>
+                <div class="space30"></div>
+                {% endif %}
+                {% if item.description %}
+                <p class="font-size-18 color-dark-4 line-height-24">{{item.description}}</p>
+                {% endif %}
+                {% if item.btn_link %}
+                <a id="{%if item.btn_click_id%}{{item.btn_click_id}}{%endif%}" href="{{item.btn_link}}" {%if item.btn_link_download %} download {% endif %} {%if item.btn_link_target == '_blank' %} target="_blank" {% endif %} class="btn btn-dashed-primary font-size-16 mb-5" style="padding-top: 16px">
+                    {{item.btn_text}}
+                </a>
+                {%endif%}
+                {% if item.small_description %}
+                <div class="space20"></div>
+                <p class="font-size-14 color-dark-5 mb-0 {%if item.small_description_class%}{{item.small_description_class}}{%endif%}">
+                    {{item.small_description}}</p>
+                {%endif%}
+            </div>
+            <div class="{%if item.class%} {{item.class}} {%else%} {{right_class}} {%endif%} {%if item.float=='right'%} order-md-2 {% else %} {{pr}} pr-sm-0 order-md-1 {%endif%}">
+                {% if item.type == 'image' %}
+                <img width="580" height="550" class="aspect-ratio" src="{{ item.image }}" alt="{{item.title}}">
+                {% endif %}
+                {% if item.type == 'video' %}
+                <div class='embed-container'>
+                    <iframe {%if item.video_loading%} loading="{{item.video_loading}}" {% endif %} id="{{item.iframe_id}}" src='{{ item.video }}' frameborder='0' allow="autoplay; fullscreen; picture-in-picture" allowfullscreen="" title="{{item.video_title}}"></iframe>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        <div class="{%if item.space%}{{item.space}}{%else%}space170{%endif%}"></div>
+        {%endif%}
+        {% endfor %}
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% include footer_2.html %}

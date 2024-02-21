@@ -1,0 +1,281 @@
+---
+layout: default
+author: Shanhui Fan
+custom_font: font2
+custom_css:
+  - unit-css
+title: "Finite-Difference Time-Domain (FDTD) | Flexcompute"
+description: "Dive into the dynamics of electromagnetic fields with finite-difference time-domain."
+tags:
+  - fdtd
+  - fdtd method
+  - fdtd simulation
+  - what is fdtd
+  - fdtd meaning
+  - Finite-difference time-domain
+  - Yee's method
+  - Electrodynamics
+  - photonics simulation
+  - electromagnetic phenomena
+  - electromagnetic fields
+  - Maxwell’s equations
+  - magnetic fields
+  - FDTD simulation
+  - Define simulation
+  - Discretize space
+  - finite difference
+  - Yee Lattice
+  - finite element method (FEM)
+  - FDTD vs. FEM
+image:
+  path: "/assets/images/product/tidy3D/electromagnetic-field-xl.png"
+  alt: "Finite-Difference Time-Domain (FDTD) | Flexcompute"
+
+hero_section:
+  enable: true
+  title: FDTD
+  sub_title: "Finite-difference time-domain (FDTD) is a method for solving Maxwell’s Equations, which describe classical Electrodynamics. It is a general method that can give both the full time dynamics of the electromagnetic fields or the steady state behavior. As it is a general and reliable method, it is the most commonly used tool for simulating electromagnetic devices."
+  enable_demo: true
+  get-demo_click_id: "__pg_fdtd_btn_get-a-demo"
+  contact_click_id: '__pg_fdtd_btn_contact-us'
+  enable_contact: true
+  logo:
+    image: '/assets/images/product/tidy3D/tidy3d-logo.svg'
+    alt: 'Python-Driven FDTD Software: Tidy3D - Flexcompute'
+  background:
+    image: '/assets/images/product/tidy3D/electromagnetic-field-xl.png'
+    alt: 'Finite-Difference Time-Domain (FDTD) - Flexcompute'
+featured_section:
+  enabled: true
+  title: "How does FDTD work"
+  description: "The first step of FDTD is discretizing the spatial and temporal dimensions on a regular, rectangular grid. In this formalism, the derivative operations in Maxwell’s equations may be approximated using “finite differences”. The FDTD algorithm then solves E(t) and H(t) one after another starting from t=0 and terminating when a final condition is met, for example when there are very little fields present in the system."
+  image: "/assets/images/product/tidy3D/fdtd/img.png"
+  buttons:
+    - text: FDTD 101
+      link: '/tidy3d/learning-center/fdtd101/'
+      click_id: '__pg_fdtd_how-does-fdtd-work_fdtd101_btn'
+      enabled: true
+      primary: true
+    - text: White Paper
+      link: '/download-whitepaper/'
+      click_id: '__pg_fdtd_how-does-fdtd-work_white-paper_btn'
+      enabled: true
+photonic_device:
+  enabled: true
+  title: "Model a Photonic Device in FDTD"
+  description: "Once all of these details are specified, the simulation is set up, run for a series of time steps, and the data requested by the monitors is returned for post processing or analysis."
+  list:
+    - text: "First, Specify the global simulation parameters, such as the size, discretization characteristics, and boundary conditions. These parameters define the context of the device and the discretization can be used as a knob to balance accuracy with speed."
+    - text: "Next, Specify all of the geometries and material properties of the structures within the domain. Afterwards, define the excitation that injects electromagnetic energy into this system. This can be done by directly specifying a current source, such as a point dipole, or a desired field pattern, such as a plane wave, from which a current source distribution can be defined."
+    - text: "Finally, Define the quantities of interest to be measured from the simulation. For example, measuring the time dynamics of a field component at a point within the simulation domain or the flux through a plane. Defining these “monitors” up front means that less information will need to be stored and many of these quantities can be computed during the run, saving time."
+
+feature_examples:
+  enabled: true
+  title: Feature Examples
+
+faq:
+  enabled: true
+  title: "Frequently Asked Questions"
+  link: '/tidy3d/learning-center/faq/'
+  rows_1:
+    - category: About Tidy3D
+      link: /tidy3d/learning-center/faq/#about-tidy3d
+    - category: Installation and Help
+      link: /tidy3d/learning-center/faq/#installation-and-help
+    - category: Simulations
+      link: /tidy3d/learning-center/faq/#simulations
+    - category: Parameter Sweep
+      link: /tidy3d/learning-center/faq/#parameter-sweep
+  rows_2:
+    - category: Simulation Troubleshoot
+      link: /tidy3d/learning-center/faq/#simulation-troubleshoot
+    - category: Mediums
+      link: /tidy3d/learning-center/faq/#mediums
+    - category: Structures
+      link: /tidy3d/learning-center/faq/#structures
+    - category: Sources
+      link: /tidy3d/learning-center/faq/#sources
+    - category: Grid Specification
+      link: /tidy3d/learning-center/faq/#grid-specification
+  rows_3:
+    - category: Boundary Conditions
+      link: /tidy3d/learning-center/faq/#boundary-conditions
+    - category: Symmetry
+      link: /tidy3d/learning-center/faq/#symmetry
+    - category: Mode Solver
+      link: /tidy3d/learning-center/faq/#mode-solver
+    - category: Monitors
+      link: /tidy3d/learning-center/faq/#monitors
+  rows_4:
+    - category: Data Visualization and Postprocessing
+      link: /tidy3d/learning-center/faq/#data-visualization-and-postprocessing
+    - category: Scattering Matrix
+      link: /tidy3d/learning-center/faq/#scattering-matrix
+    - category: Resonance Finder
+      link: /tidy3d/learning-center/faq/#resonance-finder
+    - category: Inverse Design
+      link: /tidy3d/learning-center/faq/#inverse-design
+
+useful_references:
+  enabled: true
+  title: "Useful References"
+  list:
+    - text: "Tidy3D is Flexcompute’s python-based FDTD solver, which makes it simple to define and run FDTD simulations."
+      btn_text: 'Tidy3D Documentation'
+      btn_link: 'https://docs.flexcompute.com/projects/tidy3d/en/latest/index.html'
+      target: '_blank'
+      btn_click_id: '__pg_fdtd_tidy3d-documentation_link'
+    - text: "EMPossible’s course on FDTD is very useful in leaning more about the implementation of FDTD"
+      btn_text: 'FDTD Implementation'
+      btn_link: 'https://empossible.net/academics/emp5304/'
+      target: '_blank'
+      btn_click_id: '__pg_fdtd_fdtd-implementation_link'
+    - text: "If your simulation diverges, follow this article and perform thorough troubleshooting."
+      btn_text: 'FDTD troubleshoot for divergence'
+      btn_link: '/tidy3d/examples/notebooks/DivergedFDTDSimulation/'
+      target: '_self'
+      btn_click_id: '__pg_fdtd_fdtd_fdtd-troubleshoot-for-divergence_link'
+    - text: "Taflove FDTD is the main reference for the definitive guide to the method and all of the details."
+      btn_text: 'Computational Electrodynamics '
+      btn_link: 'https://uk.artechhouse.com/Computational-Electrodynamics-Third-Edition-P1916.aspx'
+      target: '_blank'
+      btn_click_id: '__pg_fdtd_computational-electrodynamics_link'
+    - text: "“Inverse design” is a technique where one can use computational methods to automate the process of designing photonic devices. Master the art of simulation with our cutting-edge lectures"
+      btn_text: 'Inverse Design in Photonics'
+      target: '_self'
+      btn_link: '/tidy3d/learning-center/inverse-design/'
+      btn_click_id: '__pg_inverse-design-in-photonics_link'
+    - text: "Discover simulation excellence! Find inspiration in our showcase of simulations."
+      btn_text: 'Simulation Examples'
+      target: '_self'
+      btn_link: '/tidy3d/learning-center/example-library/'
+      btn_click_id: '__pg_fdtd_simulation-examples _link'
+
+---
+{% include header.html extra_class="absolute transparent" logo_class="logo fc-logo" container_class="container" %}
+<div class="wrapper bg-opacity-default">
+  {% include tidy3d_hero_section.html pt='pt-70' %}
+</div>
+{% if page.featured_section.enabled %}
+{% assign featured = page.featured_section %}
+<div class="space100"></div>
+<section class="wrapper bg-opacity-default">
+  <div class="container">
+    <div class="row">
+      {% if featured.image%}
+      <div class="col-12 col-lg-6">
+        <img width="925" height="436" class="aspect-ratio" src="{{featured.image}}" alt="{{featured.title}}">
+      </div>
+      {% endif %}
+      <div class="col-12 col-lg-6">
+        {% if featured.title %}
+        <h2 class="font-size-34 color-dark-3 line-height-36 mb-0">{{featured.title}}</h2>
+        <div class="space30"></div>
+        {% endif %}
+        {% if featured.description %}
+        <p class="line-height-24 color-dark-5 mb-0 {{featured.text_class}}">{{featured.description}}</p>
+        {% endif %}
+        {% if featured.buttons %}
+        <div class="space20"></div>
+        {% for button in featured.buttons %}
+        {% if button.enabled %}
+        <a
+          id="{{button.click_id}}"
+          href="{{button.link}}"
+          class="btn {%if button.primary%}btn-primary{%else%}btn-dashed-primary{%endif%} font-size-16 mb-0 {%if forloop.first%}ml-0{%else%}ml-10{%endif%}" style="padding-top: 16px">
+          {{button.text}}
+        </a>
+        {% endif %}
+        {% endfor %}
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+{%endif%}
+
+{% if page.photonic_device.enabled %}
+{%assign photonic_device = page.photonic_device%}
+<div class="space100"></div>
+<section class="wrapper bg-opacity-default">
+  <div class="container">
+    {% if photonic_device.title %}
+    <h2 class="font-size-34 color-dark-3 line-height-36 text-center mb-0">{{photonic_device.title}}</h2>
+    <div class="space30"></div>
+    {% endif %}
+    <div class="row">
+      {% if photonic_device.list %}
+      <div class="col-12 col-lg-7">
+        {%for item in photonic_device.list %}
+        <div class="d-flex justify-content-start align-items-start feature-box fdtd-photonic-device p-10 mb-15" style="column-gap:8px">
+          <span class="cycle-index">{{forloop.index}}</span>
+          <p class="line-height-24 color-dark-5 m-0">
+            {{item.text}}
+          </p>
+        </div>
+        {% endfor %}
+      </div>
+      {%endif%}
+      <div class="col-12 col-lg-5 p-0">
+        {% include fdtd/gui-tutorials.html%}
+      </div>
+    </div>
+  </div>
+</section>
+{%endif%}
+
+{%if page.feature_examples.enabled%}
+<div class="space100"></div>
+<section class="wrapper bg-opacity-default">
+  <div class="container">
+    {% if page.feature_examples.title %}
+    <h2 class="font-size-34 color-dark-3 line-height-36 text-center mb-0">{{page.feature_examples.title}}</h2>
+    <div class="space30"></div>
+    {% endif %}
+    {% include fdtd/feature-examples.html %}
+  </div>
+</section>
+{%endif%}
+
+{% if page.faq.enabled %}
+{% include fdtd/faq.html %}
+{% endif %}
+
+{% if page.useful_references.enabled %}
+{%assign reference = page.useful_references%}
+<div class="space100"></div>
+<section class="wrapper bg-opacity-default">
+  <div class="container">
+    {% if reference.title %}
+    <h2 class="font-size-34 color-dark-3 line-height-36 text-center mb-0">{{reference.title}}</h2>
+    <div class="space30"></div>
+    {% endif %}
+    <div class="row">
+      {% for card in reference.list %}
+      <div class="col-lg-6 col-12">
+        <div class="p-16">
+          {% if card.text %}
+          <p class="font-size-18 line-height-28 color-dark-3 mb-8">{{card.text}}</p>
+          {% endif %}
+          {% if card.btn_link %}
+          <div class="d-flex align-items-center justify-content-start column-gap-8">
+            <i class="jam jam-arrow-circle-right-f font-size-24"></i>
+            <a id="{{card.btn_click_id}}" target="{{card.target}}" class="color-dark-3-hover font-weight-700" href="{{card.btn_link}}">
+              {{card.btn_text}}
+            </a>
+          </div>
+          {% else %}
+          <span class="color-disabled font-weight-700 d-flex align-items-center justify-content-start column-gap-8">
+            <i class="jam jam-arrow-circle-right-f font-size-24"></i>
+            {{card.btn_text}}
+          </span>
+          {% endif %}
+        </div>
+      </div>
+      {%endfor%}
+    </div>
+  </div>
+</section>
+{% endif %}
+<div class="space80"></div>
+{% include footer_2.html %}

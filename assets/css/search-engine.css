@@ -1,0 +1,184 @@
+.search-panel.fixed-height {
+    min-height: calc(100vh - 670px); /* padding top: 70px; footer: 521px; space: 80px */
+    /*min-height: 280px;*/
+}
+.search-panel.search-panel-position-center .search-panel__filters .search-box {
+    position: relative;
+    left: calc(50% - 350px);
+    width: 700px;
+    transition: all 0.4s ease;
+}
+.search-panel.auto-height {
+    min-height: calc(100vh - 670px);
+}
+.search-panel.search-panel-position-start .search-panel__filters .search-box {
+    width: 100%;
+    left: 0;
+    transition: all 0.4s ease;
+}
+
+.search-engine-tabs .headers:not(.initial) {
+    height: 45px;
+    justify-content: flex-start;
+}
+
+.search-engine-tabs .headers.initial {
+    justify-content: center;
+}
+
+.search-engine-tabs .headers .tab-title {
+    display: flex;
+    justify-content: flex-start;
+    align-items: flex-end;
+    padding: 8px;
+    cursor: pointer;
+}
+
+.search-engine-tabs .headers:not(.initial) .tab-title.selected {
+    position: relative;
+    bottom: -1px;
+    background: #ffffff;
+}
+/*.search-engine-tabs .headers .tab-title.selected:after {*/
+/*    position: absolute;*/
+/*    left: 0;*/
+/*    bottom: -4px;*/
+/*    content: " ";*/
+/*    display: inline-block;*/
+/*    width: 100%;*/
+/*    height: 4px;*/
+/*    background: #ffffff;*/
+/*}*/
+
+.tabs.search-engine-tabs .containers .tab-body {
+    display: none;
+}
+.tabs.search-engine-tabs .containers .tab-body.selected {
+    display: block;
+}
+
+.tabs.search-engine-tabs .containers .tab-body .category-selector span.custom-radio {
+    display: inline-block;
+    padding: 12px 8px;
+    color: #606266;
+    cursor: pointer;
+}
+
+.tabs.search-engine-tabs .containers .tab-body .category-selector span.custom-radio.selected {
+    color: #D03E60;
+    border-bottom: 2px solid #D03E60;
+}
+
+.search-box .reset-input-box {
+    height: 48px;
+    padding-left: 45px;
+    border-radius: 8px!important;
+    border: 1px solid #F5F6F8!important;
+    box-shadow: none!important;
+    font-size: 18px!important;
+    background: #F5F6F8 !important;
+    color: var(--color-dark-6)!important;
+}
+
+.search-box.box-shadow .reset-input-box {
+    position: relative;
+    border-color: var(--color-primary) !important;
+    z-index: 2;
+}
+
+.search-box {
+    border-radius: 8px;
+}
+
+.search-box.box-shadow {
+    box-shadow: 0 8px 9px rgba(0, 0, 0, 0.1);
+}
+
+.search-box .jam-search {
+    left: 16px;
+    top: 13px;
+    font-size: 24px;
+    z-index: 2;
+}
+
+.search-box .jam-close-circle-f {
+    right: 16px;
+    top: 16px;
+    cursor: pointer;
+    color: #d9d9d9;
+    z-index: 2;
+}
+
+.search-box .select-items {
+    position: absolute;
+    left: 0;
+    top: 40px;
+    width: 100%;
+    height: fit-content;
+    max-height: 100px;
+    overflow-y: auto;
+    padding: 12px 0 8px 0;
+    box-shadow: 0 8px 9px rgba(0, 0, 0, 0.1);
+    border-radius: 0 0 8px 8px;
+    background: #F5F6F8;
+    z-index: 1;
+}
+
+.search-box .select-items .item {
+    padding: 5px 24px;
+    font-size: 13px;
+    line-height: 18px;
+    cursor: pointer;
+    overflow: hidden;
+}
+.search-box .select-items .item:hover {
+    background: #f5fafd;
+}
+
+.search-box .select-items .item.focus {
+    background: rgb(196, 57, 89, .45)
+}
+
+.category-box {
+    max-width: 100px;
+    height: fit-content;
+    padding: 4px 8px;
+    border: 1px solid #D1D1D1;
+    border-radius: 4px;
+    font-size: 14px;
+    line-height: 14px;
+    color: #A8A8A8 !important;
+}
+
+.category-box:hover {
+    border-color: var(--color-primary);
+}
+
+#hits div.search-pagination a {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    width: 25px;
+    height: 25px;
+    border: 1px solid #7A7977;
+    border-radius: 6px;
+    color: #7A7977;
+    cursor: pointer;
+}
+
+#hits div.search-pagination a:not(.disabled):hover {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+}
+
+#hits div.search-pagination a:not(.disabled):hover i {
+    color: var(--color-primary);
+}
+
+#hits div.search-pagination a i {
+    font-size: 16px !important;
+}
+
+#hits div.search-pagination a.disabled {
+    cursor: not-allowed;
+}

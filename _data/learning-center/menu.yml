@@ -1,0 +1,61 @@
+categories: ["Lectures", "Tutorials", "Applications"]
+
+menus:
+  - title: FDTD101
+    enable: true
+    icon: 'fdtd101.svg'
+    path: "/tidy3d/learning-center/fdtd101/"
+    submenu: true
+    submenu_sources: 'fdtd101'
+    category: "Lectures"
+  - title: Intro to PIC
+    enable: false
+    icon: 'intro-to-pic.svg'
+    path: "javascript:void(0)"
+  - title: PIC Design
+    enable: false
+    icon: 'pic-design.svg'
+    path: "javascript:void(0)"
+  - title: Metasurfaces
+    enable: false
+    icon: 'metasurfaces.svg'
+    path: "javascript:void(0)"
+  - title: Inverse Design
+    enable: true
+    icon: 'inverse-design.svg'
+    path: "/tidy3d/learning-center/inverse-design/"
+    submenu: true
+    submenu_sources: 'inverse-design'
+    category: "Lectures"
+  - title: Tidy3D GUI
+    enable: true
+    icon: 'tidy3d-gui.svg'
+    path: "/tidy3d/learning-center/tidy3d-gui/"
+    submenu: true
+    submenu_sources: 'tidy3d-gui'
+    category: "Tutorials"
+  - title: Tidy3D Python
+    enable: true
+    icon: 'tidy3d-python.svg'
+    submenu: true
+    submenu_sources: 'tidy3d-python'
+    path: "/tidy3d/learning-center/tidy3d-python/"
+    category: "Tutorials"
+  - title: FAQ
+    enable: true
+    icon: 'faq.svg'
+    selected_class: "selected-underline"
+    path: "/tidy3d/learning-center/faq/"
+    category: "Tutorials"
+  - title: Example Library
+    enable: true
+    icon: 'example-library.svg'
+    selected_class: "selected-underline"
+    path: "/tidy3d/learning-center/example-library/"
+    category: "Applications"
+  - title: Publications
+    enable: true
+    icon: 'publications.svg'
+    selected_class: "selected-underline"
+    path: "/tidy3d/learning-center/publications/"
+    category: "Applications"

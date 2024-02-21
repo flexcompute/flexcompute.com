@@ -1,0 +1,109 @@
+{
+  "title": "FDTD 101: Lecture 9",
+  "pages": [
+    {
+      "id": "",
+      "title": "Another important source of error in FDTD",
+      "transcript": "Today we will continue the topic on how to get accurate results in FDTD simulations. Last time, we talked about numerical dispersion, which is an important issue in understanding the accuracy of FDTD from both a practical point of view and a theoretical point of view. Today we'll talk about an issue that probably is not commonly talked about in the theoretical study of FDTD, but it is practically quite important: how the dielectric constant is being distributed on the FDTD grid."
+    },
+    {
+      "id": "",
+      "title": "Two FDTD simulations that differ only on the slab center position",
+      "paragraphs": [
+        {
+          "title": "Two FDTD simulations that differ only on the slab center position",
+          "transcript": "In Lecture 2, we showed how to simulate the transmission spectrum of a dielectric slab. In the setup here, we consider a silicon slab in the air. The index of refraction is 3.5, and the thickness is 150 nm. In the simulation, we set up a computational cell. Along the z-axis perpendicular to the slab, the computational cell occupies a region from -1.5 $$\\mu$$m to 1.5 $$\\mu$$m. Near the center of this computational cell, we place the electric slab."
+        },
+        {
+          "title": "",
+          "transcript": "Here I'm showing two simulations. The only difference here is the center of the dielectric slab. In one case, with respect to this coordinate system. the center is 0 nm; and in the other case, the center is 12.5 nm. In this simulation setup, we have chosen the spatial discretization along the Z direction to be 25 nm. Therefore these two choices of the center of the slab differ by half the grid step size."
+        },
+        {
+          "title": "",
+          "transcript": "Now this may sound a bit strange: the physical results should not depend on the center of the dielectric slab; but if you are using a very basic FDTD code, you can see something quite interesting. Here “basic” means we are using a uniform grid with no subpixel averaging or other fancy techniques."
+        }
+      ]
+    },
+    {
+      "id": "",
+      "title": "Surprising difference of the simulation results with a tidy change of slab position",
+      "paragraphs": [
+        {
+          "title": "Surprising difference of the simulation results with a tidy change of slab position",
+          "transcript": "Here is the simulation result with a basic FDTD algorithm. Again basic means one is using a uniform grid with no subpixel averaging or other fancy techniques. To reiterate, the grid step size is 25 nm, and the centers of the two slabs differ by half a grid step. As shown in the figure on the right, the black curve refers to the transmission spectrum when the center of the slab is at 0 nm, and the blue line for the center at 12.5 nm. To set a baseline, the red curve illustrates the analytic result."
+        },
+        {
+          "title": "",
+          "transcript": "As you can see, the blue curve that corresponds to the center at 12.5 nm is much closer to the analytic result as compared to the black curve that is for the center at 0 nm. You can also examine the resonance frequency of the transmission peak. They are the Fabry-Perot resonances that we mentioned earlier. The shift of the resonance frequency of the black curve is approximately 50 THz. This is a very large frequency shift in comparison to a small shift in the center position."
+        }
+      ]
+    },
+    {
+      "id": "",
+      "title": "How dielectric constant is assigned to 1D Yee grid",
+      "transcript": "To understand this better, it is very important to think about how FDTD calculation is carried out. In the previous example, we're looking at normal incident light, so you can simplify the relevant part of the FDTD algorithm by considering Maxwell’s equation in 1D. In 1D, the Yee grid is simply a stagger grid: the E-grids where the electric fields are defined are shifted from the H-grid where the magnetic fields are defined by half a grid step size. Since the operation of the dielectric function is multiplication on the electric field, it is common that one will assign the dielectric function on the position of the electric field grid. So the permittivity and the electric field are colocated, but the electric and magnetic fields are not. Now with this, the set up of a dielectric structure in FDTD then translates into setting up the dielectric function at the position of the electric field grid point."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "Let's start by taking a look at the more accurate case where we set the center to be at 12.5 nm. In this case, we show a typical algorithm for setting up the dielectric function on the grid."
+    },
+    {
+      "id": "",
+      "title": "Counting the grids inside the slab for the more accurate setup",
+      "paragraphs": [
+        {
+          "title": "Counting the grids inside the slab for the more accurate setup",
+          "transcript": "As mentioned earlier, the center is at 12.5 nm, and the thickness is 150 nm. These red dots here correspond to the E-grid points. The most standard way is to start with the center and search within the half thickness 75 nm. So any grid point that lies within 75 nm from the center is assumed to be silicon, and any point outside to be air."
+        },
+        {
+          "title": "",
+          "transcript": "With this algorithm, you can see that there are exactly six grid points assigned to be silicon. As mentioned earlier, the grid size is 25 nm, so the thickness of the slab simulated is 150 nm."
+        }
+      ]
+    },
+    {
+      "id": "",
+      "title": "The accurate result is attributed to the correct slab thickness in simulation",
+      "transcript": "As a result, the FDTD simulation agrees quite well with the analytics. You can see a little discrepancy because we're using a fairly coarse grid for this particular structure. Therefore, the effect of numerical dispersion, as we discussed previously, is strong."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "On the other hand, the center of the slab here is shifted by half a grid point, and we can repeat the counting process."
+    },
+    {
+      "id": "",
+      "title": "Counting the grids inside the slab for the inaccurate setup",
+      "transcript": "In this case, the center is at 0 nm, and the algorithm will assign any points that are within 75 nm of the center to be silicon. As you can see here, the grids at ∓75 nm are both assigned as silicon. Consequently, there are 7 rather than 6 grid points assigned to be silicon. Therefore, even though you think that you are simulating a silicon layer of thickness 150 nm, you are actually simulating a layer of 175 nm thick."
+    },
+    {
+      "id": "",
+      "title": "The result is off because the slab thickness in simulation is much larger",
+      "transcript": "The dash line here corresponds to the setup where the slab center is at 0 nm. When it is compared to the analytic result for a slab of thickness 175 nm, they actually agree pretty well. So this single grid point difference accounts for a very large difference in the simulation results."
+    },
+    {
+      "id": "",
+      "title": "Lesson: A single grid point assignment deviation can make a big difference ",
+      "transcript": "The lesson here is that it is very important in FDTD to understand how the dielectric constant is assigned to the E-lattice. A single grid point assignment difference can make a very large difference because it can result in a substantial change of the dielectric structure. In this particular example where the silicon layer is of thickness 150 nm, we actually need to be very careful in making sure that the structure that you put into FDTD really does have a thickness of 150 nm."
+    },
+    {
+      "id": "",
+      "title": "Motivation for subpixel averaging in the next lecture",
+      "paragraphs": [
+        {
+          "title": "Motivation for subpixel averaging in the next lecture",
+          "transcript": "While we are showing a very drastic example, something to keep in mind in general when you are running FDTD simulations is that it is quite important to understand how the dielectric constant is assigned to the E-lattice in order to get accurate numerical results."
+        },
+        {
+          "title": "",
+          "transcript": "As you can see, if you are using a bare-bone FDTD algorithm, it’s quite annoying that you have to think about how dielectric constant is assigned. As a user, it is quite reasonable that you should demand that you don't suffer from this kind of subtlety. For example, the thickness of the slab should not depend on where you choose the center of the slab in the computational domain. Also while we are talking about the slab geometry, in general this kind of issue arises for more complicated geometries as well. So it will be very desirable to have an FDTD algorithm that does not suffer from this kind of subtlety. For this, we'll talk about the algorithm next time."
+        },
+        {
+          "title": "",
+          "transcript": "This lecture in many ways provides you with motivation in thinking about those kinds of algorithms. The algorithm that we’ll introduce is subpixel averaging."
+        }
+      ]
+    }
+  ]
+}

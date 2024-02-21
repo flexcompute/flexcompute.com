@@ -1,0 +1,7 @@
+{% assign tags = "" | split: "," %}
+{% for example in site.data.learning-center.example-library.examples %}
+{% assign tags = tags | concat: example.tags | uniq %}
+{% endfor %}
+{% for tag in tags %}
+<span class="custom-radio" data-tag-value="{{tag}}" onclick="onSelectTag(event, '{{tag}}')">{{tag}}</span>
+{%endfor%}

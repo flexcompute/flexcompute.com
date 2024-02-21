@@ -1,0 +1,61 @@
+udprim naca series 0012
+rotatex 90 0 0
+translate -0.25 0 0
+scale 3
+rotatey 15 0 0
+
+udprim naca series 0012
+rotatex 90 0 0
+translate -0.25 0 0
+scale 2
+translate 2 10 1
+
+blend 0 "-1;1"
+
+attribute faceName $wing
+attribute groupName $wingRight
+
+udparg  edgeAttr  attrname $edgeName attrstr $leadingEdge
+udprim  edgeAttr  xyzs "-0.7244;0.0000;0.1941;1.5000;10.0000;1.0000;"
+
+udparg  edgeAttr  attrname $edgeName attrstr $trailingEdge
+udprim  edgeAttr  xyzs "2.1743;0.0000;-0.5786;3.5000;10.0000;1.0026;"
+udparg  edgeAttr  attrname $edgeName attrstr $trailingEdge
+udprim  edgeAttr  xyzs "2.1723;0.0000;-0.5861;3.5000;10.0000;0.9974;"
+
+translate 3 1 0
+
+store $wing
+
+point 0 0 0
+
+udprim supell rx 1 ry 1
+rotatey 90 0 0
+translate 1 0 0
+
+udprim supell rx 1.5 ry 2.0
+rotatey 90 0 0
+translate 5 0 0
+
+udprim supell rx 1 ry 1
+rotatey 90 0 0
+translate 8 0 0
+
+udprim supell rx 0.2 ry 0.1
+rotatey 90 0 0
+translate 10 0 0
+
+blend "0.5;0;1;0;0.5;0;0;1" 0
+
+attribute faceName $fuselage
+attribute groupName $fuselage
+
+store $fuselage
+
+mark
+restore $wing
+restore $wing
+attribute groupName $wingLeft
+mirror 0 1 0
+restore $fuselage
+union 1 0 0

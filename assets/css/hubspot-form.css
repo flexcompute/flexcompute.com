@@ -1,0 +1,271 @@
+/*! purgecss start ignore */
+:root {
+    --hs-form-input-width: 100%;
+    --hs-form-input-height: 48px;
+    --hs-form-input-height-32: 32px;
+    --hs-form-input-border: 1px solid #bebebe;
+    --hs-form-input-border-radius: 4px;
+    --hs-form-input-padding: 0 8px;
+    --hs-form-input-background: #ffffff;
+    --hs-form-tip-color: #de4747;
+    --hs-form-msgs-font-size: 12px;
+    --hs-form-msgs-font-weight: 400;
+}
+
+.spinning {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: 100;
+}
+
+figure.loading-animation {
+    position: absolute;
+    margin: auto;
+    top: 0; bottom: 0; left: 0; right: 0;
+    width: 24px;
+    height: 24px;
+    animation: rotate 2.4s linear infinite;
+}
+figure.loading-animation .white {
+    top: 0; bottom: 0; left: 0; right: 0;
+    background: white;
+    animation: flash 2.4s linear infinite;
+    opacity: 0;
+}
+figure.loading-animation .dot {
+    position: absolute;
+    margin: auto;
+    width: 9.2px; height: 9.2px;
+    border-radius: 100%;
+    transition: all 1s ease;
+}
+figure.loading-animation .dot:nth-child(2) { top: 0; bottom: 0; left: 0; background: rgba(196, 57, 89, 1); animation: dotsY 2.4s linear infinite; }
+figure.loading-animation .dot:nth-child(3) { left: 0; right: 0; top: 0; background: rgba(196, 57, 89, .8); animation: dotsX 2.4s linear infinite; }
+figure.loading-animation .dot:nth-child(4) { top: 0; bottom: 0; right: 0; background: rgba(196, 57, 89, .5); animation: dotsY 2.4s linear infinite; }
+figure.loading-animation .dot:nth-child(5) { left: 0; right: 0; bottom: 0; background: rgba(196, 57, 89, .2); animation: dotsX 2.4s linear infinite; }
+
+@keyframes rotate {
+    0% { transform: rotate( 0 ) }
+    100%{ transform: rotate(360deg)}
+}
+
+@keyframes dotsY {
+    66% { opacity: .1; width: 9.2px; }
+    77%{ opacity: 1; width: 0; }
+}
+@keyframes dotsX {
+    66% { opacity: .1; height: 9.2px;}
+    77%{ opacity: 1; height: 0; }
+}
+
+@keyframes flash {
+    33% { opacity: 0; border-radius: 0; }
+    55%{ opacity: .6; border-radius: 100%; }
+    66%{ opacity: 0; }
+}
+
+.hs-form-submit-loading {
+    position: absolute;
+    left: 44px;
+    top: 12px;
+    display: inline-block;
+    color: var(--color-primary);
+    transform: rotate(0deg);
+    animation: rotation 1s linear infinite;
+    -moz-animation: rotation 1s linear infinite;
+    -webkit-animation: rotation 1s linear infinite;
+    -o-animation: rotation 1s linear infinite;
+}
+
+@keyframes rotation{
+    from {transform: rotate(0deg);}
+    to {transform: rotate(360deg);}
+}
+
+
+.hubspot-form-wrapper .hbspt-form form .hs-form-field {
+    margin-bottom: 8px;
+}
+
+.hubspot-form-wrapper .hbspt-form form .hs-form-field label {
+    margin-bottom: 0;
+    font-size: 16px;
+}
+
+.hubspot-form-wrapper .hbspt-form form .hs-form-field legend {
+    margin-bottom: 0;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--color-dark-4);
+    font-style: oblique;
+}
+
+.hubspot-form-wrapper .hbspt-form form .hs-form-field label .hs-form-required {
+    color: var(--hs-form-tip-color);
+}
+
+.hubspot-form-wrapper .hbspt-form form .hs-form-field .input .hs-input {
+    width: var(--hs-form-input-width);
+    min-height: var(--hs-form-input-height);
+    padding: var(--hs-form-input-padding);
+    border: var(--hs-form-input-border);
+    border-radius: var(--hs-form-input-border-radius);
+    line-height: unset !important;
+    background: var(--hs-form-input-background);
+}
+
+.hubspot-form-wrapper .hbspt-form form.teaching-program-hubspot-form .hs-form-field .input .hs-input {
+    height: var(--hs-form-input-height-32);
+    min-height: var(--hs-form-input-height-32);
+}
+
+.hubspot-form-wrapper .hbspt-form form .hs-form-field .hs-error-msgs, .inputs-list,
+.hubspot-form-wrapper .hbspt-form form .hs_error_rollup .inputs-list {
+    margin: 0;
+}
+
+.hubspot-form-wrapper .hbspt-form form .hs-form-field .hs-error-msgs, ul.inputs-list,
+.hubspot-form-wrapper .hbspt-form form .hs_error_rollup ul.inputs-list{
+    padding: 0;
+    list-style-type: none;
+}
+
+.hubspot-form-wrapper .hbspt-form form .hs-form-field .hs-error-msgs, ul.inputs-list li,
+.hubspot-form-wrapper .hbspt-form form .hs_error_rollup ul.inputs-list li{
+    line-height: 18px;
+}
+.hubspot-form-wrapper .hbspt-form form > .hs-form-field > ul > li > label:not(.hs-error-msg) {
+    display: none;
+}
+.hubspot-form-wrapper .hbspt-form form .hs-form-field .hs-error-msgs, .inputs-list label.hs-error-msg,
+.hubspot-form-wrapper .hbspt-form form .hs_error_rollup .hs-main-font-element,
+.hubspot-form-wrapper .hbspt-form form .hs-fieldtype-file ul label,
+.hubspot-form-wrapper .hbspt-form form .form-error-message,
+.hs-form-file-preview .invalid-file-tips
+{
+    font-size: var(--hs-form-msgs-font-size) !important;
+    font-weight: var(--hs-form-msgs-font-weight);
+    color: var(--hs-form-tip-color);
+    line-height: 18px;
+}
+
+/* reset file upload style */
+.hubspot-form-wrapper .hbspt-form form .hs-fieldtype-file .input {
+    width: 0.1px;
+    height: 0.1px;
+    opacity: 0;
+    overflow: hidden;
+    position: absolute;
+    z-index: -1;
+}
+.hubspot-form-wrapper .hbspt-form form .hs-fieldtype-file>label,
+.hubspot-form-wrapper .hbspt-form form .hs_submit .actions .hs-button {
+    display: inline-block;
+    box-sizing: border-box!important;
+    padding: .65rem .9rem .55rem;
+    font-size: .65rem;
+    letter-spacing: .025rem;
+    font-weight: 600;
+    line-height: 1;
+    border: 1px solid var(--color-primary)!important;
+    border-radius: 1.5rem;
+    color: var(--color-primary);
+    background-color: var(--color-white);
+    text-transform: none;
+    cursor: pointer;
+}
+
+.hubspot-form-wrapper .hbspt-form form .hs_submit .actions .hs-button {
+    width: 173px;
+}
+
+.hs-form-file-preview .preview-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    column-gap: 16px;
+}
+
+.hs-form-file-preview.image-file .preview-item{
+    align-items: center;
+}
+
+.hs-form-file-preview.image-file {
+    padding: 10px;
+    border: 1px dashed #ccc;
+    margin: 8px 0;
+    background: rgba(255,255,255,0.8);
+}
+
+.hs-form-file-preview .preview-item:not(:first-child){
+    margin-top: 8px;
+}
+
+.hs-form-file-preview:not(.image-file) .preview-item:hover {
+    background: #f5f5f5
+}
+.hs-form-file-preview .preview-item .info {
+    flex: 1;
+}
+.hs-form-file-preview .preview-item .close {
+    cursor: pointer;
+}
+.hs-form-file-preview.image-file .preview-item {
+    position: relative;
+    height: 45px;
+    display: flex;
+    column-gap: 10px;
+    justify-content: space-between;
+    border: 1px solid #ccc;
+    padding: 5px;
+    box-sizing: border-box;
+    border-radius: 4px;
+    background: #FFF;
+}
+.hs-form-file-preview.image-file .preview-item.invalid-file {
+    margin-bottom: 24px;
+    border-color: var(--hs-form-tip-color);
+}
+
+.hs-form-file-preview.image-file .preview-item.invalid-file .invalid-file-tips {
+    position: absolute;
+    left: 0;
+    bottom: -20px;
+}
+
+.hs-form-file-preview.image-file .preview-item.invalid-file span,
+.hs-form-file-preview.image-file .preview-item.invalid-file i {
+    color: var(--hs-form-tip-color) !important;
+}
+
+.hs-form-file-preview.image-file .preview-item .image-content{
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    column-gap: 10px;
+}
+
+.hs-form-file-preview.image-file .preview-item .image-content img{
+    width: 30px;
+    height: 30px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+}
+.hs-form-file-preview.image-file .preview-item.invalid-file .image-content img{
+    border-color: var(--hs-form-tip-color);
+}
+
+.hs-form-file-preview.image-file .preview-item .image-content .info{
+    display: flex;
+    flex-direction: column;
+    font-size: 14px;
+    line-height: 16px;
+}
+
+/*! purgecss end ignore */

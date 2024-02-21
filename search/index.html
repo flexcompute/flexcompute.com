@@ -1,0 +1,53 @@
+---
+layout: default
+title: "Search | Flexcompute"
+description: "Search"
+tags:
+author: Flexcompute
+custom_font: font2
+custom_css:
+  - search-engine
+  - unit-css
+custom_js:
+  - search-engine.min
+  - tabs.min
+search_title: How can we help you?
+preconnect: https://7HAKFDYBT6-dsn.algolia.net
+
+search_categories:
+  - tab: Tidy3D
+    icon: '/assets/images/Tidy3D-logo.svg'
+    categories: ['All', "FAQ", 'Tutorials', 'Applications', 'Lectures', 'Docs', 'Blog', 'Website']
+    enable: true
+  - tab: Flow360
+    icon: '/assets/images/Flow360-logo.svg'
+    categories: ['All-flow360', 'Tutorials', 'Applications', 'Lectures', 'Docs', 'Blog', 'Website']
+    enable: false
+
+---
+{% include header.html extra_class="absolute transparent" logo_class="logo fc-logo" container_class="container" %}
+<div class="wrapper bg-opacity-default">
+  <div class="container inner pt-70 pb-0">
+    {% if page.search_title %}
+    <h1 class="font-size-36 line-height-36 mb-20 color-dark-3 d-none">{{page.search_title}}</h1>
+    {% endif %}
+    <div class="search-panel search-panel-position-center fixed-height">
+      <div class="search-panel__filters">
+        {% include search-engine/tabs.html tabs=page.search_categories %}
+        {% include search-engine/search-box.html %}
+        <div id="product-list" class="d-none"></div>
+        <div id="category-list" class="d-none"></div>
+      </div>
+
+      <div class="search-panel__results">
+        <div id="hits" class="d-flex flex-column justify-content-end pt-24" style="visibility: hidden; height: calc(100% - 174px)">
+          <div id="hits-container"></div>
+          <div id="hits-container-pagination" class="mt-16"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="space80"></div>
+{% include footer_2.html %}
+

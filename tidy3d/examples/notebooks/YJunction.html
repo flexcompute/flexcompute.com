@@ -1,0 +1,3566 @@
+---
+author: Tom Chen
+custom_css:
+- learning-center/fdtd101
+- learning-center/menu
+- learning-center/home
+custom_font: font2
+description: This notebook demonstrates how to simulate a waveguide Y junction in
+  Tidy3D FDTD.
+image:
+  alt: Waveguide Y Junction Modeling in Tidy3D | Flexcompute
+  path: /assets/tidy3d/examples/image/y_junction_schematic.png
+layout: learning-center/example-library
+menu_config:
+  collapsed: true
+  selected: Example Library
+metadata:
+  category: Photonic Integrated Circuit Components
+  enable_more_examples: true
+  more_examples:
+  - name: Waveguide mode size converters
+    path: notebooks/WaveguideSizeConverter/
+    thumbnail:
+      description: Waveguide mode size converters
+      image: /assets/tidy3d/examples/image/luneburg_lens_taper.png
+  - name: Broadband directional coupler
+    path: notebooks/BroadbandDirectionalCoupler/
+    thumbnail:
+      description: Broadband directional coupler
+      image: /assets/tidy3d/examples/image/broadband_DC_1.png
+  - name: THz integrated demultiplexer/filter based on a ring resonator
+    path: notebooks/THzDemultiplexerFilter/
+    thumbnail:
+      description: THz integrated demultiplexer/filter based on a ring resonator
+      image: /assets/tidy3d/examples/image/thz_ring_resonator.png
+  pagination:
+    next:
+      name: Waveguide to ring coupling
+      path: notebooks/WaveguideToRingCoupling/
+    previous: false
+  type: example-library
+page_title: Waveguide Y junction
+source_link: https:/docs.flexcompute.com/projects/tidy3d/en/latest/_sources/notebooks/YJunction.ipynb
+tags:
+- Y junction
+- T branch
+- Tidy3D
+- FDTD
+title: Waveguide Y Junction Modeling in Tidy3D | Flexcompute
+---
+
+
+<html lang="en">
+<head><meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="/assets/tidy3d/examples/css/example-notebook.css" rel="stylesheet"/><script>
+(function() {
+  function addWidgetsRenderer() {
+    var mimeElement = document.querySelector('script[type="application/vnd.jupyter.widget-view+json"]');
+    var scriptElement = document.createElement('script');
+    
+    var widgetRendererSrc = 'https://unpkg.com/@jupyter-widgets/html-manager@*/dist/embed-amd.js';
+    
+    var widgetState;
+
+    // Fallback for older version:
+    try {
+      widgetState = mimeElement && JSON.parse(mimeElement.innerHTML);
+
+      if (widgetState && (widgetState.version_major < 2 || !widgetState.version_major)) {
+        
+        var widgetRendererSrc = 'https://unpkg.com/@jupyter-js-widgets@*/dist/embed.js';
+        
+      }
+    } catch(e) {}
+
+    scriptElement.src = widgetRendererSrc;
+    document.body.appendChild(scriptElement);
+  }
+
+  document.addEventListener('DOMContentLoaded', addWidgetsRenderer);
+}());
+</script>
+
+
+
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS_CHTML-full,Safe"> </script>
+
+<script type="text/x-mathjax-config">
+    init_mathjax = function() {
+        if (window.MathJax) {
+        // MathJax loaded
+            MathJax.Hub.Config({
+                TeX: {
+                    equationNumbers: {
+                    autoNumber: "AMS",
+                    useLabelIds: true
+                    }
+                },
+                tex2jax: {
+                    inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+                    displayMath: [ ['$$','$$'], ["\\[","\\]"] ],
+                    processEscapes: true,
+                    processEnvironments: true
+                },
+                displayAlign: 'center',
+                CommonHTML: {
+                    linebreaks: {
+                    automatic: true
+                    }
+                }
+            });
+
+            MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
+        }
+    }
+    init_mathjax();
+    </script>
+<script type="module">
+  document.addEventListener("DOMContentLoaded", async () => {
+    const diagrams = document.querySelectorAll(".jp-Mermaid > pre.mermaid");
+    // do not load mermaidjs if not needed
+    if (!diagrams.length) {
+      return;
+    }
+    const mermaid = (await import("https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.7.0/mermaid.esm.min.mjs")).default;
+    const parser = new DOMParser();
+
+    mermaid.initialize({
+      maxTextSize: 100000,
+      maxEdges: 100000,
+      startOnLoad: false,
+      fontFamily: window
+        .getComputedStyle(document.body)
+        .getPropertyValue("--jp-ui-font-family"),
+      theme: document.querySelector("body[data-jp-theme-light='true']")
+        ? "default"
+        : "dark",
+    });
+
+    let _nextMermaidId = 0;
+
+    function makeMermaidImage(svg) {
+      const img = document.createElement("img");
+      const doc = parser.parseFromString(svg, "image/svg+xml");
+      const svgEl = doc.querySelector("svg");
+      const { maxWidth } = svgEl?.style || {};
+      const firstTitle = doc.querySelector("title");
+      const firstDesc = doc.querySelector("desc");
+
+      img.setAttribute("src", `data:image/svg+xml,${encodeURIComponent(svg)}`);
+      if (maxWidth) {
+        img.width = parseInt(maxWidth);
+      }
+      if (firstTitle) {
+        img.setAttribute("alt", firstTitle.textContent);
+      }
+      if (firstDesc) {
+        const caption = document.createElement("figcaption");
+        caption.className = "sr-only";
+        caption.textContent = firstDesc.textContent;
+        return [img, caption];
+      }
+      return [img];
+    }
+
+    async function makeMermaidError(text) {
+      let errorMessage = "";
+      try {
+        await mermaid.parse(text);
+      } catch (err) {
+        errorMessage = `${err}`;
+      }
+
+      const result = document.createElement("details");
+      result.className = 'jp-RenderedMermaid-Details';
+      const summary = document.createElement("summary");
+      summary.className = 'jp-RenderedMermaid-Summary';
+      const pre = document.createElement("pre");
+      const code = document.createElement("code");
+      code.innerText = text;
+      pre.appendChild(code);
+      summary.appendChild(pre);
+      result.appendChild(summary);
+
+      const warning = document.createElement("pre");
+      warning.innerText = errorMessage;
+      result.appendChild(warning);
+      return [result];
+    }
+
+    async function renderOneMarmaid(src) {
+      const id = `jp-mermaid-${_nextMermaidId++}`;
+      const parent = src.parentNode;
+      let raw = src.textContent.trim();
+      const el = document.createElement("div");
+      el.style.visibility = "hidden";
+      document.body.appendChild(el);
+      let results = null;
+      let output = null;
+      try {
+        let { svg } = await mermaid.render(id, raw, el);
+        svg = cleanMermaidSvg(svg);
+        results = makeMermaidImage(svg);
+        output = document.createElement("figure");
+        results.map(output.appendChild, output);
+      } catch (err) {
+        parent.classList.add("jp-mod-warning");
+        results = await makeMermaidError(raw);
+        output = results[0];
+      } finally {
+        el.remove();
+      }
+      parent.classList.add("jp-RenderedMermaid");
+      parent.appendChild(output);
+    }
+
+
+    /**
+     * Post-process to ensure mermaid diagrams contain only valid SVG and XHTML.
+     */
+    function cleanMermaidSvg(svg) {
+      return svg.replace(RE_VOID_ELEMENT, replaceVoidElement);
+    }
+
+
+    /**
+     * A regular expression for all void elements, which may include attributes and
+     * a slash.
+     *
+     * @see https://developer.mozilla.org/en-US/docs/Glossary/Void_element
+     *
+     * Of these, only `<br>` is generated by Mermaid in place of `\n`,
+     * but _any_ "malformed" tag will break the SVG rendering entirely.
+     */
+    const RE_VOID_ELEMENT =
+      /<\s*(area|base|br|col|embed|hr|img|input|link|meta|param|source|track|wbr)\s*([^>]*?)\s*>/gi;
+
+    /**
+     * Ensure a void element is closed with a slash, preserving any attributes.
+     */
+    function replaceVoidElement(match, tag, rest) {
+      rest = rest.trim();
+      if (!rest.endsWith('/')) {
+        rest = `${rest} /`;
+      }
+      return `<${tag} ${rest}>`;
+    }
+
+    void Promise.all([...diagrams].map(renderOneMarmaid));
+  });
+</script>
+
+</head>
+<body class="jp-Notebook" data-jp-theme-light="true" data-jp-theme-name="JupyterLab Light">
+<main>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=da3f0190">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=eab8c7bd">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>Power splitters such as Y-junctions are widely used in photonic integrated circuits across different applications. When designing a power splitter, we aim to achieve a flat broadband response, low insertion loss, and compact footprint. At the same time, the design needs to comply with the fabrication resolution and tolerance.</p>
+<p>In this example, we demonstrate the modeling of a Y-junction for integrated photonics. The designed device shows an average insertion loss below 0.2 dB in the wavelength range of 1500 nm to 1600 nm. At the same time, it has a small footprint. The junction area is smaller than 2 $\mu m$ by 2 $\mu m$, much smaller than the typical power splitters based on multimode interference devices. The design is adapted from <a href="https://opg.optica.org/oe/fulltext.cfm?uri=oe-21-1-1310" target="_blank">Yi Zhang, Shuyu Yang, Andy Eu-Jin Lim, Guo-Qiang Lo, Christophe Galland, Tom Baehr-Jones, and Michael Hochberg, "A compact and low loss Y-junction for submicron silicon waveguide," Opt. Express 21, 1310-1316 (2013)</a>.</p>
+<img alt="Schematic of the waveguide Y junction" src="/assets/tidy3d/examples/image/y_junction_schematic.png" width="600"/>
+<p>For more integrated photonic examples such as the <a href="https://www.flexcompute.com/tidy3d/examples/notebooks/8ChannelDemultiplexer/" target="_blank">8-Channel mode and polarization de-multiplexer</a>, the <a href="https://www.flexcompute.com/tidy3d/examples/notebooks/BilevelPSR/" target="_blank">broadband bi-level taper polarization rotator-splitter</a>, and the <a href="https://www.flexcompute.com/tidy3d/examples/notebooks/BroadbandDirectionalCoupler/" target="_blank">broadband directional coupler</a>, please visit our <a href="https://www.flexcompute.com/tidy3d/examples/" target="_blank">examples page</a>.</p>
+<p>If you are new to the finite-difference time-domain (FDTD) method, we highly recommend going through our <a href="https://www.flexcompute.com/tidy3d/learning-center/" target="_blank">FDTD101</a> tutorials.</p>
+<p>FDTD simulations can diverge due to various reasons. If you run into any simulation divergence issues, please follow the steps outlined in our <a href="https://www.flexcompute.com/tidy3d/examples/notebooks/DivergedFDTDSimulation/" target="_blank">troubleshooting guide</a> to resolve it.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=ad43045e">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[1]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">gdstk</span>
+
+<span class="kn">import</span> <span class="nn">tidy3d</span> <span class="k">as</span> <span class="nn">td</span>
+<span class="kn">import</span> <span class="nn">tidy3d.web</span> <span class="k">as</span> <span class="nn">web</span>
+<span class="kn">from</span> <span class="nn">tidy3d.plugins.mode</span> <span class="kn">import</span> <span class="n">ModeSolver</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=128b718e">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="Simulation-Setup">Simulation Setup<a class="anchor-link" href="#Simulation-Setup">¶</a></h2>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=c26dafaa">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>Define simulation wavelength range to be 1.5 $\mu m$ to 1.6 $\mu m$.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=3a2dd129">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[2]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">lda0</span> <span class="o">=</span> <span class="mf">1.55</span>  <span class="c1"># central wavelength</span>
+<span class="n">freq0</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">C_0</span> <span class="o">/</span> <span class="n">lda0</span>  <span class="c1"># central frequency</span>
+<span class="n">ldas</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">1.5</span><span class="p">,</span> <span class="mf">1.6</span><span class="p">,</span> <span class="mi">101</span><span class="p">)</span>  <span class="c1"># wavelength range</span>
+<span class="n">freqs</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">C_0</span> <span class="o">/</span> <span class="n">ldas</span>  <span class="c1"># frequency range</span>
+<span class="n">fwidth</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">freqs</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">freqs</span><span class="p">))</span> <span class="c1"># width of the source frequency range</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=946d0a45">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>In this model, the Y-junction is made of silicon. The top cladding is made of silicon oxide. We will directly use the silicon and oxide media from Tidy3D's <a href="https://docs.flexcompute.com/projects/tidy3d/en/latest/material_library.html" target="_blank">material library</a>. More specifically, we use the data from the widely used Handbook of Optical Constants of Solids by Palik.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=b90f342c">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[3]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">si</span> <span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">material_library</span><span class="p">[</span><span class="s1">'cSi'</span><span class="p">][</span><span class="s1">'Palik_Lossless'</span><span class="p">]</span>
+
+<span class="n">sio2</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">material_library</span><span class="p">[</span><span class="s1">'SiO2'</span><span class="p">][</span><span class="s1">'Palik_Lossless'</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=473f2133">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>The junction is discretized into 13 segments. Each segment is a tapper with the given widths. The optimum design is obtained by optimizing the 13 width parameters using the Particle Swarm Optimization algorithm. For the sake of simplicity, in this notebook, we skip the optimization procedure and only present the optimized result.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=c67cbbf5">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[4]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">t</span> <span class="o">=</span> <span class="mf">0.22</span>  <span class="c1"># thickness of the silicon layer</span>
+
+<span class="c1"># width of the 13 segments</span>
+<span class="n">w1</span> <span class="o">=</span> <span class="mf">0.5</span>
+<span class="n">w2</span> <span class="o">=</span> <span class="mf">0.5</span>
+<span class="n">w3</span> <span class="o">=</span> <span class="mf">0.6</span>
+<span class="n">w4</span> <span class="o">=</span> <span class="mf">0.7</span>
+<span class="n">w5</span> <span class="o">=</span> <span class="mf">0.9</span>
+<span class="n">w6</span> <span class="o">=</span> <span class="mf">1.26</span>
+<span class="n">w7</span> <span class="o">=</span> <span class="mf">1.4</span>
+<span class="n">w8</span> <span class="o">=</span> <span class="mf">1.4</span>
+<span class="n">w9</span> <span class="o">=</span> <span class="mf">1.4</span>
+<span class="n">w10</span> <span class="o">=</span> <span class="mf">1.4</span>
+<span class="n">w11</span> <span class="o">=</span> <span class="mf">1.31</span>
+<span class="n">w12</span> <span class="o">=</span> <span class="mf">1.2</span>
+<span class="n">w13</span> <span class="o">=</span> <span class="mf">1.2</span>
+
+<span class="n">l_in</span> <span class="o">=</span> <span class="mi">1</span>  <span class="c1"># input waveguide length</span>
+<span class="n">l_junction</span> <span class="o">=</span> <span class="mi">2</span>  <span class="c1"># length of the junction</span>
+<span class="n">l_bend</span> <span class="o">=</span> <span class="mi">6</span>  <span class="c1"># horizontal length of the waveguide bend</span>
+<span class="n">h_bend</span> <span class="o">=</span> <span class="mi">2</span>  <span class="c1"># vertical offset of the waveguide bend</span>
+<span class="n">l_out</span> <span class="o">=</span> <span class="mi">1</span>  <span class="c1"># output waveguide length</span>
+<span class="n">inf_eff</span> <span class="o">=</span> <span class="mi">100</span>  <span class="c1"># effective infinity</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=98ae6d2c">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>First, define the junction structure by using a <a href="https://docs.flexcompute.com/projects/tidy3d/en/latest/_autosummary/tidy3d.PolySlab.html" target="_blank">PolySlab</a>. The vertices are given by the widths of the segments defined above. If a smooth curve is desirable, one can interpolate the vertices to a finer grid using spline for example.</p>
+<p>Before proceeding further to construct other structures, we can use the <code>plot</code> method to inspect the geometry.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=f1bd7cba">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[5]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">l_in</span><span class="p">,</span> <span class="n">l_in</span> <span class="o">+</span> <span class="n">l_junction</span><span class="p">,</span> <span class="mi">13</span><span class="p">)</span>  <span class="c1"># x coordinates of the top edge vertices</span>
+<span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+    <span class="p">[</span><span class="n">w1</span><span class="p">,</span> <span class="n">w2</span><span class="p">,</span> <span class="n">w3</span><span class="p">,</span> <span class="n">w4</span><span class="p">,</span> <span class="n">w5</span><span class="p">,</span> <span class="n">w6</span><span class="p">,</span> <span class="n">w7</span><span class="p">,</span> <span class="n">w8</span><span class="p">,</span> <span class="n">w9</span><span class="p">,</span> <span class="n">w10</span><span class="p">,</span> <span class="n">w11</span><span class="p">,</span> <span class="n">w12</span><span class="p">,</span> <span class="n">w13</span><span class="p">]</span>
+<span class="p">)</span>  <span class="c1"># y coordinates of the top edge vertices</span>
+
+<span class="c1"># using concatenate to include bottom edge vertices</span>
+<span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">flipud</span><span class="p">(</span><span class="n">x</span><span class="p">)))</span>
+<span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">y</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">flipud</span><span class="p">(</span><span class="n">y</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)))</span>
+
+<span class="c1"># stacking x and y coordinates to form vertices pairs</span>
+<span class="n">vertices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)))</span>
+
+<span class="n">junction</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">Structure</span><span class="p">(</span>
+    <span class="n">geometry</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">PolySlab</span><span class="p">(</span><span class="n">vertices</span><span class="o">=</span><span class="n">vertices</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">slab_bounds</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">t</span><span class="p">)),</span> <span class="n">medium</span><span class="o">=</span><span class="n">si</span>
+<span class="p">)</span>
+<span class="n">junction</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">z</span><span class="o">=</span><span class="n">t</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedImage jp-OutputArea-output" tabindex="0">
+<img alt="No description has been provided for this image" class="" src="/assets/tidy3d/examples/image/YJunction/YJunction_2.png"/>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=f33fc2d8">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>For the output waveguide bends, we use S bend sine waveguides, which are described by the function</p>
+<center>$y = \frac{xh_{band}}{l_{bend}}-\frac{h_{bend}}{2\pi}sin(\frac{2\pi x}{l_{bend}})$.</center>
+<p>Different types of bend can also be used here for similar performance. To define the bends, the most convenient way is to use <code>gdstk</code>. First compute the $x$ and $y$ coordinates of the bend, then define a <code>FlexPath</code> and add it to a gds cell. The paths in the cell can be converted to Tidy3D <a href="https://docs.flexcompute.com/projects/tidy3d/en/latest/_autosummary/tidy3d.PolySlab.html" target="_blank">PolySlabs</a> using the <code>from_gds</code> method.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=2f517ebb">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[6]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">x_start</span> <span class="o">=</span> <span class="n">l_in</span> <span class="o">+</span> <span class="n">l_junction</span>  <span class="c1"># x coordinate of the starting point of the waveguide bends</span>
+
+<span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span>
+    <span class="n">x_start</span><span class="p">,</span> <span class="n">x_start</span> <span class="o">+</span> <span class="n">l_bend</span><span class="p">,</span> <span class="mi">100</span>
+<span class="p">)</span>  <span class="c1"># x coordinates of the top edge vertices</span>
+
+<span class="n">y</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">x_start</span><span class="p">)</span> <span class="o">*</span> <span class="n">h_bend</span> <span class="o">/</span> <span class="n">l_bend</span>
+    <span class="o">-</span> <span class="n">h_bend</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">x_start</span><span class="p">)</span> <span class="o">/</span> <span class="n">l_bend</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="o">+</span> <span class="n">w13</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">-</span> <span class="n">w1</span><span class="o">/</span><span class="mi">2</span>
+<span class="p">)</span>  <span class="c1"># y coordinates of the top edge vertices</span>
+
+<span class="c1"># adding the last point to include the straight waveguide at the output</span>
+<span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">inf_eff</span><span class="p">)</span>
+<span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">y</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+
+<span class="c1"># add path to the cell</span>
+<span class="n">cell</span> <span class="o">=</span> <span class="n">gdstk</span><span class="o">.</span><span class="n">Cell</span><span class="p">(</span><span class="s2">"bends"</span><span class="p">)</span>
+<span class="n">cell</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">gdstk</span><span class="o">.</span><span class="n">FlexPath</span><span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">y</span><span class="p">,</span> <span class="n">w1</span><span class="p">,</span> <span class="n">layer</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">datatype</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>  <span class="c1"># top waveguide bend</span>
+<span class="n">cell</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">gdstk</span><span class="o">.</span><span class="n">FlexPath</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">y</span><span class="p">,</span> <span class="n">w1</span><span class="p">,</span> <span class="n">layer</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">datatype</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>  <span class="c1"># bottom waveguide bend</span>
+
+<span class="c1"># define top waveguide bend structure</span>
+<span class="n">wg_bend_1</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">Structure</span><span class="p">(</span>
+    <span class="n">geometry</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">PolySlab</span><span class="o">.</span><span class="n">from_gds</span><span class="p">(</span>
+        <span class="n">cell</span><span class="p">,</span>
+        <span class="n">gds_layer</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">axis</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+        <span class="n">slab_bounds</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">t</span><span class="p">),</span>
+    <span class="p">)[</span><span class="mi">0</span><span class="p">],</span> 
+    <span class="n">medium</span><span class="o">=</span><span class="n">si</span>
+<span class="p">)</span>
+
+<span class="c1"># define bottom waveguide bend structure</span>
+<span class="n">wg_bend_2</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">Structure</span><span class="p">(</span>
+    <span class="n">geometry</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">PolySlab</span><span class="o">.</span><span class="n">from_gds</span><span class="p">(</span>
+        <span class="n">cell</span><span class="p">,</span>
+        <span class="n">gds_layer</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">axis</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+        <span class="n">slab_bounds</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">t</span><span class="p">),</span>
+    <span class="p">)[</span><span class="mi">1</span><span class="p">],</span> 
+    <span class="n">medium</span><span class="o">=</span><span class="n">si</span>
+<span class="p">)</span>
+
+<span class="c1"># plot the top waveguide bend to visualize</span>
+<span class="n">ax</span> <span class="o">=</span> <span class="n">wg_bend_1</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">z</span><span class="o">=</span><span class="n">t</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedImage jp-OutputArea-output" tabindex="0">
+<img alt="No description has been provided for this image" class="" src="/assets/tidy3d/examples/image/YJunction/YJunction_3.png"/>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=fecdf772">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>Lastly, define the straight input waveguide using <a href="https://docs.flexcompute.com/projects/tidy3d/en/latest/_autosummary/tidy3d.Box.html" target="_blank">Box</a>.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=37f3f2e2">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[7]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># straight input waveguide</span>
+<span class="n">wg_in</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">Structure</span><span class="p">(</span>
+    <span class="n">geometry</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">Box</span><span class="o">.</span><span class="n">from_bounds</span><span class="p">(</span><span class="n">rmin</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="n">inf_eff</span><span class="p">,</span> <span class="o">-</span><span class="n">w1</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">rmax</span><span class="o">=</span><span class="p">(</span><span class="n">l_in</span><span class="p">,</span> <span class="n">w1</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">t</span><span class="p">)),</span>
+    <span class="n">medium</span><span class="o">=</span><span class="n">si</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># the entire model is the collection of all structures defined so far</span>
+<span class="n">y_junction</span> <span class="o">=</span> <span class="p">[</span><span class="n">wg_in</span><span class="p">,</span> <span class="n">junction</span><span class="p">,</span> <span class="n">wg_bend_1</span><span class="p">,</span> <span class="n">wg_bend_2</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=051768d5">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>Define the simulation domain. Here we ensure sufficient buffer spacing in each direction. In general, we want to make sure that the structure is at least half a wavelength away from the domain boundaries unless it goes into the PML.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=f0cef4aa">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[8]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">Lx</span> <span class="o">=</span> <span class="n">l_in</span> <span class="o">+</span> <span class="n">l_junction</span> <span class="o">+</span> <span class="n">l_out</span> <span class="o">+</span> <span class="n">l_bend</span>  <span class="c1"># simulation domain size in x direction</span>
+<span class="n">Ly</span> <span class="o">=</span> <span class="n">w13</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">h_bend</span> <span class="o">+</span> <span class="mf">1.5</span> <span class="o">*</span> <span class="n">lda0</span>  <span class="c1"># simulation domain size in y direction</span>
+<span class="n">Lz</span> <span class="o">=</span> <span class="mi">10</span> <span class="o">*</span> <span class="n">t</span>  <span class="c1"># simulation domain size in z direction</span>
+<span class="n">sim_size</span> <span class="o">=</span> <span class="p">(</span><span class="n">Lx</span><span class="p">,</span> <span class="n">Ly</span><span class="p">,</span> <span class="n">Lz</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=4eaa0e1e">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>We will use a <a href="https://docs.flexcompute.com/projects/tidy3d/en/latest/_autosummary/tidy3d.ModeSource.html" target="_blank">ModeSource</a> to excite the input waveguide using the fundamental TE mode.</p>
+<p>A <a href="https://docs.flexcompute.com/projects/tidy3d/en/latest/_autosummary/tidy3d.ModeMonitor.html" target="_blank">ModeMonitor</a> is placed at the top output waveguide to measure the transmission. A <a href="https://docs.flexcompute.com/projects/tidy3d/en/latest/_autosummary/tidy3d.FieldMonitor.html" target="_blank">FieldMonitor</a> is added to the xy plane to visualize the power flow.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=dbf57f31">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[9]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># add a mode source as excitation</span>
+<span class="n">mode_spec</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">ModeSpec</span><span class="p">(</span><span class="n">num_modes</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">target_neff</span><span class="o">=</span><span class="mf">3.5</span><span class="p">)</span>
+<span class="n">mode_source</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">ModeSource</span><span class="p">(</span>
+    <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="n">l_in</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">t</span> <span class="o">/</span> <span class="mi">2</span><span class="p">),</span>
+    <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4</span> <span class="o">*</span> <span class="n">w1</span><span class="p">,</span> <span class="mi">6</span> <span class="o">*</span> <span class="n">t</span><span class="p">),</span>
+    <span class="n">source_time</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">GaussianPulse</span><span class="p">(</span><span class="n">freq0</span><span class="o">=</span><span class="n">freq0</span><span class="p">,</span> <span class="n">fwidth</span><span class="o">=</span><span class="n">fwidth</span><span class="p">),</span>
+    <span class="n">direction</span><span class="o">=</span><span class="s2">"+"</span><span class="p">,</span>
+    <span class="n">mode_spec</span><span class="o">=</span><span class="n">mode_spec</span><span class="p">,</span>
+    <span class="n">mode_index</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># add a mode monitor to measure transmission at the output waveguide</span>
+<span class="n">mode_monitor</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">ModeMonitor</span><span class="p">(</span>
+    <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="n">l_in</span> <span class="o">+</span> <span class="n">l_junction</span> <span class="o">+</span> <span class="n">l_bend</span> <span class="o">+</span> <span class="n">l_out</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">w13</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">-</span> <span class="n">w1</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">h_bend</span><span class="p">,</span> <span class="n">t</span> <span class="o">/</span> <span class="mi">2</span><span class="p">),</span>
+    <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4</span> <span class="o">*</span> <span class="n">w1</span><span class="p">,</span> <span class="mi">6</span> <span class="o">*</span> <span class="n">t</span><span class="p">),</span>
+    <span class="n">freqs</span><span class="o">=</span><span class="n">freqs</span><span class="p">,</span>
+    <span class="n">mode_spec</span><span class="o">=</span><span class="n">mode_spec</span><span class="p">,</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">"mode"</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># add a field monitor to visualize field distribution at z=t/2</span>
+<span class="n">field_monitor</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">FieldMonitor</span><span class="p">(</span>
+    <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">t</span> <span class="o">/</span> <span class="mi">2</span><span class="p">),</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">td</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">td</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">freqs</span><span class="o">=</span><span class="p">[</span><span class="n">freq0</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="s2">"field"</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">[09:50:02] </span><span style="color: #800000; text-decoration-color: #800000">WARNING: Default value for the field monitor          </span> <a href="file://C:\Users\xinzhong\Desktop\tidy3d\tidy3d\components\monitor.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">monitor.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file://C:\Users\xinzhong\Desktop\tidy3d\tidy3d\components\monitor.py#261" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">261</span></a>
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span><span style="color: #008000; text-decoration-color: #008000">'colocate'</span><span style="color: #800000; text-decoration-color: #800000"> setting has changed to </span><span style="color: #008000; text-decoration-color: #008000">'True'</span><span style="color: #800000; text-decoration-color: #800000"> in Tidy3D    </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">              </span>
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span><span style="color: #008080; text-decoration-color: #008080; font-weight: bold">2.4</span><span style="color: #800000; text-decoration-color: #800000">.</span><span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0</span><span style="color: #800000; text-decoration-color: #800000">. All field components will be colocated to the  </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">              </span>
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span><span style="color: #800000; text-decoration-color: #800000">grid boundaries. Set to </span><span style="color: #008000; text-decoration-color: #008000">'False'</span><span style="color: #800000; text-decoration-color: #800000"> to get the raw fields </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">              </span>
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span><span style="color: #800000; text-decoration-color: #800000">on the Yee grid instead.                              </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">              </span>
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=725eee9e">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>Set up the simulation with the previously defined structures, source, and monitors. All boundaries are set to PML to mimic infinite open space. Since the top and bottom claddings are silicon oxide, we will set the medium of the background to silicon oxide.</p>
+<p>In principle, we can impose symmetry to reduce the computational load. Since this model is relatively small and quick to solve, we will simply model the whole device without using symmetry.</p>
+<p>Using an <a href="https://www.flexcompute.com/tidy3d/examples/notebooks/AutoGrid/" target="_blank">automatic nonuniform grid</a> is the most efficient and convenient. We set <code>min_steps_per_wvl=20</code> to achieve a very accurate result while still keeping the simulation cost at a minimum.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=9a4ec279">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[10]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">run_time</span> <span class="o">=</span> <span class="mf">5e-13</span> <span class="c1"># simulation run time</span>
+
+<span class="c1"># construct simulation</span>
+<span class="n">sim</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">Simulation</span><span class="p">(</span>
+    <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="n">Lx</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+    <span class="n">size</span><span class="o">=</span><span class="n">sim_size</span><span class="p">,</span>
+    <span class="n">grid_spec</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">GridSpec</span><span class="o">.</span><span class="n">auto</span><span class="p">(</span><span class="n">min_steps_per_wvl</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">wavelength</span><span class="o">=</span><span class="n">lda0</span><span class="p">),</span>
+    <span class="n">structures</span><span class="o">=</span><span class="n">y_junction</span><span class="p">,</span>
+    <span class="n">sources</span><span class="o">=</span><span class="p">[</span><span class="n">mode_source</span><span class="p">],</span>
+    <span class="n">monitors</span><span class="o">=</span><span class="p">[</span><span class="n">mode_monitor</span><span class="p">,</span> <span class="n">field_monitor</span><span class="p">],</span>
+    <span class="n">run_time</span><span class="o">=</span><span class="n">run_time</span><span class="p">,</span>
+    <span class="n">boundary_spec</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">BoundarySpec</span><span class="o">.</span><span class="n">all_sides</span><span class="p">(</span><span class="n">boundary</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">PML</span><span class="p">()),</span>
+    <span class="n">medium</span><span class="o">=</span><span class="n">sio2</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">sim</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">z</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedImage jp-OutputArea-output" tabindex="0">
+<img alt="No description has been provided for this image" class="" src="/assets/tidy3d/examples/image/YJunction/YJunction_4.png"/>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=a0b7c40f">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>To have a better visualization, we can also plot the simulation in 3D.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=9aefe40d">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[11]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">sim</span><span class="o">.</span><span class="n">plot_3d</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<iframe allowfullscreen="true" height="800" id="simulation-viewer169444020259182708" src="https://feature-simulation-viewer.d3a9gfg7glllfq.amplifyapp.com/simulation-viewer?uuid=169444020259182708" width="800"></iframe>
+<script>
+        
+    window.postMessageToViewer169444020259182708 = event => {
+        if(event.data.type === 'viewer'&&event.data.uuid==='169444020259182708'){
+            document.getElementById('simulation-viewer169444020259182708').contentWindow.postMessage({ type: 'jupyter', uuid:'169444020259182708', value:{
+    "type": "Simulation",
+    "center": [
+        5.0,
+        0.0,
+        0.0
+    ],
+    "size": [
+        10.0,
+        7.525,
+        2.2
+    ],
+    "run_time": 5e-13,
+    "medium": {
+        "name": null,
+        "frequency_range": [
+            59958491600000.0,
+            1998616386666666.8
+        ],
+        "allow_gain": false,
+        "nonlinear_spec": null,
+        "type": "PoleResidue",
+        "eps_inf": 1.5385442336875639,
+        "poles": [
+            [
+                {
+                    "real": -11504139.374277674,
+                    "imag": -1.595196740783775e+16
+                },
+                {
+                    "real": 7507685.43042605,
+                    "imag": 4535416182817100.0
+                }
+            ],
+            [
+                {
+                    "real": -249390.3565044153,
+                    "imag": -172280738540723.53
+                },
+                {
+                    "real": 46272.506981344035,
+                    "imag": 99704543223121.88
+                }
+            ]
+        ]
+    },
+    "symmetry": [
+        0,
+        0,
+        0
+    ],
+    "structures": [
+        {
+            "geometry": {
+                "type": "Box",
+                "center": [
+                    -49.5,
+                    0.0,
+                    0.11
+                ],
+                "size": [
+                    101.0,
+                    0.5,
+                    0.22
+                ]
+            },
+            "name": null,
+            "type": "Structure",
+            "medium": {
+                "name": null,
+                "frequency_range": [
+                    1199169832000.0,
+                    249827048333333.34
+                ],
+                "allow_gain": false,
+                "nonlinear_spec": null,
+                "type": "PoleResidue",
+                "eps_inf": 1.0,
+                "poles": [
+                    [
+                        {
+                            "real": -1.7473849958109988,
+                            "imag": -6409829457220535.0
+                        },
+                        {
+                            "real": 0.06947645444424029,
+                            "imag": 3.4268436708700284e+16
+                        }
+                    ]
+                ]
+            }
+        },
+        {
+            "geometry": {
+                "type": "PolySlab",
+                "axis": 2,
+                "sidewall_angle": 0.0,
+                "reference_plane": "middle",
+                "slab_bounds": [
+                    0.0,
+                    0.22
+                ],
+                "dilation": 0.0,
+                "vertices": [
+                    [
+                        1.0,
+                        0.25
+                    ],
+                    [
+                        1.1666666666666667,
+                        0.25
+                    ],
+                    [
+                        1.3333333333333333,
+                        0.3
+                    ],
+                    [
+                        1.5,
+                        0.35
+                    ],
+                    [
+                        1.6666666666666665,
+                        0.45
+                    ],
+                    [
+                        1.8333333333333333,
+                        0.63
+                    ],
+                    [
+                        2.0,
+                        0.7
+                    ],
+                    [
+                        2.1666666666666665,
+                        0.7
+                    ],
+                    [
+                        2.333333333333333,
+                        0.7
+                    ],
+                    [
+                        2.5,
+                        0.7
+                    ],
+                    [
+                        2.6666666666666665,
+                        0.655
+                    ],
+                    [
+                        2.833333333333333,
+                        0.6
+                    ],
+                    [
+                        3.0,
+                        0.6
+                    ],
+                    [
+                        3.0,
+                        -0.6
+                    ],
+                    [
+                        2.833333333333333,
+                        -0.6
+                    ],
+                    [
+                        2.6666666666666665,
+                        -0.655
+                    ],
+                    [
+                        2.5,
+                        -0.7
+                    ],
+                    [
+                        2.333333333333333,
+                        -0.7
+                    ],
+                    [
+                        2.1666666666666665,
+                        -0.7
+                    ],
+                    [
+                        2.0,
+                        -0.7
+                    ],
+                    [
+                        1.8333333333333333,
+                        -0.63
+                    ],
+                    [
+                        1.6666666666666665,
+                        -0.45
+                    ],
+                    [
+                        1.5,
+                        -0.35
+                    ],
+                    [
+                        1.3333333333333333,
+                        -0.3
+                    ],
+                    [
+                        1.1666666666666667,
+                        -0.25
+                    ],
+                    [
+                        1.0,
+                        -0.25
+                    ]
+                ]
+            },
+            "name": null,
+            "type": "Structure",
+            "medium": {
+                "name": null,
+                "frequency_range": [
+                    1199169832000.0,
+                    249827048333333.34
+                ],
+                "allow_gain": false,
+                "nonlinear_spec": null,
+                "type": "PoleResidue",
+                "eps_inf": 1.0,
+                "poles": [
+                    [
+                        {
+                            "real": -1.7473849958109988,
+                            "imag": -6409829457220535.0
+                        },
+                        {
+                            "real": 0.06947645444424029,
+                            "imag": 3.4268436708700284e+16
+                        }
+                    ]
+                ]
+            }
+        },
+        {
+            "geometry": {
+                "type": "PolySlab",
+                "axis": 2,
+                "sidewall_angle": 0.0,
+                "reference_plane": "middle",
+                "slab_bounds": [
+                    0.0,
+                    0.22
+                ],
+                "dilation": 0.0,
+                "vertices": [
+                    [
+                        3.060829657979,
+                        -0.100013603324
+                    ],
+                    [
+                        3.121938032937,
+                        -0.10010924083
+                    ],
+                    [
+                        3.183379012545,
+                        -0.100369890425
+                    ],
+                    [
+                        3.245149152922,
+                        -0.100879162881
+                    ],
+                    [
+                        3.307243562308,
+                        -0.101720915795
+                    ],
+                    [
+                        3.369655836996,
+                        -0.102978836917
+                    ],
+                    [
+                        3.432377987751,
+                        -0.104736003999
+                    ],
+                    [
+                        3.495400363069,
+                        -0.107074422346
+                    ],
+                    [
+                        3.558711576692,
+                        -0.110074541913
+                    ],
+                    [
+                        3.622298447578,
+                        -0.113814756673
+                    ],
+                    [
+                        3.686145960928,
+                        -0.118370890208
+                    ],
+                    [
+                        3.750237258829,
+                        -0.123815672938
+                    ],
+                    [
+                        3.814553668397,
+                        -0.130218217949
+                    ],
+                    [
+                        3.879074774094,
+                        -0.137643503968
+                    ],
+                    [
+                        3.94377853895,
+                        -0.146151875408
+                    ],
+                    [
+                        4.008641477007,
+                        -0.155798570416
+                    ],
+                    [
+                        4.073638876336,
+                        -0.166633288334
+                    ],
+                    [
+                        4.138745068811,
+                        -0.17869980773
+                    ],
+                    [
+                        4.203933739663,
+                        -0.192035665177
+                    ],
+                    [
+                        4.269178266897,
+                        -0.206671903135
+                    ],
+                    [
+                        4.334452078372,
+                        -0.222632892836
+                    ],
+                    [
+                        4.399729012791,
+                        -0.239936235054
+                    ],
+                    [
+                        4.464983670326,
+                        -0.258592738401
+                    ],
+                    [
+                        4.5301917391,
+                        -0.278606471539
+                    ],
+                    [
+                        4.595330285216,
+                        -0.299974882786
+                    ],
+                    [
+                        4.66037799635,
+                        -0.322688978258
+                    ],
+                    [
+                        4.72531537182,
+                        -0.346733548041
+                    ],
+                    [
+                        4.790124855217,
+                        -0.372087429166
+                    ],
+                    [
+                        4.854790908886,
+                        -0.398723794184
+                    ],
+                    [
+                        4.919300032475,
+                        -0.426610454934
+                    ],
+                    [
+                        4.983640730217,
+                        -0.455710172469
+                    ],
+                    [
+                        5.047803433446,
+                        -0.485980965869
+                    ],
+                    [
+                        5.111780386077,
+                        -0.51737641456
+                    ],
+                    [
+                        5.175565501293,
+                        -0.549845950762
+                    ],
+                    [
+                        5.239154197714,
+                        -0.583335140402
+                    ],
+                    [
+                        5.302543222829,
+                        -0.617785952398
+                    ],
+                    [
+                        5.365730470698,
+                        -0.653137017418
+                    ],
+                    [
+                        5.428714799919,
+                        -0.689323878096
+                    ],
+                    [
+                        5.491495856767,
+                        -0.726279233218
+                    ],
+                    [
+                        5.554073907323,
+                        -0.763933178676
+                    ],
+                    [
+                        5.616449681389,
+                        -0.802213447992
+                    ],
+                    [
+                        5.678624230065,
+                        -0.841045655053
+                    ],
+                    [
+                        5.740598798142,
+                        -0.880353541409
+                    ],
+                    [
+                        5.802374711812,
+                        -0.920059230099
+                    ],
+                    [
+                        5.863953281786,
+                        -0.960083487549
+                    ],
+                    [
+                        5.925335721572,
+                        -1.000345994663
+                    ],
+                    [
+                        5.986523080481,
+                        -1.040765627778
+                    ],
+                    [
+                        6.047516190868,
+                        -1.08126074977
+                    ],
+                    [
+                        6.108315629079,
+                        -1.121749511227
+                    ],
+                    [
+                        6.168921689685,
+                        -1.16215016123
+                    ],
+                    [
+                        6.229334372686,
+                        -1.202381367027
+                    ],
+                    [
+                        6.289553383512,
+                        -1.242362541526
+                    ],
+                    [
+                        6.349578145814,
+                        -1.28201417731
+                    ],
+                    [
+                        6.409407827241,
+                        -1.321258185572
+                    ],
+                    [
+                        6.469041378479,
+                        -1.36001823811
+                    ],
+                    [
+                        6.528477586021,
+                        -1.398220110221
+                    ],
+                    [
+                        6.587715139156,
+                        -1.435792022038
+                    ],
+                    [
+                        6.646752711692,
+                        -1.47266497552
+                    ],
+                    [
+                        6.705589058839,
+                        -1.508773083965
+                    ],
+                    [
+                        6.764223129494,
+                        -1.544053890555
+                    ],
+                    [
+                        6.822654193859,
+                        -1.578448672073
+                    ],
+                    [
+                        6.88088198585,
+                        -1.61190272362
+                    ],
+                    [
+                        6.938906859193,
+                        -1.644365619845
+                    ],
+                    [
+                        6.99672995529,
+                        -1.675791448039
+                    ],
+                    [
+                        7.054353380081,
+                        -1.706139008363
+                    ],
+                    [
+                        7.111780386077,
+                        -1.735371976648
+                    ],
+                    [
+                        7.169015554659,
+                        -1.763459025571
+                    ],
+                    [
+                        7.226064972641,
+                        -1.790373900699
+                    ],
+                    [
+                        7.282936396112,
+                        -1.81609544891
+                    ],
+                    [
+                        7.339639393734,
+                        -1.840607598048
+                    ],
+                    [
+                        7.396185461278,
+                        -1.863899288355
+                    ],
+                    [
+                        7.452588099093,
+                        -1.885964358146
+                    ],
+                    [
+                        7.508862844834,
+                        -1.906801388303
+                    ],
+                    [
+                        7.565027254913,
+                        -1.926413512241
+                    ],
+                    [
+                        7.621100830009,
+                        -1.944808199938
+                    ],
+                    [
+                        7.677104882447,
+                        -1.961997026124
+                    ],
+                    [
+                        7.733062346124,
+                        -1.977995433714
+                    ],
+                    [
+                        7.788997532918,
+                        -1.992822503761
+                    ],
+                    [
+                        7.844935842655,
+                        -2.006500742636
+                    ],
+                    [
+                        7.900903436633,
+                        -2.01905589566
+                    ],
+                    [
+                        7.956926886993,
+                        -2.030516794278
+                    ],
+                    [
+                        8.01303281573,
+                        -2.040915241056
+                    ],
+                    [
+                        8.069247537613,
+                        -2.050285933741
+                    ],
+                    [
+                        8.125596720768,
+                        -2.058666426517
+                    ],
+                    [
+                        8.182105077124,
+                        -2.066097123733
+                    ],
+                    [
+                        8.23879609264,
+                        -2.072621299045
+                    ],
+                    [
+                        8.295691804283,
+                        -2.078285131295
+                    ],
+                    [
+                        8.352812627595,
+                        -2.083137747523
+                    ],
+                    [
+                        8.410177235457,
+                        -2.087231263463
+                    ],
+                    [
+                        8.467802485783,
+                        -2.090620812418
+                    ],
+                    [
+                        8.525703393372,
+                        -2.093364554576
+                    ],
+                    [
+                        8.583893139266,
+                        -2.09552366027
+                    ],
+                    [
+                        8.642383109723,
+                        -2.097162262413
+                    ],
+                    [
+                        8.701182956248,
+                        -2.098347374946
+                    ],
+                    [
+                        8.760300668074,
+                        -2.099148775695
+                    ],
+                    [
+                        8.819742648909,
+                        -2.099638853318
+                    ],
+                    [
+                        8.879513790512,
+                        -2.099892419
+                    ],
+                    [
+                        8.939617536767,
+                        -2.099986484214
+                    ],
+                    [
+                        9.00002796658,
+                        -2.1
+                    ],
+                    [
+                        100.0,
+                        -2.1
+                    ],
+                    [
+                        100.0,
+                        -2.6
+                    ],
+                    [
+                        8.99997203342,
+                        -2.6
+                    ],
+                    [
+                        8.939170342021,
+                        -2.599986396676
+                    ],
+                    [
+                        8.878061967063,
+                        -2.59989075917
+                    ],
+                    [
+                        8.816620987455,
+                        -2.599630109575
+                    ],
+                    [
+                        8.754850847078,
+                        -2.599120837119
+                    ],
+                    [
+                        8.692756437692,
+                        -2.598279084205
+                    ],
+                    [
+                        8.630344163004,
+                        -2.597021163083
+                    ],
+                    [
+                        8.567622012249,
+                        -2.595263996001
+                    ],
+                    [
+                        8.504599636931,
+                        -2.592925577654
+                    ],
+                    [
+                        8.441288423308,
+                        -2.589925458087
+                    ],
+                    [
+                        8.377701552422,
+                        -2.586185243327
+                    ],
+                    [
+                        8.313854039072,
+                        -2.581629109792
+                    ],
+                    [
+                        8.249762741171,
+                        -2.576184327062
+                    ],
+                    [
+                        8.185446331603,
+                        -2.569781782051
+                    ],
+                    [
+                        8.120925225906,
+                        -2.562356496032
+                    ],
+                    [
+                        8.05622146105,
+                        -2.553848124592
+                    ],
+                    [
+                        7.991358522993,
+                        -2.544201429584
+                    ],
+                    [
+                        7.926361123664,
+                        -2.533366711666
+                    ],
+                    [
+                        7.861254931189,
+                        -2.52130019227
+                    ],
+                    [
+                        7.796066260337,
+                        -2.507964334823
+                    ],
+                    [
+                        7.730821733103,
+                        -2.493328096865
+                    ],
+                    [
+                        7.665547921628,
+                        -2.477367107164
+                    ],
+                    [
+                        7.600270987209,
+                        -2.460063764946
+                    ],
+                    [
+                        7.535016329674,
+                        -2.441407261599
+                    ],
+                    [
+                        7.4698082609,
+                        -2.421393528461
+                    ],
+                    [
+                        7.404669714784,
+                        -2.400025117214
+                    ],
+                    [
+                        7.33962200365,
+                        -2.377311021742
+                    ],
+                    [
+                        7.27468462818,
+                        -2.353266451959
+                    ],
+                    [
+                        7.209875144783,
+                        -2.327912570834
+                    ],
+                    [
+                        7.145209091114,
+                        -2.301276205816
+                    ],
+                    [
+                        7.080699967525,
+                        -2.273389545066
+                    ],
+                    [
+                        7.016359269783,
+                        -2.244289827531
+                    ],
+                    [
+                        6.952196566554,
+                        -2.214019034131
+                    ],
+                    [
+                        6.888219613923,
+                        -2.18262358544
+                    ],
+                    [
+                        6.824434498707,
+                        -2.150154049238
+                    ],
+                    [
+                        6.760845802286,
+                        -2.116664859598
+                    ],
+                    [
+                        6.697456777171,
+                        -2.082214047602
+                    ],
+                    [
+                        6.634269529302,
+                        -2.046862982582
+                    ],
+                    [
+                        6.571285200081,
+                        -2.010676121904
+                    ],
+                    [
+                        6.508504143233,
+                        -1.973720766782
+                    ],
+                    [
+                        6.445926092677,
+                        -1.936066821324
+                    ],
+                    [
+                        6.383550318611,
+                        -1.897786552008
+                    ],
+                    [
+                        6.321375769935,
+                        -1.858954344947
+                    ],
+                    [
+                        6.259401201858,
+                        -1.819646458591
+                    ],
+                    [
+                        6.197625288188,
+                        -1.779940769901
+                    ],
+                    [
+                        6.136046718214,
+                        -1.739916512451
+                    ],
+                    [
+                        6.074664278428,
+                        -1.699654005337
+                    ],
+                    [
+                        6.013476919519,
+                        -1.659234372222
+                    ],
+                    [
+                        5.952483809132,
+                        -1.61873925023
+                    ],
+                    [
+                        5.891684370921,
+                        -1.578250488773
+                    ],
+                    [
+                        5.831078310315,
+                        -1.53784983877
+                    ],
+                    [
+                        5.770665627314,
+                        -1.497618632973
+                    ],
+                    [
+                        5.710446616489,
+                        -1.457637458474
+                    ],
+                    [
+                        5.650421854186,
+                        -1.41798582269
+                    ],
+                    [
+                        5.590592172759,
+                        -1.378741814428
+                    ],
+                    [
+                        5.530958621521,
+                        -1.33998176189
+                    ],
+                    [
+                        5.471522413979,
+                        -1.301779889779
+                    ],
+                    [
+                        5.412284860844,
+                        -1.264207977962
+                    ],
+                    [
+                        5.353247288308,
+                        -1.22733502448
+                    ],
+                    [
+                        5.294410941161,
+                        -1.191226916035
+                    ],
+                    [
+                        5.235776870506,
+                        -1.155946109445
+                    ],
+                    [
+                        5.177345806141,
+                        -1.121551327927
+                    ],
+                    [
+                        5.11911801415,
+                        -1.08809727638
+                    ],
+                    [
+                        5.061093140807,
+                        -1.055634380155
+                    ],
+                    [
+                        5.00327004471,
+                        -1.024208551961
+                    ],
+                    [
+                        4.945646619919,
+                        -0.993860991637
+                    ],
+                    [
+                        4.888219613923,
+                        -0.964628023352
+                    ],
+                    [
+                        4.830984445341,
+                        -0.936540974429
+                    ],
+                    [
+                        4.773935027359,
+                        -0.909626099301
+                    ],
+                    [
+                        4.717063603888,
+                        -0.88390455109
+                    ],
+                    [
+                        4.660360606266,
+                        -0.859392401952
+                    ],
+                    [
+                        4.603814538722,
+                        -0.836100711645
+                    ],
+                    [
+                        4.547411900907,
+                        -0.814035641854
+                    ],
+                    [
+                        4.491137155166,
+                        -0.793198611697
+                    ],
+                    [
+                        4.434972745087,
+                        -0.773586487759
+                    ],
+                    [
+                        4.378899169991,
+                        -0.755191800062
+                    ],
+                    [
+                        4.322895117553,
+                        -0.738002973876
+                    ],
+                    [
+                        4.266937653876,
+                        -0.722004566286
+                    ],
+                    [
+                        4.211002467082,
+                        -0.707177496239
+                    ],
+                    [
+                        4.155064157345,
+                        -0.693499257364
+                    ],
+                    [
+                        4.099096563367,
+                        -0.68094410434
+                    ],
+                    [
+                        4.043073113007,
+                        -0.669483205722
+                    ],
+                    [
+                        3.98696718427,
+                        -0.659084758944
+                    ],
+                    [
+                        3.930752462387,
+                        -0.649714066259
+                    ],
+                    [
+                        3.874403279232,
+                        -0.641333573483
+                    ],
+                    [
+                        3.817894922876,
+                        -0.633902876267
+                    ],
+                    [
+                        3.76120390736,
+                        -0.627378700955
+                    ],
+                    [
+                        3.704308195717,
+                        -0.621714868705
+                    ],
+                    [
+                        3.647187372405,
+                        -0.616862252477
+                    ],
+                    [
+                        3.589822764543,
+                        -0.612768736537
+                    ],
+                    [
+                        3.532197514217,
+                        -0.609379187582
+                    ],
+                    [
+                        3.474296606628,
+                        -0.606635445424
+                    ],
+                    [
+                        3.416106860734,
+                        -0.60447633973
+                    ],
+                    [
+                        3.357616890277,
+                        -0.602837737587
+                    ],
+                    [
+                        3.298817043752,
+                        -0.601652625054
+                    ],
+                    [
+                        3.239699331926,
+                        -0.600851224305
+                    ],
+                    [
+                        3.180257351091,
+                        -0.600361146682
+                    ],
+                    [
+                        3.120486209488,
+                        -0.600107581
+                    ],
+                    [
+                        3.060382463233,
+                        -0.600013515786
+                    ],
+                    [
+                        2.999944066838,
+                        -0.599999993743
+                    ],
+                    [
+                        3.000055933162,
+                        -0.100000006257
+                    ],
+                    [
+                        3.060829657979,
+                        -0.100013603324
+                    ]
+                ]
+            },
+            "name": null,
+            "type": "Structure",
+            "medium": {
+                "name": null,
+                "frequency_range": [
+                    1199169832000.0,
+                    249827048333333.34
+                ],
+                "allow_gain": false,
+                "nonlinear_spec": null,
+                "type": "PoleResidue",
+                "eps_inf": 1.0,
+                "poles": [
+                    [
+                        {
+                            "real": -1.7473849958109988,
+                            "imag": -6409829457220535.0
+                        },
+                        {
+                            "real": 0.06947645444424029,
+                            "imag": 3.4268436708700284e+16
+                        }
+                    ]
+                ]
+            }
+        },
+        {
+            "geometry": {
+                "type": "PolySlab",
+                "axis": 2,
+                "sidewall_angle": 0.0,
+                "reference_plane": "middle",
+                "slab_bounds": [
+                    0.0,
+                    0.22
+                ],
+                "dilation": 0.0,
+                "vertices": [
+                    [
+                        3.060382463233,
+                        0.600013515786
+                    ],
+                    [
+                        3.120486209488,
+                        0.600107581
+                    ],
+                    [
+                        3.180257351091,
+                        0.600361146682
+                    ],
+                    [
+                        3.239699331926,
+                        0.600851224305
+                    ],
+                    [
+                        3.298817043752,
+                        0.601652625054
+                    ],
+                    [
+                        3.357616890277,
+                        0.602837737587
+                    ],
+                    [
+                        3.416106860734,
+                        0.60447633973
+                    ],
+                    [
+                        3.474296606628,
+                        0.606635445424
+                    ],
+                    [
+                        3.532197514217,
+                        0.609379187582
+                    ],
+                    [
+                        3.589822764543,
+                        0.612768736537
+                    ],
+                    [
+                        3.647187372405,
+                        0.616862252477
+                    ],
+                    [
+                        3.704308195717,
+                        0.621714868705
+                    ],
+                    [
+                        3.76120390736,
+                        0.627378700955
+                    ],
+                    [
+                        3.817894922876,
+                        0.633902876267
+                    ],
+                    [
+                        3.874403279232,
+                        0.641333573483
+                    ],
+                    [
+                        3.930752462387,
+                        0.649714066259
+                    ],
+                    [
+                        3.98696718427,
+                        0.659084758944
+                    ],
+                    [
+                        4.043073113007,
+                        0.669483205722
+                    ],
+                    [
+                        4.099096563367,
+                        0.68094410434
+                    ],
+                    [
+                        4.155064157345,
+                        0.693499257364
+                    ],
+                    [
+                        4.211002467082,
+                        0.707177496239
+                    ],
+                    [
+                        4.266937653876,
+                        0.722004566286
+                    ],
+                    [
+                        4.322895117553,
+                        0.738002973876
+                    ],
+                    [
+                        4.378899169991,
+                        0.755191800062
+                    ],
+                    [
+                        4.434972745087,
+                        0.773586487759
+                    ],
+                    [
+                        4.491137155166,
+                        0.793198611697
+                    ],
+                    [
+                        4.547411900907,
+                        0.814035641854
+                    ],
+                    [
+                        4.603814538722,
+                        0.836100711645
+                    ],
+                    [
+                        4.660360606266,
+                        0.859392401952
+                    ],
+                    [
+                        4.717063603888,
+                        0.88390455109
+                    ],
+                    [
+                        4.773935027359,
+                        0.909626099301
+                    ],
+                    [
+                        4.830984445341,
+                        0.936540974429
+                    ],
+                    [
+                        4.888219613923,
+                        0.964628023352
+                    ],
+                    [
+                        4.945646619919,
+                        0.993860991637
+                    ],
+                    [
+                        5.00327004471,
+                        1.024208551961
+                    ],
+                    [
+                        5.061093140807,
+                        1.055634380155
+                    ],
+                    [
+                        5.11911801415,
+                        1.08809727638
+                    ],
+                    [
+                        5.177345806141,
+                        1.121551327927
+                    ],
+                    [
+                        5.235776870506,
+                        1.155946109445
+                    ],
+                    [
+                        5.294410941161,
+                        1.191226916035
+                    ],
+                    [
+                        5.353247288308,
+                        1.22733502448
+                    ],
+                    [
+                        5.412284860844,
+                        1.264207977962
+                    ],
+                    [
+                        5.471522413979,
+                        1.301779889779
+                    ],
+                    [
+                        5.530958621521,
+                        1.33998176189
+                    ],
+                    [
+                        5.590592172759,
+                        1.378741814428
+                    ],
+                    [
+                        5.650421854186,
+                        1.41798582269
+                    ],
+                    [
+                        5.710446616489,
+                        1.457637458474
+                    ],
+                    [
+                        5.770665627314,
+                        1.497618632973
+                    ],
+                    [
+                        5.831078310315,
+                        1.53784983877
+                    ],
+                    [
+                        5.891684370921,
+                        1.578250488773
+                    ],
+                    [
+                        5.952483809132,
+                        1.61873925023
+                    ],
+                    [
+                        6.013476919519,
+                        1.659234372222
+                    ],
+                    [
+                        6.074664278428,
+                        1.699654005337
+                    ],
+                    [
+                        6.136046718214,
+                        1.739916512451
+                    ],
+                    [
+                        6.197625288188,
+                        1.779940769901
+                    ],
+                    [
+                        6.259401201858,
+                        1.819646458591
+                    ],
+                    [
+                        6.321375769935,
+                        1.858954344947
+                    ],
+                    [
+                        6.383550318611,
+                        1.897786552008
+                    ],
+                    [
+                        6.445926092677,
+                        1.936066821324
+                    ],
+                    [
+                        6.508504143233,
+                        1.973720766782
+                    ],
+                    [
+                        6.571285200081,
+                        2.010676121904
+                    ],
+                    [
+                        6.634269529302,
+                        2.046862982582
+                    ],
+                    [
+                        6.697456777171,
+                        2.082214047602
+                    ],
+                    [
+                        6.760845802286,
+                        2.116664859598
+                    ],
+                    [
+                        6.824434498707,
+                        2.150154049238
+                    ],
+                    [
+                        6.888219613923,
+                        2.18262358544
+                    ],
+                    [
+                        6.952196566554,
+                        2.214019034131
+                    ],
+                    [
+                        7.016359269783,
+                        2.244289827531
+                    ],
+                    [
+                        7.080699967525,
+                        2.273389545066
+                    ],
+                    [
+                        7.145209091114,
+                        2.301276205816
+                    ],
+                    [
+                        7.209875144783,
+                        2.327912570834
+                    ],
+                    [
+                        7.27468462818,
+                        2.353266451959
+                    ],
+                    [
+                        7.33962200365,
+                        2.377311021742
+                    ],
+                    [
+                        7.404669714784,
+                        2.400025117214
+                    ],
+                    [
+                        7.4698082609,
+                        2.421393528461
+                    ],
+                    [
+                        7.535016329674,
+                        2.441407261599
+                    ],
+                    [
+                        7.600270987209,
+                        2.460063764946
+                    ],
+                    [
+                        7.665547921628,
+                        2.477367107164
+                    ],
+                    [
+                        7.730821733103,
+                        2.493328096865
+                    ],
+                    [
+                        7.796066260337,
+                        2.507964334823
+                    ],
+                    [
+                        7.861254931189,
+                        2.52130019227
+                    ],
+                    [
+                        7.926361123664,
+                        2.533366711666
+                    ],
+                    [
+                        7.991358522993,
+                        2.544201429584
+                    ],
+                    [
+                        8.05622146105,
+                        2.553848124592
+                    ],
+                    [
+                        8.120925225906,
+                        2.562356496032
+                    ],
+                    [
+                        8.185446331603,
+                        2.569781782051
+                    ],
+                    [
+                        8.249762741171,
+                        2.576184327062
+                    ],
+                    [
+                        8.313854039072,
+                        2.581629109792
+                    ],
+                    [
+                        8.377701552422,
+                        2.586185243327
+                    ],
+                    [
+                        8.441288423308,
+                        2.589925458087
+                    ],
+                    [
+                        8.504599636931,
+                        2.592925577654
+                    ],
+                    [
+                        8.567622012249,
+                        2.595263996001
+                    ],
+                    [
+                        8.630344163004,
+                        2.597021163083
+                    ],
+                    [
+                        8.692756437692,
+                        2.598279084205
+                    ],
+                    [
+                        8.754850847078,
+                        2.599120837119
+                    ],
+                    [
+                        8.816620987455,
+                        2.599630109575
+                    ],
+                    [
+                        8.878061967063,
+                        2.59989075917
+                    ],
+                    [
+                        8.939170342021,
+                        2.599986396676
+                    ],
+                    [
+                        8.99997203342,
+                        2.6
+                    ],
+                    [
+                        100.0,
+                        2.6
+                    ],
+                    [
+                        100.0,
+                        2.1
+                    ],
+                    [
+                        9.00002796658,
+                        2.1
+                    ],
+                    [
+                        8.939617536767,
+                        2.099986484214
+                    ],
+                    [
+                        8.879513790512,
+                        2.099892419
+                    ],
+                    [
+                        8.819742648909,
+                        2.099638853318
+                    ],
+                    [
+                        8.760300668074,
+                        2.099148775695
+                    ],
+                    [
+                        8.701182956248,
+                        2.098347374946
+                    ],
+                    [
+                        8.642383109723,
+                        2.097162262413
+                    ],
+                    [
+                        8.583893139266,
+                        2.09552366027
+                    ],
+                    [
+                        8.525703393372,
+                        2.093364554576
+                    ],
+                    [
+                        8.467802485783,
+                        2.090620812418
+                    ],
+                    [
+                        8.410177235457,
+                        2.087231263463
+                    ],
+                    [
+                        8.352812627595,
+                        2.083137747523
+                    ],
+                    [
+                        8.295691804283,
+                        2.078285131295
+                    ],
+                    [
+                        8.23879609264,
+                        2.072621299045
+                    ],
+                    [
+                        8.182105077124,
+                        2.066097123733
+                    ],
+                    [
+                        8.125596720768,
+                        2.058666426517
+                    ],
+                    [
+                        8.069247537613,
+                        2.050285933741
+                    ],
+                    [
+                        8.01303281573,
+                        2.040915241056
+                    ],
+                    [
+                        7.956926886993,
+                        2.030516794278
+                    ],
+                    [
+                        7.900903436633,
+                        2.01905589566
+                    ],
+                    [
+                        7.844935842655,
+                        2.006500742636
+                    ],
+                    [
+                        7.788997532918,
+                        1.992822503761
+                    ],
+                    [
+                        7.733062346124,
+                        1.977995433714
+                    ],
+                    [
+                        7.677104882447,
+                        1.961997026124
+                    ],
+                    [
+                        7.621100830009,
+                        1.944808199938
+                    ],
+                    [
+                        7.565027254913,
+                        1.926413512241
+                    ],
+                    [
+                        7.508862844834,
+                        1.906801388303
+                    ],
+                    [
+                        7.452588099093,
+                        1.885964358146
+                    ],
+                    [
+                        7.396185461278,
+                        1.863899288355
+                    ],
+                    [
+                        7.339639393734,
+                        1.840607598048
+                    ],
+                    [
+                        7.282936396112,
+                        1.81609544891
+                    ],
+                    [
+                        7.226064972641,
+                        1.790373900699
+                    ],
+                    [
+                        7.169015554659,
+                        1.763459025571
+                    ],
+                    [
+                        7.111780386077,
+                        1.735371976648
+                    ],
+                    [
+                        7.054353380081,
+                        1.706139008363
+                    ],
+                    [
+                        6.99672995529,
+                        1.675791448039
+                    ],
+                    [
+                        6.938906859193,
+                        1.644365619845
+                    ],
+                    [
+                        6.88088198585,
+                        1.61190272362
+                    ],
+                    [
+                        6.822654193859,
+                        1.578448672073
+                    ],
+                    [
+                        6.764223129494,
+                        1.544053890555
+                    ],
+                    [
+                        6.705589058839,
+                        1.508773083965
+                    ],
+                    [
+                        6.646752711692,
+                        1.47266497552
+                    ],
+                    [
+                        6.587715139156,
+                        1.435792022038
+                    ],
+                    [
+                        6.528477586021,
+                        1.398220110221
+                    ],
+                    [
+                        6.469041378479,
+                        1.36001823811
+                    ],
+                    [
+                        6.409407827241,
+                        1.321258185572
+                    ],
+                    [
+                        6.349578145814,
+                        1.28201417731
+                    ],
+                    [
+                        6.289553383512,
+                        1.242362541526
+                    ],
+                    [
+                        6.229334372686,
+                        1.202381367027
+                    ],
+                    [
+                        6.168921689685,
+                        1.16215016123
+                    ],
+                    [
+                        6.108315629079,
+                        1.121749511227
+                    ],
+                    [
+                        6.047516190868,
+                        1.08126074977
+                    ],
+                    [
+                        5.986523080481,
+                        1.040765627778
+                    ],
+                    [
+                        5.925335721572,
+                        1.000345994663
+                    ],
+                    [
+                        5.863953281786,
+                        0.960083487549
+                    ],
+                    [
+                        5.802374711812,
+                        0.920059230099
+                    ],
+                    [
+                        5.740598798142,
+                        0.880353541409
+                    ],
+                    [
+                        5.678624230065,
+                        0.841045655053
+                    ],
+                    [
+                        5.616449681389,
+                        0.802213447992
+                    ],
+                    [
+                        5.554073907323,
+                        0.763933178676
+                    ],
+                    [
+                        5.491495856767,
+                        0.726279233218
+                    ],
+                    [
+                        5.428714799919,
+                        0.689323878096
+                    ],
+                    [
+                        5.365730470698,
+                        0.653137017418
+                    ],
+                    [
+                        5.302543222829,
+                        0.617785952398
+                    ],
+                    [
+                        5.239154197714,
+                        0.583335140402
+                    ],
+                    [
+                        5.175565501293,
+                        0.549845950762
+                    ],
+                    [
+                        5.111780386077,
+                        0.51737641456
+                    ],
+                    [
+                        5.047803433446,
+                        0.485980965869
+                    ],
+                    [
+                        4.983640730217,
+                        0.455710172469
+                    ],
+                    [
+                        4.919300032475,
+                        0.426610454934
+                    ],
+                    [
+                        4.854790908886,
+                        0.398723794184
+                    ],
+                    [
+                        4.790124855217,
+                        0.372087429166
+                    ],
+                    [
+                        4.72531537182,
+                        0.346733548041
+                    ],
+                    [
+                        4.66037799635,
+                        0.322688978258
+                    ],
+                    [
+                        4.595330285216,
+                        0.299974882786
+                    ],
+                    [
+                        4.5301917391,
+                        0.278606471539
+                    ],
+                    [
+                        4.464983670326,
+                        0.258592738401
+                    ],
+                    [
+                        4.399729012791,
+                        0.239936235054
+                    ],
+                    [
+                        4.334452078372,
+                        0.222632892836
+                    ],
+                    [
+                        4.269178266897,
+                        0.206671903135
+                    ],
+                    [
+                        4.203933739663,
+                        0.192035665177
+                    ],
+                    [
+                        4.138745068811,
+                        0.17869980773
+                    ],
+                    [
+                        4.073638876336,
+                        0.166633288334
+                    ],
+                    [
+                        4.008641477007,
+                        0.155798570416
+                    ],
+                    [
+                        3.94377853895,
+                        0.146151875408
+                    ],
+                    [
+                        3.879074774094,
+                        0.137643503968
+                    ],
+                    [
+                        3.814553668397,
+                        0.130218217949
+                    ],
+                    [
+                        3.750237258829,
+                        0.123815672938
+                    ],
+                    [
+                        3.686145960928,
+                        0.118370890208
+                    ],
+                    [
+                        3.622298447578,
+                        0.113814756673
+                    ],
+                    [
+                        3.558711576692,
+                        0.110074541913
+                    ],
+                    [
+                        3.495400363069,
+                        0.107074422346
+                    ],
+                    [
+                        3.432377987751,
+                        0.104736003999
+                    ],
+                    [
+                        3.369655836996,
+                        0.102978836917
+                    ],
+                    [
+                        3.307243562308,
+                        0.101720915795
+                    ],
+                    [
+                        3.245149152922,
+                        0.100879162881
+                    ],
+                    [
+                        3.183379012545,
+                        0.100369890425
+                    ],
+                    [
+                        3.121938032937,
+                        0.10010924083
+                    ],
+                    [
+                        3.060829657979,
+                        0.100013603324
+                    ],
+                    [
+                        3.000055933162,
+                        0.100000006257
+                    ],
+                    [
+                        2.999944066838,
+                        0.599999993743
+                    ],
+                    [
+                        3.060382463233,
+                        0.600013515786
+                    ]
+                ]
+            },
+            "name": null,
+            "type": "Structure",
+            "medium": {
+                "name": null,
+                "frequency_range": [
+                    1199169832000.0,
+                    249827048333333.34
+                ],
+                "allow_gain": false,
+                "nonlinear_spec": null,
+                "type": "PoleResidue",
+                "eps_inf": 1.0,
+                "poles": [
+                    [
+                        {
+                            "real": -1.7473849958109988,
+                            "imag": -6409829457220535.0
+                        },
+                        {
+                            "real": 0.06947645444424029,
+                            "imag": 3.4268436708700284e+16
+                        }
+                    ]
+                ]
+            }
+        }
+    ],
+    "sources": [
+        {
+            "type": "ModeSource",
+            "center": [
+                0.5,
+                0.0,
+                0.11
+            ],
+            "size": [
+                0.0,
+                2.0,
+                1.32
+            ],
+            "source_time": {
+                "amplitude": 1.0,
+                "phase": 0.0,
+                "type": "GaussianPulse",
+                "freq0": 193414489032258.06,
+                "fwidth": 6245676208333.328,
+                "offset": 5.0,
+                "remove_dc_component": true
+            },
+            "name": null,
+            "num_freqs": 1,
+            "direction": "+",
+            "mode_spec": {
+                "num_modes": 1,
+                "target_neff": 3.5,
+                "num_pml": [
+                    0,
+                    0
+                ],
+                "filter_pol": null,
+                "angle_theta": 0.0,
+                "angle_phi": 0.0,
+                "precision": "single",
+                "bend_radius": null,
+                "bend_axis": null,
+                "track_freq": "central",
+                "group_index_step": false,
+                "type": "ModeSpec"
+            },
+            "mode_index": 0
+        }
+    ],
+    "boundary_spec": {
+        "x": {
+            "plus": {
+                "name": null,
+                "type": "PML",
+                "num_layers": 12,
+                "parameters": {
+                    "sigma_order": 3,
+                    "sigma_min": 0.0,
+                    "sigma_max": 1.5,
+                    "type": "PMLParams",
+                    "kappa_order": 3,
+                    "kappa_min": 1.0,
+                    "kappa_max": 3.0,
+                    "alpha_order": 1,
+                    "alpha_min": 0.0,
+                    "alpha_max": 0.0
+                }
+            },
+            "minus": {
+                "name": null,
+                "type": "PML",
+                "num_layers": 12,
+                "parameters": {
+                    "sigma_order": 3,
+                    "sigma_min": 0.0,
+                    "sigma_max": 1.5,
+                    "type": "PMLParams",
+                    "kappa_order": 3,
+                    "kappa_min": 1.0,
+                    "kappa_max": 3.0,
+                    "alpha_order": 1,
+                    "alpha_min": 0.0,
+                    "alpha_max": 0.0
+                }
+            },
+            "type": "Boundary"
+        },
+        "y": {
+            "plus": {
+                "name": null,
+                "type": "PML",
+                "num_layers": 12,
+                "parameters": {
+                    "sigma_order": 3,
+                    "sigma_min": 0.0,
+                    "sigma_max": 1.5,
+                    "type": "PMLParams",
+                    "kappa_order": 3,
+                    "kappa_min": 1.0,
+                    "kappa_max": 3.0,
+                    "alpha_order": 1,
+                    "alpha_min": 0.0,
+                    "alpha_max": 0.0
+                }
+            },
+            "minus": {
+                "name": null,
+                "type": "PML",
+                "num_layers": 12,
+                "parameters": {
+                    "sigma_order": 3,
+                    "sigma_min": 0.0,
+                    "sigma_max": 1.5,
+                    "type": "PMLParams",
+                    "kappa_order": 3,
+                    "kappa_min": 1.0,
+                    "kappa_max": 3.0,
+                    "alpha_order": 1,
+                    "alpha_min": 0.0,
+                    "alpha_max": 0.0
+                }
+            },
+            "type": "Boundary"
+        },
+        "z": {
+            "plus": {
+                "name": null,
+                "type": "PML",
+                "num_layers": 12,
+                "parameters": {
+                    "sigma_order": 3,
+                    "sigma_min": 0.0,
+                    "sigma_max": 1.5,
+                    "type": "PMLParams",
+                    "kappa_order": 3,
+                    "kappa_min": 1.0,
+                    "kappa_max": 3.0,
+                    "alpha_order": 1,
+                    "alpha_min": 0.0,
+                    "alpha_max": 0.0
+                }
+            },
+            "minus": {
+                "name": null,
+                "type": "PML",
+                "num_layers": 12,
+                "parameters": {
+                    "sigma_order": 3,
+                    "sigma_min": 0.0,
+                    "sigma_max": 1.5,
+                    "type": "PMLParams",
+                    "kappa_order": 3,
+                    "kappa_min": 1.0,
+                    "kappa_max": 3.0,
+                    "alpha_order": 1,
+                    "alpha_min": 0.0,
+                    "alpha_max": 0.0
+                }
+            },
+            "type": "Boundary"
+        },
+        "type": "BoundarySpec"
+    },
+    "monitors": [
+        {
+            "type": "ModeMonitor",
+            "center": [
+                9.5,
+                2.35,
+                0.11
+            ],
+            "size": [
+                0.0,
+                2.0,
+                1.32
+            ],
+            "name": "mode",
+            "interval_space": [
+                1,
+                1,
+                1
+            ],
+            "colocate": false,
+            "freqs": [
+                199861638666666.66,
+                199728486342438.38,
+                199595511318242.34,
+                199462713240186.28,
+                199330091755319.16,
+                199197646511627.9,
+                199065377158034.53,
+                198933283344392.8,
+                198801364721485.4,
+                198669620941020.56,
+                198538051655629.12,
+                198406656518861.66,
+                198275435185185.2,
+                198144387309980.2,
+                198013512549537.66,
+                197882810561056.1,
+                197752281002638.53,
+                197621923533289.4,
+                197491737812911.72,
+                197361723502304.12,
+                197231880263157.9,
+                197102207758053.94,
+                196972705650459.9,
+                196843373604727.5,
+                196714211286089.25,
+                196585218360655.75,
+                196456394495412.84,
+                196327739358218.72,
+                196199252617801.03,
+                196070933943754.1,
+                195942783006535.94,
+                195814799477465.7,
+                195686983028720.62,
+                195559333333333.34,
+                195431850065189.03,
+                195304532899022.78,
+                195177381510416.66,
+                195050395575797.03,
+                194923574772431.72,
+                194796918778427.53,
+                194670427272727.28,
+                194544099935107.1,
+                194417936446173.78,
+                194291936487362.25,
+                194166099740932.62,
+                194040425889967.66,
+                193914914618369.97,
+                193789565610859.72,
+                193664378552971.56,
+                193539353131052.3,
+                193414489032258.06,
+                193289785944551.88,
+                193165243556701.03,
+                193040861558274.3,
+                192916639639639.62,
+                192792577491961.4,
+                192668674807197.94,
+                192544931278098.9,
+                192421346598202.8,
+                192297920461834.5,
+                192174652564102.56,
+                192051542600896.88,
+                191928590268886.03,
+                191805795265515.0,
+                191683157289002.56,
+                191560676038338.66,
+                191438351213282.25,
+                191316182514358.62,
+                191194169642857.12,
+                191072312300828.56,
+                190950610191082.78,
+                190829063017186.47,
+                190707670483460.56,
+                190586432294977.75,
+                190465348157560.34,
+                190344417777777.75,
+                190223640862944.16,
+                190103017121116.06,
+                189982546261089.97,
+                189862227992400.22,
+                189742062025316.44,
+                189622048070841.25,
+                189502185840707.97,
+                189382475047378.38,
+                189262915404040.4,
+                189143506624605.7,
+                189024248423707.44,
+                188905140516698.16,
+                188786182619647.34,
+                188667374449339.22,
+                188548715723270.44,
+                188430206159648.0,
+                188311845477386.94,
+                188193633396107.97,
+                188075569636135.5,
+                187957653918495.28,
+                187839885964912.28,
+                187722265497808.4,
+                187604792240300.38,
+                187487465916197.6,
+                187370286250000.0
+            ],
+            "apodization": {
+                "start": null,
+                "end": null,
+                "width": null,
+                "type": "ApodizationSpec"
+            },
+            "mode_spec": {
+                "num_modes": 1,
+                "target_neff": 3.5,
+                "num_pml": [
+                    0,
+                    0
+                ],
+                "filter_pol": null,
+                "angle_theta": 0.0,
+                "angle_phi": 0.0,
+                "precision": "single",
+                "bend_radius": null,
+                "bend_axis": null,
+                "track_freq": "central",
+                "group_index_step": false,
+                "type": "ModeSpec"
+            }
+        },
+        {
+            "type": "FieldMonitor",
+            "center": [
+                0.0,
+                0.0,
+                0.11
+            ],
+            "size": [
+                "Infinity",
+                "Infinity",
+                0.0
+            ],
+            "name": "field",
+            "interval_space": [
+                1,
+                1,
+                1
+            ],
+            "colocate": true,
+            "freqs": [
+                193414489032258.06
+            ],
+            "apodization": {
+                "start": null,
+                "end": null,
+                "width": null,
+                "type": "ApodizationSpec"
+            },
+            "fields": [
+                "Ex",
+                "Ey",
+                "Ez",
+                "Hx",
+                "Hy",
+                "Hz"
+            ]
+        }
+    ],
+    "grid_spec": {
+        "grid_x": {
+            "type": "AutoGrid",
+            "min_steps_per_wvl": 20.0,
+            "max_scale": 1.4,
+            "dl_min": 0.0,
+            "mesher": {
+                "type": "GradedMesher"
+            }
+        },
+        "grid_y": {
+            "type": "AutoGrid",
+            "min_steps_per_wvl": 20.0,
+            "max_scale": 1.4,
+            "dl_min": 0.0,
+            "mesher": {
+                "type": "GradedMesher"
+            }
+        },
+        "grid_z": {
+            "type": "AutoGrid",
+            "min_steps_per_wvl": 20.0,
+            "max_scale": 1.4,
+            "dl_min": 0.0,
+            "mesher": {
+                "type": "GradedMesher"
+            }
+        },
+        "wavelength": 1.55,
+        "override_structures": [],
+        "type": "GridSpec"
+    },
+    "shutoff": 1e-05,
+    "subpixel": true,
+    "normalize_index": 0,
+    "courant": 0.99,
+    "version": "2.4.0"
+}}, '*')
+        }
+    };
+    window.addEventListener(
+        'message',
+        window.postMessageToViewer169444020259182708,
+        false
+    );
+    
+    </script>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=f7f50958">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>Before submitting the simulation to the server, it is a good practice to visualize the mode profile at the <a href="https://docs.flexcompute.com/projects/tidy3d/en/latest/_autosummary/tidy3d.ModeSource.html" target="_blank">ModeSource</a> to ensure we are launching the fundamental TE mode. To do so, we will use the <a href="https://docs.flexcompute.com/projects/tidy3d/en/latest/_autosummary/tidy3d.plugins.mode.ModeSolver.html" target="_blank">ModeSolver</a> plugin, which solves for the mode profile on your local computer.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=da2af982">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[12]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">mode_solver</span> <span class="o">=</span> <span class="n">ModeSolver</span><span class="p">(</span>
+    <span class="n">simulation</span><span class="o">=</span><span class="n">sim</span><span class="p">,</span>
+    <span class="n">plane</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">Box</span><span class="p">(</span><span class="n">center</span><span class="o">=</span><span class="n">mode_source</span><span class="o">.</span><span class="n">center</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">mode_source</span><span class="o">.</span><span class="n">size</span><span class="p">),</span>
+    <span class="n">mode_spec</span><span class="o">=</span><span class="n">mode_spec</span><span class="p">,</span>
+    <span class="n">freqs</span><span class="o">=</span><span class="p">[</span><span class="n">freq0</span><span class="p">],</span>
+<span class="p">)</span>
+<span class="n">mode_data</span> <span class="o">=</span> <span class="n">mode_solver</span><span class="o">.</span><span class="n">solve</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span><span style="color: #800000; text-decoration-color: #800000">WARNING: Use the remote mode solver with subpixel </span> <a href="file://C:\Users\xinzhong\Desktop\tidy3d\tidy3d\plugins\mode\mode_solver.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">mode_solver.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file://C:\Users\xinzhong\Desktop\tidy3d\tidy3d\plugins\mode\mode_solver.py#154" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">154</span></a>
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span><span style="color: #800000; text-decoration-color: #800000">averaging for better accuracy through             </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">                  </span>
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span><span style="color: #008000; text-decoration-color: #008000">'tidy3d.plugins.mode.web.run(...)'</span><span style="color: #800000; text-decoration-color: #800000">.               </span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">                  </span>
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=1c0322c9">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>Visualize the mode profile. We confirm that we are exciting the waveguide with the fundamental TE mode.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=a2e49017">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[13]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">f</span><span class="p">,</span> <span class="p">(</span><span class="n">ax1</span><span class="p">,</span> <span class="n">ax2</span><span class="p">,</span> <span class="n">ax3</span><span class="p">)</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">tight_layout</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+<span class="nb">abs</span><span class="p">(</span><span class="n">mode_data</span><span class="o">.</span><span class="n">Ex</span><span class="o">.</span><span class="n">isel</span><span class="p">(</span><span class="n">mode_index</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="s2">"y"</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s2">"z"</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax1</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s2">"magma"</span><span class="p">)</span>
+<span class="nb">abs</span><span class="p">(</span><span class="n">mode_data</span><span class="o">.</span><span class="n">Ey</span><span class="o">.</span><span class="n">isel</span><span class="p">(</span><span class="n">mode_index</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="s2">"y"</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s2">"z"</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax2</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s2">"magma"</span><span class="p">)</span>
+<span class="nb">abs</span><span class="p">(</span><span class="n">mode_data</span><span class="o">.</span><span class="n">Ez</span><span class="o">.</span><span class="n">isel</span><span class="p">(</span><span class="n">mode_index</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="s2">"y"</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s2">"z"</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax3</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s2">"magma"</span><span class="p">)</span>
+
+<span class="n">ax1</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">"|Ex(x, y)|"</span><span class="p">)</span>
+<span class="n">ax1</span><span class="o">.</span><span class="n">set_aspect</span><span class="p">(</span><span class="s2">"equal"</span><span class="p">)</span>
+<span class="n">ax2</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">"|Ey(x, y)|"</span><span class="p">)</span>
+<span class="n">ax2</span><span class="o">.</span><span class="n">set_aspect</span><span class="p">(</span><span class="s2">"equal"</span><span class="p">)</span>
+<span class="n">ax3</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">"|Ez(x, y)|"</span><span class="p">)</span>
+<span class="n">ax3</span><span class="o">.</span><span class="n">set_aspect</span><span class="p">(</span><span class="s2">"equal"</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedImage jp-OutputArea-output" tabindex="0">
+<img alt="No description has been provided for this image" class="" src="/assets/tidy3d/examples/image/YJunction/YJunction_5.png"/>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=7e904938">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>Now that we verified all the settings, we are ready to submit the simulation job to the server. Before running the simulation, we can get a cost estimation using <code>estimate_cost</code>. This prevents us from accidentally running large jobs that we set up by mistake. The estimated cost is the maximum cost corresponding to running all the time steps.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=15e791dd">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[14]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">job</span> <span class="o">=</span> <span class="n">web</span><span class="o">.</span><span class="n">Job</span><span class="p">(</span><span class="n">simulation</span><span class="o">=</span><span class="n">sim</span><span class="p">,</span> <span class="n">task_name</span><span class="o">=</span><span class="s2">"y_junction"</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">estimated_cost</span> <span class="o">=</span> <span class="n">web</span><span class="o">.</span><span class="n">estimate_cost</span><span class="p">(</span><span class="n">job</span><span class="o">.</span><span class="n">task_id</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">[09:50:03] </span>Created task <span style="color: #008000; text-decoration-color: #008000">'y_junction'</span> with task_id                  <a href="file://C:\Users\xinzhong\Desktop\tidy3d\tidy3d\web\webapi.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">webapi.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file://C:\Users\xinzhong\Desktop\tidy3d\tidy3d\web\webapi.py#188" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">188</span></a>
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span><span style="color: #008000; text-decoration-color: #008000">'fdve-771bc23f-8119-4c96-b584-a1588f8e68a2v1'</span>.          <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">             </span>
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span>View task using web UI at                               <a href="file://C:\Users\xinzhong\Desktop\tidy3d\tidy3d\web\webapi.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">webapi.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file://C:\Users\xinzhong\Desktop\tidy3d\tidy3d\web\webapi.py#190" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">190</span></a>
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span><a href="https://tidy3d.simulation.cloud/workbench?taskId=fdve-771bc23f-8119-4c96-b584-a1588f8e68a2v1" target="_blank"><span style="color: #008000; text-decoration-color: #008000">'https://tidy3d.simulation.cloud/workbench?taskId=fdve-</span></a> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">             </span>
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span><a href="https://tidy3d.simulation.cloud/workbench?taskId=fdve-771bc23f-8119-4c96-b584-a1588f8e68a2v1" target="_blank"><span style="color: #008000; text-decoration-color: #008000">771bc23f-8119-4c96-b584-a1588f8e68a2v1'</span></a>.                <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">             </span>
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Output()</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>The estimated maximum cost is 0.047 Flex Credits.
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=cedcee1e">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>The cost is reasonaly so we can run the simulation.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=73df031e">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[15]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">sim_data</span> <span class="o">=</span> <span class="n">job</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="s2">"data/simulation_data.hdf5"</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">[09:50:05] </span>status = queued                                         <a href="file://C:\Users\xinzhong\Desktop\tidy3d\tidy3d\web\webapi.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">webapi.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file://C:\Users\xinzhong\Desktop\tidy3d\tidy3d\web\webapi.py#361" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">361</span></a>
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Output()</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">[09:50:10] </span>status = preprocess                                     <a href="file://C:\Users\xinzhong\Desktop\tidy3d\tidy3d\web\webapi.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">webapi.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file://C:\Users\xinzhong\Desktop\tidy3d\tidy3d\web\webapi.py#355" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">355</span></a>
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">[09:50:15] </span>Maximum FlexCredit cost: <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0.047</span>. Use                     <a href="file://C:\Users\xinzhong\Desktop\tidy3d\tidy3d\web\webapi.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">webapi.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file://C:\Users\xinzhong\Desktop\tidy3d\tidy3d\web\webapi.py#341" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">341</span></a>
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span><span style="color: #008000; text-decoration-color: #008000">'web.real_cost(task_id)'</span> to get the billed FlexCredit   <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">             </span>
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span>cost after a simulation run.                            <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">             </span>
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span>starting up solver                                      <a href="file://C:\Users\xinzhong\Desktop\tidy3d\tidy3d\web\webapi.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">webapi.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file://C:\Users\xinzhong\Desktop\tidy3d\tidy3d\web\webapi.py#377" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">377</span></a>
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span>running solver                                          <a href="file://C:\Users\xinzhong\Desktop\tidy3d\tidy3d\web\webapi.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">webapi.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file://C:\Users\xinzhong\Desktop\tidy3d\tidy3d\web\webapi.py#386" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">386</span></a>
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span>To cancel the simulation, use <span style="color: #008000; text-decoration-color: #008000">'web.abort(task_id)'</span> or   <a href="file://C:\Users\xinzhong\Desktop\tidy3d\tidy3d\web\webapi.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">webapi.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file://C:\Users\xinzhong\Desktop\tidy3d\tidy3d\web\webapi.py#387" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">387</span></a>
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span><span style="color: #008000; text-decoration-color: #008000">'web.delete(task_id)'</span> or abort/delete the task in the   <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">             </span>
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span>web UI. Terminating the Python script will not stop the <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">             </span>
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span>job running on the cloud.                               <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">             </span>
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Output()</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">[09:50:57] </span>early shutoff detected, exiting.                        <a href="file://C:\Users\xinzhong\Desktop\tidy3d\tidy3d\web\webapi.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">webapi.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file://C:\Users\xinzhong\Desktop\tidy3d\tidy3d\web\webapi.py#404" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">404</span></a>
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span>status = postprocess                                    <a href="file://C:\Users\xinzhong\Desktop\tidy3d\tidy3d\web\webapi.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">webapi.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file://C:\Users\xinzhong\Desktop\tidy3d\tidy3d\web\webapi.py#420" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">420</span></a>
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Output()</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">[09:51:13] </span>status = success                                        <a href="file://C:\Users\xinzhong\Desktop\tidy3d\tidy3d\web\webapi.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">webapi.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file://C:\Users\xinzhong\Desktop\tidy3d\tidy3d\web\webapi.py#427" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">427</span></a>
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Output()</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">[09:51:17] </span>loading SimulationData from data/simulation_data.hdf5   <a href="file://C:\Users\xinzhong\Desktop\tidy3d\tidy3d\web\webapi.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">webapi.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file://C:\Users\xinzhong\Desktop\tidy3d\tidy3d\web\webapi.py#591" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">591</span></a>
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=fec4554c">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="Result-Visualization">Result Visualization<a class="anchor-link" href="#Result-Visualization">¶</a></h2>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=17041534">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>After the simulation is complete, we first inspect the insertion loss. Within this wavelength range, we see that the insertion loss is generally below 0.2 dB.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=04666ade">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[16]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># extract the transmission data from the mode monitor</span>
+<span class="n">amp</span> <span class="o">=</span> <span class="n">sim_data</span><span class="p">[</span><span class="s2">"mode"</span><span class="p">]</span><span class="o">.</span><span class="n">amps</span><span class="o">.</span><span class="n">sel</span><span class="p">(</span><span class="n">mode_index</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">direction</span><span class="o">=</span><span class="s2">"+"</span><span class="p">)</span>
+<span class="n">T</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">amp</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> 
+
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ldas</span><span class="p">,</span> <span class="mi">10</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">T</span><span class="p">))</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">(</span><span class="mf">1.5</span><span class="p">,</span> <span class="mf">1.6</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">(</span><span class="o">-</span><span class="mf">0.5</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">"Wavelength ($\mu m$)"</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">"Insertion loss (dB)"</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedImage jp-OutputArea-output" tabindex="0">
+<img alt="No description has been provided for this image" class="" src="/assets/tidy3d/examples/image/YJunction/YJunction_6.png"/>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=9d9e0403">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>We can also visualize the field distribution. Here we can see the interference in the junction while no visible higher order modes are excited at the output waveguides.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=e44e8128">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[17]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">sim_data</span><span class="o">.</span><span class="n">plot_field</span><span class="p">(</span>
+    <span class="n">field_monitor_name</span><span class="o">=</span><span class="s2">"field"</span><span class="p">,</span> <span class="n">field_name</span><span class="o">=</span><span class="s2">"E"</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="s2">"abs^2"</span><span class="p">,</span> <span class="n">f</span><span class="o">=</span><span class="n">freq0</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="mf">2e3</span>
+<span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedImage jp-OutputArea-output" tabindex="0">
+<img alt="No description has been provided for this image" class="" src="/assets/tidy3d/examples/image/YJunction/YJunction_7.png"/>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=016a3a86">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[ ]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body>
+<script type="application/vnd.jupyter.widget-state+json">
+{"state": {"017eca6992504f178a92982a1ef2f40a": {"model_module": "@jupyter-widgets\/output", "model_module_version": "1.0.0", "model_name": "OutputModel", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets\/output", "_model_module_version": "1.0.0", "_model_name": "OutputModel", "_view_count": null, "_view_module": "@jupyter-widgets\/output", "_view_module_version": "1.0.0", "_view_name": "OutputView", "layout": "IPY_MODEL_40583069262e45599bb5889252890598", "msg_id": "", "outputs": [{"data": {"text\/html": "<pre style=\"white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace\"><span style=\"color: #008000; text-decoration-color: #008000\">\ud83d\udeb6 <\/span> <span style=\"color: #008000; text-decoration-color: #008000; font-weight: bold\">Starting 'y_junction'...<\/span>\n<\/pre>\n", "text\/plain": "\u001b[32m\ud83d\udeb6 \u001b[0m \u001b[1;32mStarting 'y_junction'...\u001b[0m\n"}, "metadata": {}, "output_type": "display_data"}], "tabbable": null, "tooltip": null}}, "37889f6b982f4e38863fccc5bc9ceadd": {"model_module": "@jupyter-widgets\/base", "model_module_version": "2.0.0", "model_name": "LayoutModel", "state": {"_model_module": "@jupyter-widgets\/base", "_model_module_version": "2.0.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets\/base", "_view_module_version": "2.0.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border_bottom": null, "border_left": null, "border_right": null, "border_top": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}, "40583069262e45599bb5889252890598": {"model_module": "@jupyter-widgets\/base", "model_module_version": "2.0.0", "model_name": "LayoutModel", "state": {"_model_module": "@jupyter-widgets\/base", "_model_module_version": "2.0.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets\/base", "_view_module_version": "2.0.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border_bottom": null, "border_left": null, "border_right": null, "border_top": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}, "6a9c0a8161504d57a4e997eaca760c10": {"model_module": "@jupyter-widgets\/output", "model_module_version": "1.0.0", "model_name": "OutputModel", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets\/output", "_model_module_version": "1.0.0", "_model_name": "OutputModel", "_view_count": null, "_view_module": "@jupyter-widgets\/output", "_view_module_version": "1.0.0", "_view_name": "OutputView", "layout": "IPY_MODEL_d583ffe67abc4f1b9e80c5ee4f49ae18", "msg_id": "", "outputs": [{"data": {"text\/html": "<pre style=\"white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace\">solver progress (field decay = 1.97e-01) <span style=\"color: #729c1f; text-decoration-color: #729c1f\">\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501<\/span> <span style=\"color: #800080; text-decoration-color: #800080\">100%<\/span> <span style=\"color: #008080; text-decoration-color: #008080\">0:00:00<\/span>\n<\/pre>\n", "text\/plain": "solver progress (field decay = 1.97e-01) \u001b[38;2;114;156;31m\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u001b[0m \u001b[35m100%\u001b[0m \u001b[36m0:00:00\u001b[0m\n"}, "metadata": {}, "output_type": "display_data"}], "tabbable": null, "tooltip": null}}, "7b46b59792484faa99d66c600fca3f7a": {"model_module": "@jupyter-widgets\/output", "model_module_version": "1.0.0", "model_name": "OutputModel", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets\/output", "_model_module_version": "1.0.0", "_model_name": "OutputModel", "_view_count": null, "_view_module": "@jupyter-widgets\/output", "_view_module_version": "1.0.0", "_view_name": "OutputView", "layout": "IPY_MODEL_8e1725dcf255479c960d3429e9ae6185", "msg_id": "", "outputs": [{"data": {"text\/html": "<pre style=\"white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace\"><span style=\"color: #008000; text-decoration-color: #008000\">\ud83c\udfc3 <\/span> <span style=\"color: #008000; text-decoration-color: #008000; font-weight: bold\">Finishing 'y_junction'...<\/span>\n<\/pre>\n", "text\/plain": "\u001b[32m\ud83c\udfc3 \u001b[0m \u001b[1;32mFinishing 'y_junction'...\u001b[0m\n"}, "metadata": {}, "output_type": "display_data"}], "tabbable": null, "tooltip": null}}, "8e1725dcf255479c960d3429e9ae6185": {"model_module": "@jupyter-widgets\/base", "model_module_version": "2.0.0", "model_name": "LayoutModel", "state": {"_model_module": "@jupyter-widgets\/base", "_model_module_version": "2.0.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets\/base", "_view_module_version": "2.0.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border_bottom": null, "border_left": null, "border_right": null, "border_top": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}, "ab8f6d59fa92429bbfbb0f51eaf44b4b": {"model_module": "@jupyter-widgets\/output", "model_module_version": "1.0.0", "model_name": "OutputModel", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets\/output", "_model_module_version": "1.0.0", "_model_name": "OutputModel", "_view_count": null, "_view_module": "@jupyter-widgets\/output", "_view_module_version": "1.0.0", "_view_name": "OutputView", "layout": "IPY_MODEL_37889f6b982f4e38863fccc5bc9ceadd", "msg_id": "", "outputs": [{"data": {"text\/html": "<pre style=\"white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace\"><span style=\"color: #800000; text-decoration-color: #800000; font-weight: bold\">\u2191<\/span> <span style=\"color: #000080; text-decoration-color: #000080; font-weight: bold\">simulation.hdf5.gz<\/span> <span style=\"color: #729c1f; text-decoration-color: #729c1f\">\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501<\/span> <span style=\"color: #800080; text-decoration-color: #800080\">100.0%<\/span> \u2022 <span style=\"color: #008000; text-decoration-color: #008000\">8.6\/8.6 kB<\/span> \u2022 <span style=\"color: #800000; text-decoration-color: #800000\">?<\/span> \u2022 <span style=\"color: #008080; text-decoration-color: #008080\">0:00:00<\/span>\n<\/pre>\n", "text\/plain": "\u001b[1;31m\u2191\u001b[0m \u001b[1;34msimulation.hdf5.gz\u001b[0m \u001b[38;2;114;156;31m\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u001b[0m \u001b[35m100.0%\u001b[0m \u2022 \u001b[32m8.6\/8.6 kB\u001b[0m \u2022 \u001b[31m?\u001b[0m \u2022 \u001b[36m0:00:00\u001b[0m\n"}, "metadata": {}, "output_type": "display_data"}], "tabbable": null, "tooltip": null}}, "c1ab2cc963dd49de9bf0c7519b164c9f": {"model_module": "@jupyter-widgets\/base", "model_module_version": "2.0.0", "model_name": "LayoutModel", "state": {"_model_module": "@jupyter-widgets\/base", "_model_module_version": "2.0.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets\/base", "_view_module_version": "2.0.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border_bottom": null, "border_left": null, "border_right": null, "border_top": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}, "d50e10b829c74ac68a749e797d4a8f4c": {"model_module": "@jupyter-widgets\/output", "model_module_version": "1.0.0", "model_name": "OutputModel", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets\/output", "_model_module_version": "1.0.0", "_model_name": "OutputModel", "_view_count": null, "_view_module": "@jupyter-widgets\/output", "_view_module_version": "1.0.0", "_view_name": "OutputView", "layout": "IPY_MODEL_c1ab2cc963dd49de9bf0c7519b164c9f", "msg_id": "", "outputs": [{"data": {"text\/html": "<pre style=\"white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace\"><span style=\"color: #008000; text-decoration-color: #008000; font-weight: bold\">\u2193<\/span> <span style=\"color: #000080; text-decoration-color: #000080; font-weight: bold\">monitor_data.hdf5<\/span> <span style=\"color: #729c1f; text-decoration-color: #729c1f\">\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501<\/span> <span style=\"color: #800080; text-decoration-color: #800080\">100.0%<\/span> \u2022 <span style=\"color: #008000; text-decoration-color: #008000\">15.2\/15.2 MB<\/span> \u2022 <span style=\"color: #800000; text-decoration-color: #800000\">21.9 MB\/s<\/span> \u2022 <span style=\"color: #008080; text-decoration-color: #008080\">0:00:00<\/span>\n<\/pre>\n", "text\/plain": "\u001b[1;32m\u2193\u001b[0m \u001b[1;34mmonitor_data.hdf5\u001b[0m \u001b[38;2;114;156;31m\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u001b[0m \u001b[35m100.0%\u001b[0m \u2022 \u001b[32m15.2\/15.2 MB\u001b[0m \u2022 \u001b[31m21.9 MB\/s\u001b[0m \u2022 \u001b[36m0:00:00\u001b[0m\n"}, "metadata": {}, "output_type": "display_data"}], "tabbable": null, "tooltip": null}}, "d583ffe67abc4f1b9e80c5ee4f49ae18": {"model_module": "@jupyter-widgets\/base", "model_module_version": "2.0.0", "model_name": "LayoutModel", "state": {"_model_module": "@jupyter-widgets\/base", "_model_module_version": "2.0.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets\/base", "_view_module_version": "2.0.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border_bottom": null, "border_left": null, "border_right": null, "border_top": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}}, "version_major": 2, "version_minor": 0}
+</script>
+</html>

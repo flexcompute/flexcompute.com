@@ -1,0 +1,55 @@
+{
+  "title": "Inverse Design: Lecture 5",
+  "pages": [
+    {
+      "id": "",
+      "title": "",
+      "transcript": "Here, we continue our discussion of inverse design in photonics and focus on set of optimization techniques that we call “shape optimization”."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "Recall that the goal of this process is to design a photonic device for a specific objective. In the previous lectures, we imagined a design region, which was broken into independent pixels. We then optimized the permittivity value in each pixel to meet a give design objective. As discussed, there are many details regarding how to parameterize these permittivity values in order to satisfy fabrication constraints, for example, incorporating minimum feature sizes, binarization, and other factors that ensure that we generate a device that can actually be fabricated. While this is one very important class of optimization problems, there are other ways to set up the problem not necessarily from this pixel-by-pixel perspective."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "As an example, imagine that you are trying to design a waveguide taper where there is a narrow waveguide on the left with a mode coming in. You would like to go through a region designed such that the light will couple nicely to the larger waveguide on the right. A conventional design would be to simply put a linear taper in between the narrow waveguide and the wide waveguide. Then, you might want to control the shape of this taper to achieve this objective of mode expansion. In this case, the natural parameters for the optimization would involve the positions of the interface, indicated by the black arrows above. Of course, one could try doing this by pixel-by-pixel optimization, but in many cases, it is perhaps simpler to imagine this in terms of modifying an existing taper design. Such a structure may naturally have a design that satisfies the minimum feature size constraint. Furthermore, we may have some intuition about what the device is trying to achieve based on the more simple and intuitive design. Another advantage is that a regular interface may have lower scattering loss than a pixelated device. In general, there are several advantages to utilizing a geometry-based parameterization rather than a pixelated parameterization if your device allows it."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "For a shape-based approach to work, one must be able to compute the derivative of the objective function with respect to the position of the interface using he adjoint method. While we won’t go into much detail here as there are many papers showing how to compute this quantity, it is described in the equation above. The objective you care about is labelled “T” and the parameter describing the interface is given as “s”. The derivative of T with respect to s is computed by performing an integral of both the parallel electric (E) field and the perpendicular displacement (D) field. One needs to handle these different field components separately since they have different boundary conditions across interfaces. Using this formula, you can compute the gradient information with respect to each point along the interface, which can be used to optimize the device with respect to a set of design parameters similar to how we have previously."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "As an example, let’s apply this technique to optimize a waveguide bend. The waveguide geometry is shown above, with a top-down view on the left and a cross section view on the right. The waveguide consists of a silicon nitride region sitting on a silicon dioxide substrate with air above. In this design problem, we’d like to choose the shape of the waveguide to perform a compact, 90-degree bend. The waveguide supports multiple modes, but we inject the fundamental mode on the right hand side. After the light propagates through the waveguide and performs the bend, we want it to couple again to the fundamental mode with high efficiency. We write an objective function with this functionality in mind. The next step is to parameterize the device shape using a set of differentiable parameters."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "To parameterize the device, we split it into several sections, drawn above, such that the bend is made up of several rectangular sections. The drawing shows only a few sections for clarity, but in reality, they are chosen to be tightly spaced such that the device is approximately circular. We take as our design parameters the width of each rectangular section along this curve. Thus adjusting the width affects the boundary on both the inner and outer edges. We use the adjoint method to compute the derivative of our objective with respect to this width parameter through the shifting boundary treatment."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "As usual, we also want to apply some constraints on this geometry to ensure it can be fabricated. One simple constraint is to make sure that the thickness of each section is neither too large nor too small. To enforce this, one can apply a hyperbolic tangent function to restrict the width of each section to lie between a specified range as the parameters vary continuously. As such, this function will therefore constrain the waveguide to a certain region of space, as shown above. As we have done before, choosing a smooth function makes it possible to take derivatives without worrying about discontinuities."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "Another concern for fabrication is the presence of sharp bends in the design. One way to handle this is to impose a penalty for a small radius of curvature in the device and add this penalty to the objective function. To compute this penalty, one may perform a local fit to each set of adjacent points along the device and use an analytical formula to determine an approximate local radius of curvature. Then, again using a smooth function, one can construct a penalty function that is only significant when the local radius of curvature goes below some threshold, labelled “R0” above. Applying this penalty to the objective function has the desired effect of discouraging devices that have sharp features that may be difficult to fabricate."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "Here is the visualization of the optimization results incorporating these techniques. On the left are top down views of the device. We can see the performance of the starting device on the top, which clearly does not inject properly into the fundamental output mode, as one can see from the asymmetric intensity pattern at the output interface. On the bottom, we see the final optimized device, which displays smooth features, and injects well into the fundamental output mode as we can see from the symmetric intensity pattern. The objective function as a function of the iteration number is shown on the right hand side and we can see that it gradually improves performance, despite a few oscillations. This final device no longer retains its perfectly circular properties, but clearly provides a substantial improvement in the objective. It is also possible to come up with some intuition based on the final shape, and is clearly more amenable to fabrication than some of the pixelated designs explored earlier."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "Finally, here is a short movie of the optimization process. You can see how the boundary between the silicon nitrate and air gets adjusted and how that translates into the measured field distribution inside the waveguide. In summary, this lecture has introduced an alternative to pixel-based approaches to optimization. One can parameterize the device using the interface defined by various geometric parameters and use a modified adjoint method to perform gradient-based optimization using these parameters. For many waveguide problems, this is, in fact, quite an effective strategy for generating a device amenable to nano-fabrication. Furthermore, the devices tend to be easier to understand through human intuition and common ideas in waveguide design."
+    }
+  ]
+}

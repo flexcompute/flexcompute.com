@@ -1,0 +1,58 @@
+---
+layout: default
+title: 'Python-Driven FDTD Software: Volt3D - Flexcompute'
+description: Volt3D is a cloud-based electromagnetic simulation powerhouse which enables new possibilities in ultra-fast design and optimization for electromagnetic interference and compatibility (EMI/EMC) applications.
+
+custom_font: font2
+introduction_section:
+  - type: image
+    enable: true
+    class: 'order-1'
+    image: '/assets/images/product/tidy3D/volt3d/Volt3d-Medium.png'
+  - type: image
+    enable: true
+    class: 'order-2'
+    image: '/assets/images/product/tidy3D/volt3d/resolution-computer.png'
+  - type: image
+    enable: true
+    class: 'order-4 order-lg-3'
+    image: '/assets/images/product/tidy3D/volt3d/lcm-of-pcb.png'
+  - type: text
+    enable: true
+    class: 'order-3 order-lg-4'
+    text: "Volt3D is a cloud-based electromagnetic simulation powerhouse which enables new possibilities in ultra-fast design and optimization for electromagnetic interference and compatibility (EMI/EMC) applications."
+  - type: text
+    enable: true
+    class: 'order-5'
+    text: "By integrating hardware and software together, Volt3D can effortlessly handle extremely large EMI/EMC problems with highly complex geometries, while giving users a seamless end-to-end experience with a Python interface. This allows users to focus on their ideas without worrying about the hardware."
+  - type: image
+    enable: true
+    class: "order-6"
+    image: "/assets/images/product/tidy3D/volt3d/raytracervjm.png"
+
+---
+{% include header.html extra_class="absolute transparent" logo_class="logo fc-logo" container_class="container" %}
+<div class="wrapper bg-opacity-default">
+  <div class="container inner">
+    <div class="row justify-content-center">
+      <div class="col-lg-9 row" style="row-gap: 10px">
+        {% for item in page.introduction_section %}
+        {% case item.type %}
+        {% when "image" %}
+        <div class="col-lg-6 d-flex align-items-center justify-content-center {%if item.class%}{{item.class}}{%endif%}">
+          <img style="width: 100%; max-width: 500px; object-fit: contain" src="{{item.image}}" alt="">
+        </div>
+        {% when "text" %}
+        <div class="col-lg-6 d-flex align-items-center justify-content-center {%if item.class%}{{item.class}}{%endif%}">
+          <p class="rect-paragraph-point font-size-20 font-weight-500" style="max-width: 500px;">
+            <span>{{item.text}}</span>
+          </p>
+        </div>
+        {% endcase %}
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+<div class="space80"></div>
+{% include footer_2.html %}

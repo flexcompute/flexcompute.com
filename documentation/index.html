@@ -1,0 +1,104 @@
+---
+layout: default
+title: Welcome to Simulation Technology Supporting Documentations
+description: CFD engineering 3D simulator created by Flow360 brings unrivaled performance.
+  Faster and Larger grids field 3D modeling solving electromagnetic simulation tool
+
+custom_font: font2
+document_section:
+  title: Documentation for Simulation Software | Flexcompute
+  enable: true
+  list:
+  - name: Tidy3D
+    logo: "/assets/images/product/tidy3D/tidy3d-logo.svg"
+    logo_alt: Tidy3D EM simulation software logo by Flexcompute Inc.
+    bg_image: "/assets/images/product/tidy3D/electromagnetic-field-xl.png"
+    bg_image_alt: Tidy3D EM simulation software by Flexcompute.
+    enable: true
+    summary: EM FDTD simulation tool
+    title: Faster, Larger
+    description: New Chips, New Solvers<br> For a breakthrough in simulation experiences
+    link: https://docs.flexcompute.com/tidy3d
+    click_id: __pg_documentation_tidy3d
+    target:
+    link_text: Documentation
+  - name: Flow 360
+    enable: true
+    logo: "/assets/images/Flow360-logo.svg"
+    logo_alt: Flow360 CFD simulation softwar mesh modeling by Flexcompute.
+    bg_image: "/assets/images/product/flow360/bg.png"
+    bg_image_alt: Flow360 CFD simulation software mesh modeling by Flexcompute.
+    summary: CFD simulation tool
+    title: A new era of CFD
+    description: Created for the most sophisticated engineers to gain unrivaled performance
+    link: https://docs.flexcompute.com/flow360
+    click_id: __pg_documentation_flow360
+    target:
+    link_text: Documentation
+
+---
+<div class="content-wrapper">
+    {% include header.html extra_class="absolute transparent" logo_class="logo fc-logo" container_class="container" %}
+    {% if page.document_section.enable %}
+    <div class="wrapper">
+        <div class="container pt-100">
+          {% if page.document_section.title %}
+          <h1 class="font-size-38 m-0 color-dark text-center">{{page.document_section.title}}</h1>
+          <div class="space40"></div>
+          {% endif %}
+            <div class="product-card row align-items-center justify-content-center">
+                {% for item in page.document_section.list %}
+                <div class="col-lg-5 mb-10 item-hover" onclick="window.open('{{item.link}}','_self')" style="height: 100%">
+                    <div class="box bg-white shadow d-flex flex-column justify-content-between box-max-height" style="height: 100%;padding: 0">
+                        <div class="header d-flex justify-content-between align-items-end pt-20 pl-20 pr-20 pb-20 border-bottom">
+                            {% if item.logo %}
+                            <picture style="max-width: 180px">
+                                <source srcset="{{item.logo}}" type="image/svg+xml">
+                                <img src="{{item.logo}}" alt="{{item.logo_alt}}" style="width: 100%">
+                            </picture>
+                            {%endif%}
+                            {% if item.summary %}
+                            <span class="font-size-18 color-dark-gray">
+                                {{ item.summary }}
+                            </span>
+                            {%endif%}
+                        </div>
+                        <div class="document-content position-relative">
+                            {% if item.bg_image %}
+                            <div class="img-content">
+                                <img
+                                    style="border-radius: 15px"
+                                    width="1024"
+                                    height="576"
+                                    class="aspect-ratio"
+                                    src="{{item.bg_image}}"
+                                    alt="{{ item.bg_image_alt }}">
+                            </div>
+                            {% endif %}
+                            <div class="description pt-20 pl-20 pr-20 pb-30">
+                                {% if item.title %}
+                                <h4 class="mb-0">{{item.title}}</h4>
+                                <div class="space5"></div>
+                                {% endif %}
+                                {% if item.description %}
+                                <p class="font-size-18 color-dark-gray mb-0">{{item.description}}</p>
+                                <div class="space10"></div>
+                                {% endif %}
+                                {% if item.link %}
+                                <a id="{{item.click_id}}" href="{{ item.link }}" target="{{item.target}}" class="color-primary-hover font-size-18">
+                                    {{ item.link_text }}
+                                    <i class="jam jam-arrow-right align-middle"></i>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    <div class="space80"></div>
+    {% endif %}
+    {% include footer_2.html %}
+</div>

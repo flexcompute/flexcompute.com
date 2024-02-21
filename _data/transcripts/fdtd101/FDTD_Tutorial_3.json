@@ -1,0 +1,68 @@
+{
+  "title": "FDTD 101: Lecture 3",
+  "pages": [
+    {
+      "id": "intro-to-fdtd",
+      "transcript": "This is the third video in the introduction to the finite difference time domain method or the FDTD method. I'm Shanhui Fan from Flexcompute."
+    },
+    {
+      "id": "",
+      "title": "How to simulate a photonic crystal slab in FDTD",
+      "transcript": "In our previous video we have looked at using FDTD method to compute the transmission through a uniform dielectric slab. In this video, we are going to do a more complex structure of a transmission through a photonic crystal slab. The structure is shown here on the left, but it consists of a high index dielectric slab with a periodic array of air holes introduced into the slab. The geometric parameters are provided below here. The period is set to be one micron and then the radius is 200 nanometers and the thickness is 550 nanometers. The permittivity of the slab is 12 which roughly corresponds to silicon in the infrared. And we will compute the transmission spectrum of light normally incident upon the slab. On the right here is the computed transmission spectrum. And the spectrum consists of a smoothly varying background with two resonant features near 115 and 120 terahertz where the transmission varies very sharply from one to zero over a narrow frequency range. The detailed physics of this transmission spectrum is very interesting. You can look at this reference. Here we're going to focus primarily on the FDTD setup that allows you to get a transmission spectrum. But the thing that we would need to highlight is the fact that if you look at the transmission spectrum, there are these two very strong resonant features. We will focus  on some of the consideration of using FDTD method when you try to study systems that support strong optical resonance."
+    },
+    {
+      "id": "",
+      "title": "Setting up the computational domain",
+      "transcript": "Let's start the first step: we need to set up the computational cell. Here we're considering a structure that is infinitely periodic in the xy plane. As is typical, we're going to choose the computational domain to be only a single unit cell of this infinity periodic structure."
+    },
+    {
+      "id": "",
+      "title": "Simulation configuration for photonic crystal slab",
+      "transcript": "This is how the computational domain looks like. At the middle here is a single unit cell structure. On top and bottom here, we put in a perfectly matched layers boundary condition that are used to absorb incident waves. And then on the side here we put in a periodic boundary condition to simulate an infinitely periodic structure. And we excite a plane wave incident upon the structure with a plane wave source, and we assume an x-polarized current to generate polarized incident waves. And we look at the transmitted field by looking at the flux and the field on the other side of the structure. We choose the discretization to be sufficiently small to resolve both the structural features and the wavelengths inside the material. These are standard if you recall what we have discussed in the second video. In general, one nice aspect about FDTD is that many of the considerations that you have in complex structures are very similar to the considerations that you have in simulating simple structures."
+    },
+    {
+      "id": "",
+      "title": "Setting the source for FDTD simulation of a photonic crystal slab",
+      "transcript": "With this we can put in a source. The source that we use here is a plane wave source with a gaussian envelope. And we choose in this case a relatively short pulse so that we can produce a broad-band spectrum covering the frequency range from 80 to approximately 130 terahertz."
+    },
+    {
+      "id": "",
+      "title": "How to measure the transmission spectrum of photonic crystal slab in FDTD",
+      "transcript": "With this we run two simulations. One is without the photonic crystal slab and that produces the blue curve here and that gives a characterization of the incident wave spectrum. We then put the photonic crystal slab in and that produced the red spectrum here on the top and that's the amplitude of the transmitted wave. We then take the ratio between the spectra with and without the photonic crystal slab and that gives you the nice transmission spectrum at the bottom, which is the spectrum that we show in the very beginning of this tutorial."
+    },
+    {
+      "id": "",
+      "title": "Analyze the time series of the transmitted signal to identify resonant features",
+      "transcript": "Now one very important consideration in simulating systems with highly resonant features is that you will need to run the simulation long enough. And to illustrate this point on the top here, I'm showing the time evolution of the electric field along the X direction at a monitor point on the blue planet on the left. And what you can see here in this time trajectory is that you have an initial pulse passing through the structure with a long tail generated afterwards. This long tail extends very far, all the way to a few picoseconds. And in the time slot B here, we again plot the field as a function of time and you can see the exponential decay and a beating pattern on top of it. Now, if you recall we have two resonant features here. These resonant features are slightly different frequencies. And the beating pattern here is related to the frequency difference between these two resonances."
+    },
+    {
+      "id": "",
+      "title": "How to obtain a smooth spectrum in FDTD simulation",
+      "transcript": "To obtain a nice-looking spectrum on the right, we run the simulation to a time of about six picoseconds so that all the amplitudes in the resonance essentially decay to zero. We choose the computational time duration to be significantly longer than the lifetime of the system. If we do that, we can get a nice transmission spectrum."
+    },
+    {
+      "id": "",
+      "title": "How to choose the time duration to obtain high quality FDTD results",
+      "transcript": "On the other hand, if you don't run the simulation long enough, you won't get the desired result. Here is an example, where instead we only do the Fourier transform over a simulation time or 0.56 picosecond corresponding to the blue break on the left. In this time duration, the initial pulse has passed and we capture part of the exponential decay of the resonance. However, the amplitude of the resonance has not decayed to zero. If that's the duration that you choose, then you obtain a spectrum as indicated on the right. It is somewhere resembling the spectrum that I showed you in previous slides. However, on one hand, you see that the resonance gets more smooth and in particular you do not see the short transition from one to zero over a narrow frequency range. The one and the zero there are required by energy conservation considerations. Here you don't get either zero or one because we do not fully capture the energy in the exponential decay of the resonance. The other thing that you see in this spectrum is there are lots of oscillations. These oscillations come from the fact we truncate the time series before the field amplitude goes to zero."
+    },
+    {
+      "id": "",
+      "title": "How to analyze the high Q cavity in FDTD simulation?",
+      "transcript": "To get the nice looking spectrum that faithfully captures the physics of the structure, you will need to run the simulation significantly longer than the lifetime of the system. Now having a spectrum like this, typically one would want to gain further insight. For example, one would like to visualize how the field of one of the resonances looks like. In FDTD, this is actually straightforwardly done. Instead of using a broad-band spectrum of a source to excite the system as we have done this previously. What you can do is to choose a narrow band spectrum, thus a much longer pulse in the dipole source. We'll show an example where we try to study a bit more of the first resonance peak near 115 THz. We choose a source spectrum indicated by the blue curve here. On the right, I'm plotting the Ex field at the monitor point as a function of time. Again, you see an initial pulse is now actually much longer than the previous example and therefore generate a narrow band spectrum. As well as the exponential decay of the resonance. In this case, you see a pure exponential decay without the beating pattern that we've seen in the previous example, and this is because now we selectively excite only one resonance."
+    },
+    {
+      "id": "",
+      "title": "How to examine the field of a high Q cavity in FDTD simulations",
+      "paragraphs": [
+        {
+          "title": "How to examine the field of a high Q cavity in FDTD simulations",
+          "transcript": "Having generated the field plot as a function of time,  you can then select a particular time duration during which the system is going through pure exponential decay. For example, we can select the time duration as indicated by the blue brace there. And at that time duration, you can then look at the field distribution. Since the system is going through pure exponential decay now. It gives you a sense of how the resonance looks like. So here I'm plotting the Ex field on the vertical slice as indicated by the yellow in the computational domain. This slice cuts through the structures.  You can see that inside the dielectric structure, the field is not uniform and is strongly enhanced compared to the outside. And that is the resonant feature. Once you go outside the slab in the Z direction on the other hand, you can see that the field very quickly becomes uniform along the X direction. This is because we're in the non-diffracting regime. Once you go sufficiently away from the structure, you only get plane waves. And this is a field plot, but you can also generate a movie. In the movie, you can see that in the structure the field oscillates back and forth and then it produces a pure plane wave radiating out outside the structure."
+        },
+        {
+          "title": "Considerations on using FDTD to simulate high Q resonance",
+          "transcript": "To end the video, let me just briefly comment that FDTD is a very nice method for studying systems with high quality factor resonances. In the long time after a pause excitation, the behavior of the structure is dominated by the high Q resonance. Therefore, you can always excite the high Q resonance as long as your source has some spectral overlap. And this is in contrast to the frequency domain method where to excite high Q resonance. You have to choose your expectation frequency very precisely. To summarize, I give you some of the considerations on using FDTD method to simulate structures with high quality factors."
+        }
+      ]
+    }
+  ]
+}

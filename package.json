@@ -1,0 +1,14 @@
+{
+  "name": "uncss-example",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "uncss": "jekyll build && node build.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "purgecss": "^5.0.0"
+  }
+}

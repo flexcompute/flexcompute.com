@@ -1,0 +1,45 @@
+---
+more_section:
+  enable: true
+  more_text: More Release Notes
+releases:
+- version: 2.4.0
+  date: 2022-10-31 00:00:00
+  link: ''
+  new_features:
+  - Case got a new 3D visualisation tab (with “beta” label) available for all new
+    submissions, not only the latest solver version. New visualisation shows q-criterion
+    and surface results (Cp, Cf, CfVec and y+) for noSlipWalls.
+  - Pre-submission validation warnings are presented to the user
+  - The volume meshing page accepts the parameter “refinement” for refinement zones
+    (solver version release-22.3.3.0)
+  - daily.cost.s3 is hidden by default from the account page
+  resolved_issues:
+  - Large scale surface meshes can be now viewed in the 3D surface mesh viewer
+  - Input for solver tolerances now accepts 1e-10
+  - Not showing prompts for the case generator then nothing was changed.
+  - Fork is not available from a case with status=error/diverged
+  - Pagination fixed
+  improvements: []
+- version: 2.3.0
+  date: 2022-10-18 00:00:00
+  link: ''
+  new_features:
+  - Pre-submission JSON validation for surface meshing, volume meshing and case
+  - 'WebUI is now hosted under a new URL: <a class=''color-primary-hover stop-propagation''
+    href=''https://flow360.simulation.cloud''>https://flow360.simulation.cloud</a>'
+  - Added progress bar when loading surface mesh for visualisation
+  resolved_issues:
+  - Minor bug fixes
+  improvements: []
+- version: 2.2.0
+  date: 2022-09-16 00:00:00
+  link: javascript:void(0)
+  new_features:
+  - Embedded help center available for setting up a case.
+  - Enhanced 3D interactive view for setting up volume meshing.
+  - Download functionality for surface mesh.
+  - Redesign of the top navigation bar.
+  resolved_issues:
+  - Creating a case from a bad mesh JSON.
+  - Minor bug fixes.

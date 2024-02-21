@@ -1,0 +1,162 @@
+<script src="{{relative_url}}/assets/js/contact/validation.js"></script>
+{% assign url_size = page.url | size %}
+{% assign page_id = page.url | slice: 1, url_size | split: '/' | join: '-' | downcase %}
+<form id='{%if include.form_id%}{{include.form_id}}{%else%}__pg_{{page_id}}_contact-us-form{%endif%}' class="fields-white" method="post"
+  action='https://forms.zohopublic.com/cms6/form/ContactUs/formperma/SRJoNXxS1HkhlSv0umskqH0I0xwaVuMb0cwbbK8aX-I/htmlRecords/submit'
+  name='form'
+  onSubmit='javascript:document.charset="UTF-8"; return zf_ValidateAndSubmit();'
+  accept-charset='UTF-8'
+  enctype='multipart/form-data'
+>
+  <div id="contact-us-form">
+    <input type="hidden" name="zf_referrer_name" value="">
+    <!-- To Track referrals , place the referrer name within the " " in the above hidden input field -->
+    <input type="hidden" name="zf_redirect_url" value="{{site.url}}/contact/thankyou/">
+    <!-- To redirect to a specific page after record submission , place the respective url within the " " in the above hidden input field -->
+    <input type="hidden" name="zc_gad" value="">
+    <!--                        <input type="hidden" name="_redirect" value="{{site.url}}/contact/thankyou/"/>-->
+    <!--                        <input type="hidden" name="_append" value="false"/>-->
+    <div class="messages"></div>
+    <div class="controls">
+      <div class="form-row form-group-shadow" id="form-group-shadow">
+        {% for forms_data in page.contact_area.forms_data %}
+        {% case forms_data.field_tag %}
+        {% when "input" %}
+        <div class="col-lg-12">
+          <div class="form-group mb-10">
+            <input
+                    id="{{forms_data.field_name}}"
+                    type="{{forms_data.field_type}}"
+                    name="{{forms_data.field_name}}"
+                    class="form-control reset-input input-height-35"
+                    placeholder="{% if forms_data.required %}* {% endif %}{{forms_data.placeholder}}"
+                    {% if forms_data.required %}
+                    required="{{forms_data.required}}"
+                    {% endif %}
+                    data-error="{{forms_data.error_message}}"
+            >
+            <div class="help-block with-errors"></div>
+          </div>
+        </div>
+        {% when "hidden" %}
+        <input
+                id="{{forms_data.field_name}}"
+                type="hidden"
+                name="{{forms_data.field_name}}"
+                value="{{forms_data.value}}"
+        >
+        {% when "select" %}
+        <div class="col-lg-12">
+          <div class="form-group mb-10">
+            <select
+                    {% if forms_data.required %}
+                    required="{{forms_data.required}}"
+                    {% endif %}
+                    {% if forms_data.hidden %}
+                    hidden
+                    {% endif %}
+                    data-error="{{forms_data.error_message}}"
+                    class="form-control reset-input input-height-35 pt-0 pb-0"
+                    id="{{forms_data.field_name}}"
+                    name="{{forms_data.field_name}}">
+              <option disabled selected value="" style="display: none">
+                {% if forms_data.required %}* {% endif %}{{forms_data.placeholder}}
+              </option>
+              {% include form/select_options.html extra_data_type=forms_data.source %}
+            </select>
+            {%if forms_data.description %}<span class="font-size-14 color-dark-4 line-height-1 d-inline-block"><i>{{forms_data.description}}</i></span>{%endif%}
+            <div class="help-block with-errors"></div>
+          </div>
+        </div>
+        {% when "textarea" %}
+        <div class="col-md-12">
+          <div class="form-group">
+            <textarea
+                    id="{{forms_data.field_name}}"
+                    name="{{forms_data.field_name}}"
+                    class="form-control reset-input"
+                    placeholder="* {{forms_data.placeholder}}"
+                    rows="4"
+                    required="required"
+                    data-error="{{forms_data.error_message}}"
+                    style="border-radius: 14px !important;"
+            ></textarea>
+            <div class="help-block with-errors"></div>
+          </div>
+        </div>
+        {% else %}
+        {% endcase %}
+        {% endfor %}
+      </div>
+      <div class="form-row align-items-center justify-content-start">
+        <div class="col-12">
+          <div class="form-row">
+            <div class="col-md-12">
+              <div class="g-recaptcha"
+                   data-sitekey="{{site.data.general_settings.google_reCAPTCHA.key}}"
+                   data-callback="callback"
+                   data-expired-callback="expiredCallback"
+              ></div>
+            </div>
+          </div>
+
+        </div>
+        <div class="col-12">
+          <div class="form-row">
+            <div class="col-md-12">
+              <p class="color-primary"><strong>*</strong> These fields are required.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="space10"></div>
+      <div class="form-row">
+        <button class="btn btn-s font-size-14 mb-0 btn-primary border-radius-4" type='submit'
+                id="contact_us_submit"
+                disabled
+                style="width: 100%; height: 40px; padding-top: 8px; padding-bottom: 8px;">
+          Submit
+        </button>
+      </div>
+    </div>
+  </div>
+</form>
+
+<script>
+  var zf_DateRegex = new RegExp("^(([0][1-9])|([1-2][0-9])|([3][0-1]))[-](Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec|JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)[-](?:(?:19|20)[0-9]{2})$");
+  var zf_MandArray = ["Name_First", "Name_Last", "Email", "SingleLine", "MultiLine"];
+  var zf_FieldArray = ["Name_First", "Name_Last", "Email", "PhoneNumber_countrycode", "SingleLine", "SingleLine1", "MultiLine"];
+
+  const submitBtn = document.getElementById("contact_us_submit");
+  function callback(response) {
+    if(response){
+      submitBtn.disabled = false
+    }
+  }
+  function expiredCallback(){
+    submitBtn.disabled = true
+  }
+
+  (function (){
+    function getURLOptions(){
+      const urlParams = location.search.substring(1).split("&");
+      const urlOption = {}
+      urlParams.forEach(e=>{
+        const [key,value] = e.split("=");
+        urlOption[key] = value
+      })
+      return urlOption
+    }
+    function initialDownloadParma(){
+      const urlOption = getURLOptions();
+      if (urlOption && urlOption.source){
+        $(`<input type="hidden" name="SingleLine2" value="${urlOption.source}">`).appendTo('#contact-us-form');
+      }else {
+        $(`<input type="hidden" name="SingleLine2" value="//${window.location.host}${window.location.pathname}">`).appendTo('#contact-us-form');
+      }
+    }
+    document.addEventListener('DOMContentLoaded', async () => {
+      initialDownloadParma()
+    })
+  })()
+</script>

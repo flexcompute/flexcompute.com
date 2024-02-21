@@ -1,0 +1,23 @@
+{% assign tabs = include.tabs  %}
+{% for tab in tabs %}
+{% assign tabName = tab.tab | slugify %}
+{% if include.salt %}
+{% assign tabName = tab.tab | slugify | append: '-' | append: include.salt %}
+{%endif%}
+<div data-tab-name="{{tabName}}" class="tab-body p-24 {%if forloop.first%}selected{%endif%}">
+  <div class="row">
+    {%for example in tab.examples%}
+    <div class="col-12 col-sm-6 col-md-3 p-0 example-box text-center">
+      <a id="__pg_tidy3d-solver_example-library_{{example.title | downcase | slugify}}_item"
+         href="{{example.path}}">
+        <div class="p-8" style="height: 154px; overflow: hidden">
+          {%include webp-tag.html src=example.image loading='eager' alt=example.description class="aspect-ratio" style="height:154px; object-fit: scale-down"%}
+<!--          <img style="height:154px; object-fit: scale-down" class="aspect-ratio" src="{{example.image}}" alt="{{example.title}}">-->
+        </div>
+        <span class="color-black-1 d-inline-block font-size-18 line-height-22 mt-8 mb-16 pl-24 pr-24">{{example.title}}</span>
+      </a>
+    </div>
+    {%endfor%}
+  </div>
+</div>
+{% endfor %}

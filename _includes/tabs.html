@@ -1,0 +1,15 @@
+{% assign tabs = include.tabs  %}
+<div class="tabs" data-autoplay-tabs="{{include.autoplay}}" data-autoplay-time="{{include.autoplay_time}}">
+  <div class="headers d-flex justify-content-between" onclick="customTabs.onTabChange(event)">
+    {% for tab in tabs %}
+    {% assign tabName = tab.tab | slugify %}
+    {% if include.salt %}
+    {% assign tabName = tab.tab | slugify | append: '-' | append: include.salt %}
+    {%endif%}
+    <span data-tab-name="{{tabName}}" class="tab-title {%if forloop.first%}selected{%endif%} font-size-20 line-height-28 color-black-1">{{tab.tab}}</span>
+    {% endfor %}
+  </div>
+  <div class="containers">
+    {% include {{ include.tab_body }} tabs=tabs %}
+  </div>
+</div>

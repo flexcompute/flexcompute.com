@@ -1,0 +1,20 @@
+list:
+  - _faqs/How-do-I-run-a-simulation-and-access-the-results.md
+  - _faqs/How-is-using-Tidy3D-billed.md
+  - _faqs/What-are-the-units-used-in-the-simulation.md
+  - _faqs/How-are-results-normalized.md
+  - _faqs/Why-is-a-simulation-diverging.md
+  - _faqs/How-do-I-include-material-dispersion.md
+  - _faqs/Why-did-my-simulation-finish-early.md
+  - >-
+    _faqs/Should-I-make-sure-that-fields-have-fully-decayed-by-the-end-of-the-simulation.md
+  - _faqs/Why-can-I-not-change-Tidy3D-instances-after-they-are-created.md
+  - _faqs/What-do-I-need-to-know-about-the-numerical-grid.md
+_inputs:
+  list:
+    type: array
+  list[*]:
+    type: select
+    options:
+      values: collections.FAQ
+      value_key: path

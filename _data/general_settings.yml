@@ -1,0 +1,182 @@
+---
+title: Aerodynamics & Electromagnetic Simulation | Flexcompute
+email_2: info@flexcompute.com
+description: Flexcompute is an IT company that specializes in providing solutions
+  related to simulation.
+black_logo_1x: "/assets/images/logo.png"
+black_logo_2x: "/assets/images/logo@2x.png"
+black_logo_small: "/assets/images/logo-small.png"
+light_logo_1x: "/assets/images/logo-light.png"
+light_logo_2x: "/assets/images/logo-light@2x.png"
+light_logo_small: "/assets/images/logo-small-light.png"
+address_01: 130 Trapelo Rd<br>Belmont, MA 02478<br />United States
+phone_number: ''
+copyright_text: "© 2022 Flexcompute. All rights reserved."
+google_map: '<iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3172.4564967931838!2d-122.03250858386237!3d37.33169997984258!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x808fb5b6e94ffe23%3A0x63bb79532baa6af4!2sApple+Campus!5e0!3m2!1sen!2str!4v1553850783971!5m2!1sen!2str"
+  style="width:100%; height: 100%; border:0" allowfullscreen=""></iframe>
+
+  '
+google_reCAPTCHA:
+  enable: true
+  key: 6LeFvCMfAAAAAI4SClhT2s7686JCK0TIRDzk2QED
+contact_us_form_id: qk2YFbfD
+social_accounts:
+  title: Follow Us
+  links:
+  - url: https://www.linkedin.com/company/flexcompute-inc
+    icon: jam jam-linkedin
+one_page_nav_settings:
+  links:
+  - text: Home
+    url: "#home"
+  - text: Services
+    url: "#services"
+  - text: Experiences
+    url: "#experiences"
+  - text: Portfolio
+    url: "#portfolio"
+  - text: Testimonials
+    url: "#testimonials"
+  - text: Contact
+    url: "#contact"
+author_page_header:
+  header_background_image: ''
+
+login:
+  id: __g_header_btn_signin
+  text: Sign in
+  url: https://www.simulation.cloud
+# contact_us:
+#   id: __g_header_btn_contact
+#   text: Talk to an Expert
+#   url: "/contact/"
+#   submenu:
+#   - text: Email
+#     url: mailto:sales@flexcompute.com
+sign_up:
+  id: __g_header_btn_sign_up
+  text: 'Sign up for Free'
+  url: https://www.simulation.cloud
+footer_links:
+- text: Terms & Conditions
+  url: "/term-of-use/"
+  id: __g_footer_link_terms
+- text: Privacy Policy
+  url: "/privacy/"
+  id: __g_footer_link_privacy
+- text: Trust Guide
+  url: "/trust-guide/"
+  id: __g_footer_link_trust-guide
+- text: Copyright © 2024 Flexcompute, inc.
+office:
+  enable: true
+  title: Locations
+  icon: "/assets/images/contact/locations.png"
+  lists:
+  - enable: ture
+    title: Address 1
+    company: Boston, MA
+  - enable: ture
+    title: Address 2
+    company: Madison, WI
+  - enable: ture
+    title: Address 2
+    company: San Francisco, CA
+email:
+  enable: ture
+  title: E-mail
+  icon: icofont-envelope-open
+  image: "/assets/images/contact/email.png"
+  lists:
+  - enable: false
+    email: sales@flexcompute.com
+    click_id: sales
+  - enable: ture
+    email: info@flexcompute.com
+    click_id: support
+recruit_section:
+  email: hr@flexcompute.com
+  steer_text: If you’re interested in joining Flexcompute, even if your skills and
+    background don’t fit an open position exactly, please send your application.
+subscribe:
+  url: https://flexcompute.us14.list-manage.com/subscribe/post?u=4fb72f7d323950bae34717b3f&amp;id=62958770b2
+social:
+  enable: true
+  list:
+  - type: Facebook
+    enable: false
+    url: javascript:void(0)
+    icon: jam jam-facebook-circle
+    title: Share on Facebook
+  - type: Twitter
+    enable: true
+    id: __g_footer_icon_twitter
+    url: https://twitter.com/intent/tweet
+    icon: jam jam-twitter
+    title: Share on Twitter
+  - type: LinkedIn
+    enable: true
+    id: __g_footer_icon_linkedin
+    url: https://www.linkedin.com/sharing/share-offsite/
+    icon: jam jam-linkedin
+    title: Share on Linkedin
+  - type: YouTube
+    enable: false
+    url: javascript:void(0)
+    icon: jam jam-youtube
+    title: Share on YouTube
+  - type: Google
+    enable: false
+    url: javascript:void(0)
+    icon: jam jam-google-circle
+    title: Share on Google
+channels:
+  enable: true
+  list:
+  - type: LinkedIn
+    enable: true
+    id: __g_footer_icon_linkedin
+    url: https://www.linkedin.com/company/flexcompute-inc/
+    icon: jam jam-linkedin
+    title: Linkedin
+  - type: YouTube
+    enable: true
+    id: __g_footer_icon_youtube
+    url: https://www.youtube.com/channel/UCEyjOHwd21D72i8aST0Z1sw
+    icon: jam jam-youtube
+    title: YouTube
+crisp_chat:
+  enable: false
+
+# example pages config
+example:
+  table_of_contents: false
+  sign_up_btn: true
+  download_btn: true
+  anchors: true
+
+# reading time for all lecture
+# Displaying the homepage information on subpages.
+fdtd101:
+  time_consuming: 2 hours 48 mins
+  title: FDTD 101
+  link: '/tidy3d/learning-center/fdtd101/'
+  course_type: Lecture
+inverse-design:
+  time_consuming: 1 hour 28 mins
+  title: Inverse Design
+  link: '/tidy3d/learning-center/inverse-design/'
+  course_type: Lecture
+tidy3d-gui:
+  time_consuming: 1 hour 15 mins
+  title: Tidy3D Graphical User Interface (GUI)
+  link: '/tidy3d/learning-center/tidy3d-gui/'
+  course_type: Tutorial
+example-library:
+  title: Example Library
+  link: '/tidy3d/learning-center/example-library/'
+tidy3d-python:
+  title: Tidy3D Python Interface
+  link: '/tidy3d/learning-center/tidy3d-python/'
+
+assets_file_cdn_link: 'https://cdn.simulation.cloud/flexcompute.com'

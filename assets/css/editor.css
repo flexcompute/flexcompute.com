@@ -1,0 +1,9 @@
+.cms-embed {
+    position: relative;
+}
+
+.cms-embed iframe {
+    position: absolute;
+    left: 0;
+    top: 0;
+}

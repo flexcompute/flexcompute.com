@@ -1,0 +1,35 @@
+{% if include.loop_example.enable %}
+{% assign loopExample = include.loop_example %}
+<div data-lecture-name="{{loopExample.title | slugify}}" class="collapsed-item tidy3d-python collapsed" style="cursor: pointer">
+  {% assign currentExample = loopExample.title | slugify | split: ',' %}
+  {% assign idItem = '__pg_tidy3d-learning-center_' | append: type | append: '_' | split: ',' | concat: currentExample | join:'' | downcase %}
+  {% assign expandHeader = '_header-expand' | split: ',' %}
+  {% assign expandHeaderId = idItem | split:',' | concat: expandHeader | join:'' | downcase %}
+  <div id="{{expandHeaderId}}" class="d-flex justify-content-between align-items-center preview-header tidy3d-python" onclick="collapseModule.onExpand('{{expandHeaderId}}','collapsed-container')">
+    <div class="title d-flex align-items-center" style="column-gap: 20px">
+      <span class="d-inline-flex number-circle font-weight-600 justify-content-center align-items-center">{{include.loop_index}}</span>
+      <span class="color-dark-gray lecture-title">{{ loopExample.title }}</span>
+    </div>
+    {% assign firstExample = loopExample.menus | first %}
+    {% if firstExample.enable %}
+    {% assign startId = '_start_btn' | split: ',' %}
+    {% assign startBtnId = idItem | split:',' | concat: startId | join:'' | downcase %}
+    <a id="{{startBtnId}}" href="/tidy3d/examples/{{firstExample.path}}" class=" d-none d-sm-flex btn start-btn-dashed-primary font-size-16 m-0 font-weight-600 color-primary" onclick="stopPropagation(event)">
+      Start
+    </a>
+    {% endif %}
+  </div>
+  <div class="preview-body pt-0 pl-80 pr-30 pb-0">
+    <ul class="list-unstyled pt-20" style="border-top: 1px solid #D9D9D9">
+      {% for menu in loopExample.menus%}
+      {% assign exampleName = menu.name | slugify | prepend: "_" | split: ',' %}
+      {% assign exampleId = idItem | split:',' | concat: exampleName | join:'' | downcase %}
+      <li data-tutorial-name="{{menu.name | slugify}}" class="tutorial line-height-28 align-items-start d-flex" style="column-gap: 8px;">
+        <span class="line-height-28">&bull;</span>
+        <a id="{{exampleId}}" class="color-dark color-primary-hover" href="/tidy3d/examples/{{menu.path}}">{{menu.name}}</a>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+</div>
+{% endif %}

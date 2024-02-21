@@ -1,0 +1,17 @@
+<div class="form-herder">
+  {% if page.contact_area.form_header.enable %}
+  <div class="space10"></div>
+  {% assign form_header = page.contact_area.form_header %}
+  <div class="d-flex justify-content-between">
+    <span class="font-weight-700 color-dark-9 font-size-18">{{form_header.logo_title}}</span>
+    <object class="gray" type="image/svg+xml" data="{{form_header.logo}}" style="height: 24px">
+      <param name="src" value="{{form_header.logo}}" >
+    </object>
+  </div>
+  <div class="space40"></div>
+  <div>
+    <h1 class="font-size-32 line-height-32">{{form_header.title}}</h1>
+    <span class="font-size-14 line-height-17 color-dark-9 d-inline-block">{{form_header.sub_title}}</span>
+  </div>
+  {% endif %}
+</div>

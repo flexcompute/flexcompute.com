@@ -1,0 +1,1 @@
+function at(t){if((t=Math.trunc(t)||0)<0&&(t+=this.length),!(t<0||t>=this.length))return this[t]}const TypedArray=Reflect.getPrototypeOf(Int8Array);for(const t of[Array,String,TypedArray])Object.defineProperty(t.prototype,"at",{value:at,writable:!0,enumerable:!1,configurable:!0});

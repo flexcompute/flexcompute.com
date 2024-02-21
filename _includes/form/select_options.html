@@ -1,0 +1,19 @@
+{% if include.extra_data_type %}
+{% case include.extra_data_type %}
+{% when "industry" %}
+{% assign dataSource = site.data.contact_us_options.industry_list  %}
+{% when "flow360_request_types" %}
+{% assign dataSource = site.data.contact_us_options.flow360_request_types  %}
+{% when "product_of_interest" %}
+{% assign dataSource = site.data.contact_us_options.product_of_interest %}
+{% when "country" %}
+{% assign dataSource = site.data.contact_us_options.country_list  %}
+{% when "interested" %}
+{% assign dataSource = site.data.contact_us_options.interested_list  %}
+{% else %}
+{% assign dataSource = ''  %}
+{% endcase %}
+{% for data in dataSource %}
+<option value="{{data.value}}">{{data.label}}</option>
+{%endfor%}
+{%endif%}

@@ -1,0 +1,284 @@
+{% if page.contact_area.enable %}
+<div class="row justify-content-between align-items-start">
+    <div class="col-12 bg-white" style="padding: 0;">
+        <div class="pl-10 pr-10">
+            <form
+                    id="contact-us-form"
+                    class="fields-white"
+                    method="post"
+                    target="hideIframe"
+                    action="https://flexcompute.us14.list-manage.com/subscribe/post?u=4fb72f7d323950bae34717b3f&amp;id=62958770b2"
+            >
+                <input id="INT_APPS" type="hidden" name="INT_APPS" value="">
+                <input type="hidden" name="_append" value="false"/>
+                <div class="messages"></div>
+                <div class="controls">
+                    <div class="form-row form-group-shadow" id="form-group-shadow">
+                        {% for forms_data in page.contact_area.forms_data %}
+                        {% case forms_data.field_tag %}
+                        {% when "input" %}
+                        <div class="col-lg-12 col-xl-6">
+                            <div class="form-group" style="height: 45px;">
+                                <input
+                                        id="{{forms_data.field_name}}"
+                                        type="{{forms_data.field_type}}"
+                                        name="{{forms_data.field_name}}"
+                                        maxlength="{{forms_data.maxlength}}"
+                                        class="form-control reset-input"
+                                        placeholder="{% if forms_data.required %}* {% endif %}{{forms_data.placeholder}}"
+                                        {% if forms_data.required %}
+                                        required="{{forms_data.required}}"
+                                        {% endif %}
+                                        data-error="{{forms_data.error_message}}"
+                                >
+                                <div class="help-block with-errors"></div>
+                            </div>
+                        </div>
+                        {% when "select" %}
+                        <div class="col-lg-12 col-xl-6 {%if forms_data.class%}{{forms_data.class}}{%endif%}">
+                            <select
+                                    {% if forms_data.required %}
+                                    required="{{forms_data.required}}"
+                                    {% endif %}
+                                    placeholder="{% if forms_data.required %}* {% endif %}{{forms_data.placeholder}}"
+                                    data-error="{{forms_data.error_message}}"
+                                    class="form-control reset-input options_style"
+                                    id="{{forms_data.field_name}}"
+                                    name="{{forms_data.field_name}}">
+                                <option disabled selected value="" style="display: none">{% if forms_data.required %}*
+                                    {% endif %}{{forms_data.placeholder}}
+                                </option>
+                                {% include form/select_options.html extra_data_type=forms_data.source %}
+                            </select>
+                        </div>
+                        {% when "checkbox" %}
+                        <div class="{%if forms_data.class%}{{forms_data.class}}{%endif%}">
+                            <div class="space20"></div>
+                            <p class="font-size-20 color-dark-5 font-weight-500 mb-0">{{forms_data.placeholder}}</p>
+                            <div class="space15"></div>
+                            {% include form/checkbox_options.html extra_data_name=forms_data.field_name
+                            extra_data_type=forms_data.source %}
+                        </div>
+                        {% when "textarea" %}
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <textarea
+                                        id="{{forms_data.field_name}}"
+                                        name="{{forms_data.field_name}}"
+                                        class="form-control reset-input"
+                                        placeholder="{{forms_data.placeholder}}"
+                                        maxlength="{{forms_data.maxlength}}"
+                                        rows="4"
+                                        data-error="{{forms_data.error_message}}"></textarea>
+                                <div class="help-block with-errors"></div>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div></div>
+                        {% endcase %}
+                        {% endfor %}
+                    </div>
+                    <div class="form-row align-items-center justify-content-between">
+                        <div class="col-12 col-lg-6">
+                            <div class="form-row">
+                                <div class="col-md-12">
+                                    <div class="g-recaptcha"
+                                         data-sitekey="{{site.data.general_settings.google_reCAPTCHA.key}}"
+                                         data-callback="callback"
+                                         data-expired-callback="expiredCallback"
+                                    ></div>
+                                </div>
+                            </div>
+
+                        </div>
+                        <div class="col-12 col-lg-6">
+                            <div class="form-row">
+                                <div class="col-md-12">
+                                    <p class="text-right color-primary"><strong>*</strong> These fields are
+                                        required.</p>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                    <div class="space20"></div>
+                    <div class="form-row pl-10 pr-10">
+                        <span class="font-size-14 color-dark-6 mb-0">By clicking below, you are agreeing to Flexcompute's Privacy Policy.</span>
+                        <div class="space20"></div>
+                        <input class="btn btn-s font-size-14 mb-0 btn-dashed-primary" type='submit'
+                               value="Submit"
+                               id="__pg_download-whitepaper_btn_submit"
+                               disabled
+                               style="width:173px;height: 40px; padding-top: 8px; padding-bottom: 8px;">
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% include contact/submit_success.html %}
+{% endif %}
+
+<script>
+    const submitBtn = document.getElementById("__pg_download-whitepaper_btn_submit");
+    function callback(response) {
+        if (response) {
+            submitBtn.disabled = false
+        }
+    }
+
+    function expiredCallback() {
+        submitBtn.disabled = true
+    }
+    (function () {
+        let download_whitepaper_link = "";
+        const submitBtn = document.getElementById("__pg_download-whitepaper_btn_submit");
+        const form = document.getElementById("contact-us-form");
+        const comment = document.getElementById('O_INT_APPS');
+        const interested = document.getElementById('INT_APPS');
+        const download = document.getElementById("__pg_download-whitepaper_submit-success_btn_close");
+        const downloading = document.getElementById("download-whitepaper_loading");
+
+        download?.addEventListener('click',e=>{
+            e.preventDefault();
+            e.stopPropagation();
+            if (download_whitepaper_link){
+                // begin loading
+                downloading.style.display = 'inline-block';
+                const nameList = download_whitepaper_link.split("/")
+                const fileName = nameList[nameList.length-1];
+                setTimeout(()=>{
+                    _xhrDownload(download_whitepaper_link, fileName);
+                }, 1000)
+                // setTimeout(() => {
+                //     location.reload();
+                // }, 1000)
+            }
+        })
+
+        function _xhrDownload(url, fileName) {
+            let xhr = new XMLHttpRequest();
+            // get 方式
+            xhr.open('get', url, true);
+            xhr.setRequestHeader('Cache-Control', 'no-cache');
+            xhr.setRequestHeader('Content-type', 'application/json');
+            // xhr.setRequestHeader('AUTHORIZATION', 'Bearer ' + this.auth.accessToken)
+            // xhr.setRequestHeader('FLOW360USER', this.auth.user.identityId || '')
+            // 返回类型blob
+            xhr.responseType = 'blob';
+            // 定义请求完成的处理函数，请求前也可以增加加载框/禁用下载按钮逻辑
+            xhr.onload = function () {
+                // 请求完成
+                if (this.status === 200) {
+                    let blob = this.response;
+                    let url = window.URL.createObjectURL(blob);
+                    // 生成 url，创建一个a标签用于下载
+                    let a = document.createElement('a');
+                    a.href = url;
+                    a.download = fileName;
+                    a.click();
+                    $("#contact-us-submit-success").modal('hide');
+                    downloading.style.display = 'none';
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1e3)
+                }
+            };
+            xhr.onerror = function () {
+                console.error('error occurred when download whitepaper');
+
+                setTimeout(() => {
+                    location.reload();
+                }, 1e3)
+            };
+            xhr.send();
+        }
+
+        setTimeout(() => {
+            $(":checkbox").on('change', function () {
+                if (form) {
+                    const formData = new FormData(form)
+                    const checked_values = formData.getAll('INT_APPS_TEMP');
+                    // if (checked_values && checked_values.includes('Other')) {
+                    //     comment.setAttribute("required", 'true');
+                    //     comment.setAttribute("placeholder", "* Comments")
+                    // } else {
+                    //     // comment.setAttribute("required", 'false')
+                    //     comment.removeAttribute("required")
+                    //     comment.setAttribute("placeholder", "Comments")
+                    // }
+                    interested.value = checked_values.join(",")
+                }
+            })
+
+
+            submitBtn.addEventListener('click', e => {
+                // verify phone and email
+                const formData = new FormData(form);
+                let verifiedStatus = true
+                if (!formData.getAll('FNAME') || formData.getAll('FNAME').length > 20) {
+                    verifiedStatus = false
+                }
+                if (!formData.getAll('LNAME') || formData.getAll('LNAME').length > 20) {
+                    verifiedStatus = false
+                }
+                const isEmail = (email) => {
+                    return /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/.test(email)
+                }
+                if (!formData.getAll('EMAIL') || formData.getAll('EMAIL').length > 60 || !isEmail(formData.getAll('EMAIL'))) {
+                    verifiedStatus = false
+                }
+                if (formData.getAll('PHONE') && formData.getAll('PHONE').length > 20) {
+                    verifiedStatus = false
+                }
+
+                if (!formData.getAll('COMPANY') || formData.getAll('COMPANY').length > 50) {
+                    verifiedStatus = false
+                }
+                if (formData.getAll('INDUSTRY').length<=0 || formData.getAll('COUNTRY')<=0) {
+                    verifiedStatus = false
+                }
+                // if (formData.getAll('INT_APPS_TEMP').includes('Other') && !formData.getAll('O_INT_APPS')[0]) {
+                //     verifiedStatus = false
+                // }
+                if (verifiedStatus && download_whitepaper_link.length>0) {
+                    $("#contact-us-submit-success").modal('show')
+                }
+            })
+        }, 1000)
+
+        function getURLOptions(){
+            const urlParams = location.search.substring(1).split("&");
+            const urlOption = {}
+            urlParams.forEach(e=>{
+                const [key,value] = e.split("=");
+                urlOption[key] = value
+            })
+            return urlOption
+        }
+
+        function initialDownloadParma(){
+            const urlOption = getURLOptions();
+            const mlistType = urlOption.t;
+            // Set the mlist dynamically
+            if (mlistType==='1'){
+                // document.getElementById('download-whitepaper-MLIST').value='EM_whitepaper'
+                $('<input id="em-whitepaper-downloaded" type="hidden" name="EM_WP_DLD" value="Yes">').appendTo('#contact-us-form');
+            }
+            if (mlistType==='2'){
+                // document.getElementById('download-whitepaper-MLIST').value='CFD_whitepaper'
+                $('<input id="cfd-whitepaper-downloaded" type="hidden" name="CFD_WP_DLD" value="Yes">').appendTo('#contact-us-form');
+            }
+            // set download link form _p
+            setDownloadLink(urlOption._p)
+        }
+
+        function setDownloadLink(p){
+            download_whitepaper_link = "/assets/tidy3d/tidy3d__hardware_accelerated_electromagnetic_solver_for_fast_simulations_at_scale.pdf"
+        }
+        ///assets/tidy3d/tidy3d__hardware_accelerated_electromagnetic_solver_for_fast_simulations_at_scale.pdf
+        document.addEventListener('DOMContentLoaded', async () => {
+            initialDownloadParma()
+        })
+    })()
+</script>

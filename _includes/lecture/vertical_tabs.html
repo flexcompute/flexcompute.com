@@ -1,0 +1,48 @@
+{% assign lecture_section = include.data  %}
+<div class="wrapper">
+  {% if lecture_section.enable %}
+  <div class="container inner pt-60">
+    <div class="row justify-content-around">
+      <div class="col-lg-3 mb-0 bg-opacity-default d-none d-lg-block">
+        {% assign directory = 'left-directory' | split: ',' %}
+        {% assign directory_prefix = include.extra_id_prefix | split: '_' | concat:directory | join: '_'  %}
+        {% include lecture/lecture_directory.html data=include.data extra_id_prefix=directory_prefix %}
+        <!-- /.nav-tabs -->
+      </div>
+      <!--/column -->
+      <div class="col-lg-8">
+        <div class="tab-content">
+          {% for tabBody in lecture_section.tabs_body %}
+          {% if tabBody.enable %}
+          <div class="tab-pane {{tabBody.class}}">
+            {% for data in tabBody.dataSource %}
+            {% if data.enable %}
+            <div id="{%if include.extra_id_prefix%}{{include.extra_id_prefix}}_{%endif%}{{data.click_id}}_card" onclick="window.open('{{data.url}}','_self')" class="bg-white shadow tab-body-item row align-items-center justify-content-around {{data.class}}">
+                <div class="col-md-12 col-lg-6 pl-0 {% if data.reverse %} order-lg-2 {%endif%}">
+                  <img src="{{data.thumbnail}}" alt="{{data.title}}" width="351" height="200" class="aspect-ratio">
+                </div>
+                <div class="col-md-12 col-lg-6 tab-body-item-content pl-35 pl-md-0 {% if data.reverse %} order-lg-1 {%endif%}">
+                  <a id="{%if include.extra_id_prefix%}{{include.extra_id_prefix}}_{%endif%}{{data.click_id}}_title" href="{{data.url}}"><h2 class="font-size-18">
+                    {{data.title}}
+                  </h2>
+                  </a>
+                  <p class="font-size-14 color-dark-gray text-3-truncate" style="width: 100%; line-height: 24px;">{{ data.description }}</p>
+                  <a href="{{data.url}}" id="{%if include.extra_id_prefix%}{{include.extra_id_prefix}}_{%endif%}{{data.click_id}}_btn_start" class="btn btn-s btn-sm btn-fc-primary mb-0">Start</a>
+                </div>
+              </div>
+            <div class="space30"></div>
+            {% endif %}
+            {% endfor %}
+          </div>
+          {% endif %}
+          {% endfor %}
+        </div>
+        <!-- /.tab-content -->
+      </div>
+      <!--/column -->
+    </div>
+    <!--/.row -->
+  </div>
+  <!-- /.container -->
+  {% endif %}
+</div>

@@ -1,0 +1,2503 @@
+---
+author: Tom Chen
+custom_css:
+- learning-center/fdtd101
+- learning-center/menu
+- learning-center/home
+custom_font: font2
+description: This notebook demonstrates the adjoint optimization of a wavelength division
+  multiplexer using the adjoint plugin.
+layout: learning-center/example-library
+menu_config:
+  collapsed: true
+  selected: Tidy3D Python
+metadata:
+  category: FDTD Adjoint Optimization
+  enable_more_examples: false
+  more_examples:
+  - name: Inverse design optimization of a mode converter
+    path: notebooks/AdjointPlugin3InverseDesign/
+  - name: Inverse design optimization of a waveguide taper
+    path: notebooks/AdjointPlugin5BoundaryGradients/
+  - name: Parameterized level set optimization of a y-branch
+    path: notebooks/AdjointPlugin10YBranchLevelSet/
+  pagination:
+    next:
+      name: Parameterized level set optimization of a y-branch
+      path: notebooks/AdjointPlugin10YBranchLevelSet/
+    previous:
+      name: Adjoint-based shape optimization of a waveguide bend
+      path: notebooks/AdjointPlugin8WaveguideBend/
+  type: python-tutorial
+page_title: Adjoint optimization of a wavelength division multiplexer
+source_link: https:/docs.flexcompute.com/projects/tidy3d/en/latest/_sources/notebooks/AdjointPlugin9WDM.ipynb
+tags:
+- inverse design
+- WDM
+- design optimization
+- adjoint
+- Tidy3D
+- FDTD
+title: Adjoint Optimization of a WDM in Tidy3D | Flexcompute
+---
+
+
+<html lang="en">
+<head><meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="/assets/tidy3d/examples/css/example-notebook.css" rel="stylesheet"/>
+
+
+
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS_CHTML-full,Safe"> </script>
+
+<script type="text/x-mathjax-config">
+    init_mathjax = function() {
+        if (window.MathJax) {
+        // MathJax loaded
+            MathJax.Hub.Config({
+                TeX: {
+                    equationNumbers: {
+                    autoNumber: "AMS",
+                    useLabelIds: true
+                    }
+                },
+                tex2jax: {
+                    inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+                    displayMath: [ ['$$','$$'], ["\\[","\\]"] ],
+                    processEscapes: true,
+                    processEnvironments: true
+                },
+                displayAlign: 'center',
+                CommonHTML: {
+                    linebreaks: {
+                    automatic: true
+                    }
+                }
+            });
+
+            MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
+        }
+    }
+    init_mathjax();
+    </script>
+<script type="module">
+  document.addEventListener("DOMContentLoaded", async () => {
+    const diagrams = document.querySelectorAll(".jp-Mermaid > pre.mermaid");
+    // do not load mermaidjs if not needed
+    if (!diagrams.length) {
+      return;
+    }
+    const mermaid = (await import("https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.7.0/mermaid.esm.min.mjs")).default;
+    const parser = new DOMParser();
+
+    mermaid.initialize({
+      maxTextSize: 100000,
+      maxEdges: 100000,
+      startOnLoad: false,
+      fontFamily: window
+        .getComputedStyle(document.body)
+        .getPropertyValue("--jp-ui-font-family"),
+      theme: document.querySelector("body[data-jp-theme-light='true']")
+        ? "default"
+        : "dark",
+    });
+
+    let _nextMermaidId = 0;
+
+    function makeMermaidImage(svg) {
+      const img = document.createElement("img");
+      const doc = parser.parseFromString(svg, "image/svg+xml");
+      const svgEl = doc.querySelector("svg");
+      const { maxWidth } = svgEl?.style || {};
+      const firstTitle = doc.querySelector("title");
+      const firstDesc = doc.querySelector("desc");
+
+      img.setAttribute("src", `data:image/svg+xml,${encodeURIComponent(svg)}`);
+      if (maxWidth) {
+        img.width = parseInt(maxWidth);
+      }
+      if (firstTitle) {
+        img.setAttribute("alt", firstTitle.textContent);
+      }
+      if (firstDesc) {
+        const caption = document.createElement("figcaption");
+        caption.className = "sr-only";
+        caption.textContent = firstDesc.textContent;
+        return [img, caption];
+      }
+      return [img];
+    }
+
+    async function makeMermaidError(text) {
+      let errorMessage = "";
+      try {
+        await mermaid.parse(text);
+      } catch (err) {
+        errorMessage = `${err}`;
+      }
+
+      const result = document.createElement("details");
+      result.className = 'jp-RenderedMermaid-Details';
+      const summary = document.createElement("summary");
+      summary.className = 'jp-RenderedMermaid-Summary';
+      const pre = document.createElement("pre");
+      const code = document.createElement("code");
+      code.innerText = text;
+      pre.appendChild(code);
+      summary.appendChild(pre);
+      result.appendChild(summary);
+
+      const warning = document.createElement("pre");
+      warning.innerText = errorMessage;
+      result.appendChild(warning);
+      return [result];
+    }
+
+    async function renderOneMarmaid(src) {
+      const id = `jp-mermaid-${_nextMermaidId++}`;
+      const parent = src.parentNode;
+      let raw = src.textContent.trim();
+      const el = document.createElement("div");
+      el.style.visibility = "hidden";
+      document.body.appendChild(el);
+      let results = null;
+      let output = null;
+      try {
+        let { svg } = await mermaid.render(id, raw, el);
+        svg = cleanMermaidSvg(svg);
+        results = makeMermaidImage(svg);
+        output = document.createElement("figure");
+        results.map(output.appendChild, output);
+      } catch (err) {
+        parent.classList.add("jp-mod-warning");
+        results = await makeMermaidError(raw);
+        output = results[0];
+      } finally {
+        el.remove();
+      }
+      parent.classList.add("jp-RenderedMermaid");
+      parent.appendChild(output);
+    }
+
+
+    /**
+     * Post-process to ensure mermaid diagrams contain only valid SVG and XHTML.
+     */
+    function cleanMermaidSvg(svg) {
+      return svg.replace(RE_VOID_ELEMENT, replaceVoidElement);
+    }
+
+
+    /**
+     * A regular expression for all void elements, which may include attributes and
+     * a slash.
+     *
+     * @see https://developer.mozilla.org/en-US/docs/Glossary/Void_element
+     *
+     * Of these, only `<br>` is generated by Mermaid in place of `\n`,
+     * but _any_ "malformed" tag will break the SVG rendering entirely.
+     */
+    const RE_VOID_ELEMENT =
+      /<\s*(area|base|br|col|embed|hr|img|input|link|meta|param|source|track|wbr)\s*([^>]*?)\s*>/gi;
+
+    /**
+     * Ensure a void element is closed with a slash, preserving any attributes.
+     */
+    function replaceVoidElement(match, tag, rest) {
+      rest = rest.trim();
+      if (!rest.endsWith('/')) {
+        rest = `${rest} /`;
+      }
+      return `<${tag} ${rest}>`;
+    }
+
+    void Promise.all([...diagrams].map(renderOneMarmaid));
+  });
+</script>
+
+</head>
+<body class="jp-Notebook" data-jp-theme-light="true" data-jp-theme-name="JupyterLab Light">
+<main>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=6fa5d362-5b46-4387-8013-951463db2211">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>In this notebook, we will use a multi-objective optimization to design a wavelength division multiplexer (WDM).</p>
+<p>In short, this device takes in broadband light and directs light of different wavelengths to different output ports.</p>
+<p>This demo combines the basic setup of our 3rd tutorial of a <a href="https://www.flexcompute.com/tidy3d/examples/notebooks/AdjointPlugin3InverseDesign/" target="_blank">mode converter</a> with the multi-frequency feature introduced in Tidy3D version 2.5.</p>
+<p>If you are unfamiliar with inverse design, we also recommend our <a href="https://www.flexcompute.com/tidy3d/learning-center/inverse-design/" target="_blank">intro to inverse design tutorials</a> and our <a href="https://www.flexcompute.com/tidy3d/examples/notebooks/AdjointPlugin1Intro/" target="_blank">primer on automatic differentiation with tidy3d</a>.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=c76c454e-e2c8-40ab-a4ed-e41a5e3e0d65">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[1]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># first import tidy3d, its adjoint plugin, numpy, and jax.</span>
+
+<span class="kn">import</span> <span class="nn">tidy3d</span> <span class="k">as</span> <span class="nn">td</span>
+<span class="kn">import</span> <span class="nn">tidy3d.plugins.adjoint</span> <span class="k">as</span> <span class="nn">tda</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">jax.numpy</span> <span class="k">as</span> <span class="nn">jnp</span>
+<span class="kn">import</span> <span class="nn">jax</span>
+
+<span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=e12a92cd-ca91-4981-8168-da4bcd7bb156">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="Setup">Setup<a class="anchor-link" href="#Setup">¶</a></h2><p>First we set up our basic simulation.</p>
+<p>We have an input waveguide connected to a square design region, which has two output waveguides.</p>
+<p>The square design region is a custom medium with a pixellated permittivity grid that we wish to optimize such that input light of different wavelengths get directed to different output ports.</p>
+<p>As this is a SOI device, we typically define the design region and waveguides as Silicon sitting on an SiO2 substrate. For this demo, we make a 2D simulation, but it can be easily made 3D by changing the <code>Lz</code> parameter, adding dimension to the structures, and adding a substrate.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=3d77b41c-91ac-49af-bc3d-cca78e938e3c">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[2]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># material information</span>
+<span class="n">n_si</span> <span class="o">=</span> <span class="mf">3.49</span>
+<span class="n">n_sio2</span> <span class="o">=</span> <span class="mf">1.45</span> <span class="c1"># not used in 2D</span>
+<span class="n">n_air</span> <span class="o">=</span> <span class="mi">1</span>
+
+<span class="c1"># design output wavelengths</span>
+<span class="n">wavelength_top</span> <span class="o">=</span> <span class="mf">1.300</span>
+<span class="n">wavelength_bot</span> <span class="o">=</span> <span class="mf">1.550</span>
+
+<span class="c1"># and their corresponding frequencies and spectral information</span>
+<span class="n">freq_top</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">C_0</span> <span class="o">/</span> <span class="n">wavelength_top</span>
+<span class="n">freq_bot</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">C_0</span> <span class="o">/</span> <span class="n">wavelength_bot</span>
+<span class="n">freq0</span> <span class="o">=</span> <span class="p">(</span><span class="n">freq_top</span> <span class="o">+</span> <span class="n">freq_bot</span><span class="p">)</span> <span class="o">/</span> <span class="mf">2.0</span>
+<span class="n">fwidth</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">freq_bot</span> <span class="o">-</span> <span class="n">freq_top</span><span class="p">)</span>
+<span class="n">run_time</span> <span class="o">=</span> <span class="mi">100</span> <span class="o">/</span> <span class="n">fwidth</span>
+
+<span class="c1"># create dictionaries to reference these later by string key 'top' or 'bot'</span>
+<span class="n">freqs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">top</span><span class="o">=</span><span class="n">freq_top</span><span class="p">,</span> <span class="n">bot</span><span class="o">=</span><span class="n">freq_bot</span><span class="p">)</span>
+<span class="n">wavelengths</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">top</span><span class="o">=</span><span class="n">wavelength_top</span><span class="p">,</span> <span class="n">bot</span><span class="o">=</span><span class="n">wavelength_bot</span><span class="p">)</span>
+
+<span class="c1"># size of design region</span>
+<span class="n">lx</span> <span class="o">=</span> <span class="mf">2.8</span>
+<span class="n">ly</span> <span class="o">=</span> <span class="mf">2.8</span>
+<span class="n">lz</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">inf</span> <span class="c1"># in 2D, we say the size of components is inf but the size of simulation is 0.</span>
+
+<span class="c1"># size of waveguides</span>
+<span class="n">wg_width</span> <span class="o">=</span> <span class="mf">0.3</span>
+<span class="n">wg_length</span> <span class="o">=</span> <span class="mf">1.5</span>
+<span class="n">wg_spacing</span> <span class="o">=</span> <span class="mf">0.8</span>
+
+<span class="c1"># spacing between design region and PML in y</span>
+<span class="n">buffer</span> <span class="o">=</span> <span class="mf">1.5</span>
+
+<span class="c1"># size of simulation</span>
+<span class="n">Lx</span> <span class="o">=</span> <span class="n">lx</span> <span class="o">+</span> <span class="n">wg_length</span> <span class="o">*</span> <span class="mi">2</span>
+<span class="n">Ly</span> <span class="o">=</span> <span class="n">ly</span> <span class="o">+</span> <span class="n">buffer</span> <span class="o">*</span> <span class="mi">2</span>
+<span class="n">Lz</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+<span class="c1"># fabrication constraint (feature size and projection strength)</span>
+<span class="n">radius</span> <span class="o">=</span> <span class="mf">0.200</span>
+<span class="n">beta</span> <span class="o">=</span> <span class="mi">30</span>
+
+<span class="c1"># resolution information</span>
+<span class="n">min_steps_per_wvl</span> <span class="o">=</span> <span class="mi">25</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=32d9d769-d0eb-4f53-a11f-a43b8d33b7b4">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[3]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># define the waveguide ports</span>
+
+<span class="n">wg_in</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">Structure</span><span class="p">(</span>
+    <span class="n">geometry</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">Box</span><span class="p">(</span>
+        <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="n">Lx</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+        <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">wg_length</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span> <span class="n">wg_width</span><span class="p">,</span> <span class="n">lz</span><span class="p">),</span>
+    <span class="p">),</span>
+    <span class="n">medium</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">Medium</span><span class="p">(</span><span class="n">permittivity</span><span class="o">=</span><span class="n">n_si</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+<span class="p">)</span>
+
+<span class="n">wg_top</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">Structure</span><span class="p">(</span>
+    <span class="n">geometry</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">Box</span><span class="p">(</span>
+        <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="o">+</span><span class="n">Lx</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="o">+</span><span class="n">wg_width</span><span class="o">/</span><span class="mi">2</span><span class="o">+</span><span class="n">wg_spacing</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+        <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">wg_length</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span> <span class="n">wg_width</span><span class="p">,</span> <span class="n">lz</span><span class="p">),</span>
+    <span class="p">),</span>
+    <span class="n">medium</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">Medium</span><span class="p">(</span><span class="n">permittivity</span><span class="o">=</span><span class="n">n_si</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+<span class="p">)</span>
+
+<span class="n">wg_bot</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">Structure</span><span class="p">(</span>
+    <span class="n">geometry</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">Box</span><span class="p">(</span>
+        <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="o">+</span><span class="n">Lx</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="n">wg_width</span><span class="o">/</span><span class="mi">2</span><span class="o">-</span><span class="n">wg_spacing</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+        <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">wg_length</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span> <span class="n">wg_width</span><span class="p">,</span> <span class="n">lz</span><span class="p">),</span>
+    <span class="p">),</span>
+    <span class="n">medium</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">Medium</span><span class="p">(</span><span class="n">permittivity</span><span class="o">=</span><span class="n">n_si</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+<span class="p">)</span>
+
+<span class="c1"># and a field monitor that measures fields on the z=0 plane</span>
+<span class="n">fld_mnt</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">FieldMonitor</span><span class="p">(</span>
+    <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span>
+    <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">td</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">td</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+    <span class="n">freqs</span><span class="o">=</span><span class="p">[</span><span class="n">freq_top</span><span class="p">,</span> <span class="n">freq_bot</span><span class="p">],</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">"field"</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">13:12:34 EDT </span><span style="color: #800000; text-decoration-color: #800000">WARNING: Default value for the field monitor </span><span style="color: #008000; text-decoration-color: #008000">'colocate'</span><span style="color: #800000; text-decoration-color: #800000"> setting has</span>
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">             </span><span style="color: #800000; text-decoration-color: #800000">changed to </span><span style="color: #008000; text-decoration-color: #008000">'True'</span><span style="color: #800000; text-decoration-color: #800000"> in Tidy3D </span><span style="color: #008080; text-decoration-color: #008080; font-weight: bold">2.4</span><span style="color: #800000; text-decoration-color: #800000">.</span><span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0</span><span style="color: #800000; text-decoration-color: #800000">. All field components will be    </span>
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">             </span><span style="color: #800000; text-decoration-color: #800000">colocated to the grid boundaries. Set to </span><span style="color: #008000; text-decoration-color: #008000">'False'</span><span style="color: #800000; text-decoration-color: #800000"> to get the raw    </span>
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">             </span><span style="color: #800000; text-decoration-color: #800000">fields on the Yee grid instead.                                    </span>
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=d120bf86-54c3-4af2-b3eb-33726288d008">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<blockquote>
+<p>Note we can ignore this warning as it will be resolved after 2.4.0</p>
+</blockquote>
+<h3 id="Define-design-region">Define design region<a class="anchor-link" href="#Define-design-region">¶</a></h3><p>Here we define the design region as a pixellated grid of permittivity values.</p>
+<p>We first define the overall geometry as a <code>JaxBox</code> and also the number of pixels in x and y.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=209f2e58-fd7d-42f7-bb6d-459f41511250">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[4]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">nx</span> <span class="o">=</span> <span class="mi">55</span>
+<span class="n">ny</span> <span class="o">=</span> <span class="mi">55</span>
+
+<span class="n">design_region_geo</span> <span class="o">=</span> <span class="n">tda</span><span class="o">.</span><span class="n">JaxBox</span><span class="p">(</span>
+    <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">lx</span><span class="p">,</span> <span class="n">ly</span><span class="p">,</span> <span class="n">lz</span><span class="p">),</span>
+    <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=9b02b2fa-ce32-49ad-9844-1af1a4ff864d">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>Next we write a function to give us the pixellated array as a function of our parameters through our filtering and projection methods, which are used to make the resulting structures easier to fabricate. For more details, refer to our 4th lecture in the <a href="https://www.flexcompute.com/tidy3d/learning-center/inverse-design/" target="_blank">inverse design 101 lecture series</a>, which focuses on fabrication constraints.</p>
+<p>We also wrap this function in another one that generates the entire <code>JaxStructure</code> corresponding to the design region, for convenience later.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=761964ee-79d7-486a-8bbb-03d2917ff844">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[5]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">tidy3d.plugins.adjoint.utils.filter</span> <span class="kn">import</span> <span class="n">ConicFilter</span>
+
+<span class="n">conic_filter</span> <span class="o">=</span> <span class="n">ConicFilter</span><span class="p">(</span><span class="n">radius</span><span class="o">=</span><span class="n">radius</span><span class="p">,</span> <span class="n">design_region_dl</span><span class="o">=</span><span class="n">lx</span><span class="o">/</span><span class="n">nx</span><span class="p">)</span>
+
+<span class="c1"># note: params is an array of shape (nx, ny) that stores values between -inf (air) and +inf (silicon)</span>
+
+<span class="k">def</span> <span class="nf">tanh_projection</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">eta</span><span class="o">=</span><span class="mf">0.5</span><span class="p">):</span>
+    <span class="n">tanhbn</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">tanh</span><span class="p">(</span><span class="n">beta</span> <span class="o">*</span> <span class="n">eta</span><span class="p">)</span>
+    <span class="n">num</span> <span class="o">=</span> <span class="n">tanhbn</span> <span class="o">+</span> <span class="n">jnp</span><span class="o">.</span><span class="n">tanh</span><span class="p">(</span><span class="n">beta</span> <span class="o">*</span> <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">eta</span><span class="p">))</span>
+    <span class="n">den</span> <span class="o">=</span> <span class="n">tanhbn</span> <span class="o">+</span> <span class="n">jnp</span><span class="o">.</span><span class="n">tanh</span><span class="p">(</span><span class="n">beta</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">eta</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">num</span> <span class="o">/</span> <span class="n">den</span>    
+
+<span class="k">def</span> <span class="nf">filter_project</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">eta</span><span class="o">=</span><span class="mf">0.5</span><span class="p">):</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">conic_filter</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">tanh_projection</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="n">beta</span><span class="p">,</span> <span class="n">eta</span><span class="o">=</span><span class="n">eta</span><span class="p">)</span>
+
+<span class="c1"># number of times to filter -&gt; project. Two times with a lower beta (~30) seems to give decent results.</span>
+<span class="n">num_projections</span> <span class="o">=</span> <span class="mi">2</span>
+
+<span class="k">def</span> <span class="nf">pre_process</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">beta</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Get the permittivity values (1, eps_wg) array as a funciton of the parameters (0,1)"""</span>
+    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_projections</span><span class="p">):</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="n">filter_project</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="n">beta</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">params</span>
+
+<span class="k">def</span> <span class="nf">make_eps</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">beta</span><span class="p">):</span>
+    <span class="n">params</span> <span class="o">=</span> <span class="n">pre_process</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="n">beta</span><span class="p">)</span>
+    <span class="n">eps_values</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">+</span> <span class="p">(</span><span class="n">n_si</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">params</span>
+    <span class="k">return</span> <span class="n">eps_values</span>
+
+<span class="k">def</span> <span class="nf">make_custom_medium</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">beta</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Make JaxCustomMedium as a function of provided parameters."""</span>
+    <span class="n">eps</span> <span class="o">=</span> <span class="n">make_eps</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">beta</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">nx</span><span class="p">,</span> <span class="n">ny</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+
+    <span class="n">xs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="n">lx</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">lx</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">nx</span><span class="p">))</span>
+    <span class="n">ys</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="n">ly</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">ly</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">ny</span><span class="p">))</span>
+    <span class="n">zs</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">freqs</span> <span class="o">=</span> <span class="p">[</span><span class="n">freq0</span><span class="p">]</span>
+    <span class="n">coords</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">xs</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">ys</span><span class="p">,</span> <span class="n">z</span><span class="o">=</span><span class="n">zs</span><span class="p">,</span> <span class="n">f</span><span class="o">=</span><span class="n">freqs</span><span class="p">)</span>
+
+    <span class="n">eps_dataset</span> <span class="o">=</span> <span class="n">tda</span><span class="o">.</span><span class="n">JaxDataArray</span><span class="p">(</span><span class="n">values</span><span class="o">=</span><span class="n">eps</span><span class="p">,</span> <span class="n">coords</span><span class="o">=</span><span class="n">coords</span><span class="p">)</span>
+    
+    <span class="n">medium</span> <span class="o">=</span> <span class="n">tda</span><span class="o">.</span><span class="n">JaxCustomMedium</span><span class="p">(</span>
+        <span class="n">eps_dataset</span><span class="o">=</span><span class="n">tda</span><span class="o">.</span><span class="n">JaxPermittivityDataset</span><span class="p">(</span>
+            <span class="n">eps_xx</span><span class="o">=</span><span class="n">eps_dataset</span><span class="p">,</span>
+            <span class="n">eps_yy</span><span class="o">=</span><span class="n">eps_dataset</span><span class="p">,</span>
+            <span class="n">eps_zz</span><span class="o">=</span><span class="n">eps_dataset</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+
+    <span class="n">struct</span> <span class="o">=</span> <span class="n">tda</span><span class="o">.</span><span class="n">JaxStructure</span><span class="p">(</span>
+        <span class="n">geometry</span><span class="o">=</span><span class="n">design_region_geo</span><span class="p">,</span>
+        <span class="n">medium</span><span class="o">=</span><span class="n">medium</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">struct</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=d8dcf2f1-9bf8-49e6-9e1e-6221992c7210">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h3 id="Define-base-simulation">Define base simulation<a class="anchor-link" href="#Define-base-simulation">¶</a></h3><p>With all of these functions and variables defined, we can write a single function to return our "base" <code>JaxSimulation</code> as a function of our design parameters. This function first constructs the design region and then creates a <code>JaxSimulation</code> with all of the basic parameters.</p>
+<p>Note, we don't yet have a source or monitors for injecting and measuring our fields, but will add those next after running the mode solver.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=1d67ccdc-758e-4648-aabc-4264b83086a1">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[6]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">make_sim_base</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">beta</span><span class="p">):</span>
+
+    <span class="n">input_struct</span> <span class="o">=</span> <span class="n">make_custom_medium</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="n">beta</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">tda</span><span class="o">.</span><span class="n">JaxSimulation</span><span class="p">(</span>
+        <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">Lx</span><span class="p">,</span> <span class="n">Ly</span><span class="p">,</span> <span class="n">Lz</span><span class="p">),</span>
+        <span class="n">grid_spec</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">GridSpec</span><span class="o">.</span><span class="n">auto</span><span class="p">(</span><span class="n">min_steps_per_wvl</span><span class="o">=</span><span class="n">min_steps_per_wvl</span><span class="p">,</span> <span class="n">wavelength</span><span class="o">=</span><span class="n">wavelength_top</span><span class="p">),</span>
+        <span class="n">structures</span><span class="o">=</span><span class="p">[</span><span class="n">wg_in</span><span class="p">,</span> <span class="n">wg_top</span><span class="p">,</span> <span class="n">wg_bot</span><span class="p">],</span>
+        <span class="n">monitors</span><span class="o">=</span><span class="p">[</span><span class="n">fld_mnt</span><span class="p">],</span>
+        <span class="n">input_structures</span><span class="o">=</span><span class="p">[</span><span class="n">input_struct</span><span class="p">],</span>
+        <span class="n">boundary_spec</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">BoundarySpec</span><span class="o">.</span><span class="n">pml</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">z</span><span class="o">=</span><span class="kc">True</span> <span class="k">if</span> <span class="n">Lz</span> <span class="k">else</span> <span class="kc">False</span><span class="p">),</span>
+        <span class="n">run_time</span><span class="o">=</span><span class="n">run_time</span><span class="p">,</span>
+    <span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=aaab90f1-970e-4fde-89d8-f08ae61f530f">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>Let's test out our function. We'll make an initially random array of parameters between 0 and 1 and generate the base simulation to plot and inspect.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=08846717-16bc-49ee-bcb3-dd5e1c30cd6c">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[7]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">params0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">((</span><span class="n">nx</span><span class="p">,</span> <span class="n">ny</span><span class="p">))</span>
+<span class="n">sim_base</span> <span class="o">=</span> <span class="n">make_sim_base</span><span class="p">(</span><span class="n">params0</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=65933269-50cd-4dea-b32d-25f39492c7dc">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[8]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">ax</span> <span class="o">=</span> <span class="n">sim_base</span><span class="o">.</span><span class="n">plot_eps</span><span class="p">(</span><span class="n">z</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">monitor_alpha</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedImage jp-OutputArea-output" tabindex="0">
+<img alt="No description has been provided for this image" class="" src="/assets/tidy3d/examples/image/AdjointPlugin9WDM/AdjointPlugin9WDM_1.png"/>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=27386dd2-e686-4fd0-8210-20bac15dc422">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>It all looks good, so now we add the bits that define the optimization.</p>
+<h2 id="Adding-Mode-Sources-and-Monitors">Adding Mode Sources and Monitors<a class="anchor-link" href="#Adding-Mode-Sources-and-Monitors">¶</a></h2><h3 id="Solving-modes">Solving modes<a class="anchor-link" href="#Solving-modes">¶</a></h3><p>First, we need to create our <code>ModeSource</code> and <code>ModeMonitor</code> objects that inject and measure the modes that we are interested in optimizing.</p>
+<p>We'll use <code>tidy3d</code>'s <code>ModeSolver</code> and use the remote <code>run</code> function that gets more accurate results by running on Flexcompute's servers.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=439f9a65-ec0b-4fab-bdc1-d6831108153e">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[9]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">tidy3d.plugins.mode</span> <span class="kn">import</span> <span class="n">ModeSolver</span>
+<span class="kn">from</span> <span class="nn">tidy3d.plugins.mode.web</span> <span class="kn">import</span> <span class="n">run</span> <span class="k">as</span> <span class="n">run_mode_solver</span>
+
+<span class="c1"># we'll ask for 4 modes just to inspect</span>
+<span class="n">num_modes</span> <span class="o">=</span> <span class="mi">4</span>
+
+<span class="c1"># let's define how large the mode planes are and how far they are from the PML relative to the design region</span>
+<span class="n">mode_size</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">1.8</span> <span class="o">*</span> <span class="n">wg_spacing</span> <span class="o">+</span> <span class="n">wg_width</span><span class="p">,</span> <span class="nb">max</span><span class="p">([</span><span class="n">Lz</span><span class="p">,</span> <span class="n">lz</span><span class="p">,</span> <span class="mi">3</span><span class="p">]))</span>
+<span class="n">space_fraction</span> <span class="o">=</span> <span class="mf">0.2</span>
+
+<span class="c1"># make a plane corresponding to where we wish to measure the input mode</span>
+<span class="n">plane_in</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">Box</span><span class="p">(</span>
+    <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="n">Lx</span><span class="o">/</span><span class="mi">2</span> <span class="o">+</span> <span class="n">space_fraction</span> <span class="o">*</span> <span class="n">wg_length</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+    <span class="n">size</span><span class="o">=</span><span class="n">mode_size</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># construct the mode solver using our base sim (converted from `JaxSimulation` to regular `Simulation`) + our plane</span>
+<span class="n">mode_solver</span> <span class="o">=</span> <span class="n">ModeSolver</span><span class="p">(</span>
+    <span class="n">simulation</span><span class="o">=</span><span class="n">sim_base</span><span class="o">.</span><span class="n">to_simulation</span><span class="p">()[</span><span class="mi">0</span><span class="p">],</span>
+    <span class="n">plane</span><span class="o">=</span><span class="n">plane_in</span><span class="p">,</span>
+    <span class="n">freqs</span><span class="o">=</span><span class="p">[</span><span class="n">freq_top</span><span class="p">],</span>
+    <span class="n">mode_spec</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">ModeSpec</span><span class="p">(</span><span class="n">num_modes</span><span class="o">=</span><span class="n">num_modes</span><span class="p">)</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=10bd2470-6bf4-4f46-9912-191ad57ca3ab">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>Next we run the mode solver on the servers.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=682799a3-1e90-4b17-a0aa-c416a4171f9f">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[10]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">mode_data</span> <span class="o">=</span> <span class="n">run_mode_solver</span><span class="p">(</span><span class="n">mode_solver</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">13:12:44 EDT </span>Mode solver created with                                           
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">             </span><span style="color: #808000; text-decoration-color: #808000">task_id</span>=<span style="color: #008000; text-decoration-color: #008000">'fdve-f75482a3-807f-46c2-952f-ab578a2ab189v1'</span>,             
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">             </span><span style="color: #808000; text-decoration-color: #808000">solver_id</span>=<span style="color: #008000; text-decoration-color: #008000">'mo-1e66a52c-b2db-4f09-81a0-969eaa609cbd'</span>.               
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Output()</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Output()</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">13:12:48 EDT </span>Mode solver status: queued                                         
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">13:12:49 EDT </span>Mode solver status: running                                        
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">13:13:02 EDT </span>Mode solver status: success                                        
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Output()</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=d0403fdb-7cc3-44c0-97ed-75183da44c93">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>And visualize the results.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=b84807cb-0c7e-497a-88de-6ebc753f2636">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[11]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"Effective index of computed modes: "</span><span class="p">,</span> <span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">mode_data</span><span class="o">.</span><span class="n">n_eff</span><span class="p">))</span>
+
+<span class="n">fig</span><span class="p">,</span> <span class="n">axs</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">num_modes</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">4</span><span class="o">*</span><span class="n">num_modes</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span> <span class="n">tight_layout</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">mode_ind</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_modes</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">field_ind</span><span class="p">,</span> <span class="n">field_name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">((</span><span class="s2">"Ex"</span><span class="p">,</span> <span class="s2">"Ey"</span><span class="p">,</span> <span class="s2">"Ez"</span><span class="p">)):</span>
+        <span class="n">field</span> <span class="o">=</span> <span class="n">mode_data</span><span class="o">.</span><span class="n">field_components</span><span class="p">[</span><span class="n">field_name</span><span class="p">]</span><span class="o">.</span><span class="n">sel</span><span class="p">(</span><span class="n">mode_index</span><span class="o">=</span><span class="n">mode_ind</span><span class="p">)</span>
+        <span class="n">ax</span> <span class="o">=</span> <span class="n">axs</span><span class="p">[</span><span class="n">mode_ind</span><span class="p">,</span> <span class="n">field_ind</span><span class="p">]</span>
+        <span class="n">field</span><span class="o">.</span><span class="n">real</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">field_name</span><span class="si">}</span><span class="s2">, index=</span><span class="si">{</span><span class="n">mode_ind</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Effective index of computed modes:  [[3.141611 2.806403 1.953868 1.062474]]
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedImage jp-OutputArea-output" tabindex="0">
+<img alt="No description has been provided for this image" class="" src="/assets/tidy3d/examples/image/AdjointPlugin9WDM/AdjointPlugin9WDM_2.png"/>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=43d92a79-c290-48c9-8354-55c998e5b870">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>We identify <code>mode_index=0</code> as the first order mode that is out of plane of the device. Let's choose to optimize our device with respect to this as the mode of interest for both the input and output.</p>
+<p>We re-set the <code>ModeSpec</code> to only compute the number of modes we need (1) and also update our <code>ModeSolver</code> accordingly.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=8ebd9a87-8928-48a6-bbe1-56d774a49c89">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[12]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">mode_index</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">mode_spec</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">ModeSpec</span><span class="p">(</span><span class="n">num_modes</span><span class="o">=</span><span class="n">mode_index</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">mode_solver</span> <span class="o">=</span> <span class="n">mode_solver</span><span class="o">.</span><span class="n">updated_copy</span><span class="p">(</span><span class="n">mode_spec</span><span class="o">=</span><span class="n">mode_spec</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=46058639-ce2e-4f35-9938-04163e7ef11d">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h3 id="Make-input-and-output-mode-sources-and-monitors">Make input and output mode sources and monitors<a class="anchor-link" href="#Make-input-and-output-mode-sources-and-monitors">¶</a></h3><p>Next, we will generate the input <code>ModeSource</code> and output <code>ModeMonitor</code> objects using the convenience methods defined in the <code>ModeSolver</code>.</p>
+<p>Because our <code>plane</code> was defined at the input port, we'll modify the centers of the <code>ModeMonitor</code>s to place them at the output ports to the right of the device.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=b2b17072-8e40-4509-904d-37197a542f07">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[13]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># make source</span>
+<span class="n">mode_src</span> <span class="o">=</span> <span class="n">mode_solver</span><span class="o">.</span><span class="n">to_source</span><span class="p">(</span>
+    <span class="n">source_time</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">GaussianPulse</span><span class="p">(</span>
+        <span class="n">freq0</span><span class="o">=</span><span class="n">freq0</span><span class="p">,</span>
+        <span class="n">fwidth</span><span class="o">=</span><span class="n">fwidth</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="n">direction</span><span class="o">=</span><span class="s2">"+"</span><span class="p">,</span>
+    <span class="n">mode_index</span><span class="o">=</span><span class="n">mode_index</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># make a basic monitor</span>
+<span class="n">mode_mnt</span> <span class="o">=</span> <span class="n">mode_solver</span><span class="o">.</span><span class="n">to_monitor</span><span class="p">(</span>
+    <span class="n">freqs</span><span class="o">=</span><span class="p">[</span><span class="n">freq0</span><span class="p">],</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">"_"</span>
+<span class="p">)</span>
+
+<span class="c1"># construct the proper centers for the monitors at the 'top' and 'bot' ports</span>
+<span class="n">mnt_center_top</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">plane_in</span><span class="o">.</span><span class="n">center</span><span class="p">)</span>
+<span class="n">mnt_center_bot</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">plane_in</span><span class="o">.</span><span class="n">center</span><span class="p">)</span>
+<span class="n">mnt_center_top</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">plane_in</span><span class="o">.</span><span class="n">center</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">mnt_center_bot</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">plane_in</span><span class="o">.</span><span class="n">center</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">mnt_center_top</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">wg_top</span><span class="o">.</span><span class="n">geometry</span><span class="o">.</span><span class="n">center</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+<span class="n">mnt_center_bot</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">wg_bot</span><span class="o">.</span><span class="n">geometry</span><span class="o">.</span><span class="n">center</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+<span class="c1"># make a dictionary of names and frequencies to refer to later by key</span>
+<span class="n">mnt_names</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">top</span><span class="o">=</span><span class="s2">"mode_top"</span><span class="p">,</span> <span class="n">bot</span><span class="o">=</span><span class="s2">"mode_bot"</span><span class="p">)</span>
+<span class="n">mnt_freqs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">top</span><span class="o">=</span><span class="n">freq_top</span><span class="p">,</span> <span class="n">bot</span><span class="o">=</span><span class="n">freq_bot</span><span class="p">)</span>
+
+<span class="c1"># make two updated copies of the mode monitor with the proper frequencies, centers, and names</span>
+<span class="n">mode_mnt_top</span> <span class="o">=</span> <span class="n">mode_mnt</span><span class="o">.</span><span class="n">updated_copy</span><span class="p">(</span><span class="n">freqs</span><span class="o">=</span><span class="p">[</span><span class="n">mnt_freqs</span><span class="p">[</span><span class="s2">"top"</span><span class="p">]],</span> <span class="n">center</span><span class="o">=</span><span class="n">mnt_center_top</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">mnt_names</span><span class="p">[</span><span class="s2">"top"</span><span class="p">])</span>
+<span class="n">mode_mnt_bot</span> <span class="o">=</span> <span class="n">mode_mnt</span><span class="o">.</span><span class="n">updated_copy</span><span class="p">(</span><span class="n">freqs</span><span class="o">=</span><span class="p">[</span><span class="n">mnt_freqs</span><span class="p">[</span><span class="s2">"bot"</span><span class="p">]],</span> <span class="n">center</span><span class="o">=</span><span class="n">mnt_center_bot</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">mnt_names</span><span class="p">[</span><span class="s2">"bot"</span><span class="p">])</span>
+
+<span class="c1"># make another dictionary mapping the keys to the monitors</span>
+<span class="n">mode_mnts</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">top</span><span class="o">=</span><span class="n">mode_mnt_top</span><span class="p">,</span> <span class="n">bot</span><span class="o">=</span><span class="n">mode_mnt_bot</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=a2b3655c-b014-440b-a4f6-6bd95ab95d90">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h3 id="Add-flux-monitors">Add flux monitors<a class="anchor-link" href="#Add-flux-monitors">¶</a></h3><p>For plotting later, we'll add a couple of <code>FluxMonitor</code> objects at the output ports to measure the total flux over a large spectrum. With this data, we should be able to clearly see the difference in transmission for each of the ports at the design region and get an idea about the device bandwidth.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=84d7cde0-78da-476a-b34f-c5d874f97f2f">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[14]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">Nf</span> <span class="o">=</span> <span class="mi">121</span>
+<span class="n">freqs_flux</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">freq_bot</span> <span class="o">-</span> <span class="n">fwidth</span><span class="o">/</span><span class="mi">10</span><span class="p">,</span> <span class="n">freq_top</span> <span class="o">+</span> <span class="n">fwidth</span><span class="o">/</span><span class="mi">10</span><span class="p">,</span> <span class="n">Nf</span><span class="p">)</span>
+
+<span class="n">flux_mnt_names</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">top</span><span class="o">=</span><span class="s2">"flux_top"</span><span class="p">,</span> <span class="n">bot</span><span class="o">=</span><span class="s2">"flux_bot"</span><span class="p">)</span>
+
+<span class="n">flux_mnt_top</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">FluxMonitor</span><span class="p">(</span>
+    <span class="n">center</span><span class="o">=</span><span class="n">mode_mnt_top</span><span class="o">.</span><span class="n">center</span><span class="p">,</span>
+    <span class="n">size</span><span class="o">=</span><span class="n">mode_mnt_top</span><span class="o">.</span><span class="n">size</span><span class="p">,</span>
+    <span class="n">name</span><span class="o">=</span><span class="n">flux_mnt_names</span><span class="p">[</span><span class="s2">"top"</span><span class="p">],</span>
+    <span class="n">freqs</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">freqs_flux</span><span class="p">),</span>
+<span class="p">)</span>
+
+<span class="n">flux_mnt_bot</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">FluxMonitor</span><span class="p">(</span>
+    <span class="n">center</span><span class="o">=</span><span class="n">mode_mnt_bot</span><span class="o">.</span><span class="n">center</span><span class="p">,</span>
+    <span class="n">size</span><span class="o">=</span><span class="n">mode_mnt_bot</span><span class="o">.</span><span class="n">size</span><span class="p">,</span>
+    <span class="n">name</span><span class="o">=</span><span class="n">flux_mnt_names</span><span class="p">[</span><span class="s2">"bot"</span><span class="p">],</span>
+    <span class="n">freqs</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">freqs_flux</span><span class="p">),</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=3c5e650d-a063-40d8-b18c-ed613739b733">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h3 id="Add-to-simulation">Add to simulation<a class="anchor-link" href="#Add-to-simulation">¶</a></h3><p>Finally, we will wrap our previous <code>make_sim_base()</code> function in a new one that adds our new objects to this base simulation.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=8511b5e1-288c-409e-9715-b88a04389d1c">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[15]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">make_sim</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">beta</span><span class="p">):</span>
+
+    <span class="n">output_monitors</span> <span class="o">=</span> <span class="p">[</span><span class="n">mode_mnts</span><span class="p">[</span><span class="s2">"top"</span><span class="p">],</span> <span class="n">mode_mnts</span><span class="p">[</span><span class="s2">"bot"</span><span class="p">]]</span>
+
+    <span class="n">sim_base</span> <span class="o">=</span> <span class="n">make_sim_base</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="n">beta</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">sim_base</span><span class="o">.</span><span class="n">updated_copy</span><span class="p">(</span>
+        <span class="n">output_monitors</span><span class="o">=</span><span class="n">output_monitors</span><span class="p">,</span>
+        <span class="n">sources</span><span class="o">=</span><span class="p">[</span><span class="n">mode_src</span><span class="p">],</span>
+        <span class="n">monitors</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">sim_base</span><span class="o">.</span><span class="n">monitors</span><span class="p">)</span> <span class="o">+</span> <span class="p">[</span><span class="n">flux_mnt_top</span><span class="p">,</span> <span class="n">flux_mnt_bot</span><span class="p">])</span>
+    <span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=86fcca5e-392b-485f-a00c-2b99b9594606">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>Let's make the final simulation and visualize it with the sources and monitors added.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=08e654f3-cec5-4429-bcee-430ef12efcdf">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[16]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">sim</span> <span class="o">=</span> <span class="n">make_sim</span><span class="p">(</span><span class="n">params0</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=dacc319d-247a-4d23-a95b-639b2baf803e">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>Note: the <code>FluxMonitor</code> objects are overlaying the output <code>ModeMonitor</code> objects.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=9bcacc4f-275e-4167-b283-d468f12cc0eb">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[17]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">ax</span> <span class="o">=</span> <span class="n">sim</span><span class="o">.</span><span class="n">plot_eps</span><span class="p">(</span><span class="n">z</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedImage jp-OutputArea-output" tabindex="0">
+<img alt="No description has been provided for this image" class="" src="/assets/tidy3d/examples/image/AdjointPlugin9WDM/AdjointPlugin9WDM_3.png"/>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=36ddbde9-64c9-4771-ab9e-8bf2c224f860">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="Defining-objective-function">Defining objective function<a class="anchor-link" href="#Defining-objective-function">¶</a></h2><p>With our simulation fully defined as a function of our parameters, we are ready to define our objective function.</p>
+<h3 id="Computing-power-transmission">Computing power transmission<a class="anchor-link" href="#Computing-power-transmission">¶</a></h3><p>In this case, it is quite simple, we simply measure the transmitted power in our output waveguide mode. We wish to maximize transmission to the top port at the "top" wavelength (1330 nm) and maximize transmission to the bottom port at the "bot" wavelength (1550 nm).</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=56ed21ad-0882-46ca-bc99-f1e4163fcc72">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[18]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">measure_power</span><span class="p">(</span><span class="n">sim_data</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Extract power from simulation data."""</span>
+
+    <span class="k">def</span> <span class="nf">get_power</span><span class="p">(</span><span class="n">mnt_key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">freq_key</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Get the power at monitor 'mnt_key' at frequency 'freq_key' (both either 'top' or 'bot')."""</span>
+        <span class="n">mnt_name</span> <span class="o">=</span> <span class="n">mnt_names</span><span class="p">[</span><span class="n">mnt_key</span><span class="p">]</span>
+        <span class="n">freq</span> <span class="o">=</span> <span class="n">freqs</span><span class="p">[</span><span class="n">freq_key</span><span class="p">]</span>
+        <span class="n">mnt_data</span> <span class="o">=</span> <span class="n">sim_data</span><span class="p">[</span><span class="n">mnt_name</span><span class="p">]</span>
+        <span class="n">amp</span> <span class="o">=</span> <span class="n">mnt_data</span><span class="o">.</span><span class="n">amps</span><span class="o">.</span><span class="n">sel</span><span class="p">(</span><span class="n">direction</span><span class="o">=</span><span class="s2">"+"</span><span class="p">,</span> <span class="n">mode_index</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">f</span><span class="o">=</span><span class="n">freq</span><span class="p">)</span>        
+        <span class="k">return</span> <span class="n">jnp</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">amp</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+
+    <span class="n">power_max</span> <span class="o">=</span> <span class="n">get_power</span><span class="p">(</span><span class="s2">"top"</span><span class="p">,</span> <span class="s2">"top"</span><span class="p">)</span> <span class="o">+</span> <span class="n">get_power</span><span class="p">(</span><span class="s2">"bot"</span><span class="p">,</span> <span class="s2">"bot"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">power_max</span> <span class="o">/</span> <span class="mf">2.0</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=55bbda26-70af-4e53-a77e-d92dac0221f6">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>Next we add a penalty to produce structures that are invariant under erosion and dilation, which is a useful approach to implementing minimum length scale features.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=7f7da424-d19e-4e0c-b95d-2ac7c877e246">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[19]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">penalty</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">delta_eps</span><span class="o">=</span><span class="mf">0.49</span><span class="p">):</span>
+    <span class="n">params</span> <span class="o">=</span> <span class="n">pre_process</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="n">beta</span><span class="p">)</span>
+    <span class="n">dilate_fn</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">filter_project</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="n">beta</span><span class="p">,</span> <span class="n">eta</span><span class="o">=</span><span class="mf">0.5</span><span class="o">-</span><span class="n">delta_eps</span><span class="p">)</span>
+    <span class="n">eroded_fn</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">filter_project</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="n">beta</span><span class="p">,</span> <span class="n">eta</span><span class="o">=</span><span class="mf">0.5</span><span class="o">+</span><span class="n">delta_eps</span><span class="p">)</span>
+
+    <span class="n">params_dilate_erode</span> <span class="o">=</span> <span class="n">eroded_fn</span><span class="p">(</span><span class="n">dilate_fn</span><span class="p">(</span><span class="n">params</span><span class="p">))</span>
+    <span class="n">params_erode_dilate</span> <span class="o">=</span> <span class="n">dilate_fn</span><span class="p">(</span><span class="n">eroded_fn</span><span class="p">(</span><span class="n">params</span><span class="p">))</span>
+    <span class="n">diff</span> <span class="o">=</span> <span class="n">params_dilate_erode</span> <span class="o">-</span> <span class="n">params_erode_dilate</span>
+    <span class="k">return</span> <span class="n">jnp</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">diff</span><span class="p">)</span> <span class="o">/</span> <span class="n">jnp</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="n">diff</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=218ac455-3626-4399-a11d-1ba288fe63bf">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h3 id="Writing-objective-function">Writing objective function<a class="anchor-link" href="#Writing-objective-function">¶</a></h3><p>Then we write an <code>objective</code> function that constructs our simulation, runs it, measures the power, and subtracts our penalty.</p>
+<blockquote>
+<p>Note, we return a <code>JaxSimulationData</code> as the second output. The reason for this is that we might wish to access our flux and field data later on. <code>jax</code> gives an option <code>has_aux</code> to use only the first output for differentiation while letting the user have access to the 2nd "auxiliary" output, which we will make use of.</p>
+</blockquote>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=3bba8bcc-4d2e-4268-a338-aab37513f5df">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[20]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">objective</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+    <span class="n">sim</span> <span class="o">=</span> <span class="n">make_sim</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="n">beta</span><span class="p">)</span>
+    <span class="n">sim_data</span> <span class="o">=</span> <span class="n">tda</span><span class="o">.</span><span class="n">web</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">sim</span><span class="p">,</span> <span class="n">task_name</span><span class="o">=</span><span class="s2">"WDM_MULTIFREQ"</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
+    <span class="n">power</span> <span class="o">=</span> <span class="n">measure_power</span><span class="p">(</span><span class="n">sim_data</span><span class="p">)</span>
+    <span class="n">J</span> <span class="o">=</span> <span class="n">power</span> <span class="o">-</span> <span class="n">penalty</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="n">beta</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">J</span><span class="p">,</span> <span class="n">sim_data</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=94fa67f3-31e2-444c-b2d2-9aea353eef10">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h3 id="Differentiating-objective">Differentiating objective<a class="anchor-link" href="#Differentiating-objective">¶</a></h3><p>Finally, we can simply use <code>jax</code> to transform this objective function into a function that returns our objective function value, the auxiliary data, and our gradient, which we will feed to the optimizer.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=3d210aba-1184-4191-a405-08c12531991c">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[21]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">grad_fn</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">value_and_grad</span><span class="p">(</span><span class="n">objective</span><span class="p">,</span> <span class="n">has_aux</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=afabe317-16c2-4d01-a5c0-6678eb470735">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>Let's try out our gradient function with verbosity on for just this run.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=2bb09792-cb44-4fb0-a3c9-6f82fb67d865">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[22]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="p">(</span><span class="n">J</span><span class="p">,</span> <span class="n">sim_data</span><span class="p">),</span> <span class="n">grad</span> <span class="o">=</span> <span class="n">grad_fn</span><span class="p">(</span><span class="n">params0</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">13:13:13 EDT </span>Created task <span style="color: #008000; text-decoration-color: #008000">'WDM_MULTIFREQ'</span> with task_id                          
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">             </span><span style="color: #008000; text-decoration-color: #008000">'fdve-d055ad08-1512-4931-90e8-8977ba9a382bv1'</span> and task_type <span style="color: #008000; text-decoration-color: #008000">'FDTD'</span>.
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">             </span>View task using web UI at                                          
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">             </span><a href="https://tidy3d.simulation.cloud/workbench?taskId=fdve-d055ad08-1512-4931-90e8-8977ba9a382bv1" target="_blank"><span style="color: #008000; text-decoration-color: #008000">'https://tidy3d.simulation.cloud/workbench?taskId=fdve-d055ad08-151</span></a>
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">             </span><a href="https://tidy3d.simulation.cloud/workbench?taskId=fdve-d055ad08-1512-4931-90e8-8977ba9a382bv1" target="_blank"><span style="color: #008000; text-decoration-color: #008000">2-4931-90e8-8977ba9a382bv1'</span></a>.                                       
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Output()</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Output()</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">13:13:15 EDT </span>status = queued                                                    
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Output()</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">13:13:25 EDT </span>status = preprocess                                                
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">13:13:33 EDT </span>Maximum FlexCredit cost: <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0.025</span>. Use <span style="color: #008000; text-decoration-color: #008000">'web.real_cost(task_id)'</span> to get
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">             </span>the billed FlexCredit cost after a simulation run.                 
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">             </span>starting up solver                                                 
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">13:13:34 EDT </span>running solver                                                     
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">             </span>To cancel the simulation, use <span style="color: #008000; text-decoration-color: #008000">'web.abort(task_id)'</span> or              
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">             </span><span style="color: #008000; text-decoration-color: #008000">'web.delete(task_id)'</span> or abort/delete the task in the web UI.      
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">             </span>Terminating the Python script will not stop the job running on the 
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">             </span>cloud.                                                             
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Output()</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">13:13:45 EDT </span>early shutoff detected, exiting.                                   
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">             </span>status = postprocess                                               
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Output()</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">13:14:08 EDT </span>status = success                                                   
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">13:14:09 EDT </span>View simulation result at                                          
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">             </span><a href="https://tidy3d.simulation.cloud/workbench?taskId=fdve-d055ad08-1512-4931-90e8-8977ba9a382bv1" target="_blank"><span style="color: #000080; text-decoration-color: #000080; text-decoration: underline">'https://tidy3d.simulation.cloud/workbench?taskId=fdve-d055ad08-151</span></a>
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">             </span><a href="https://tidy3d.simulation.cloud/workbench?taskId=fdve-d055ad08-1512-4931-90e8-8977ba9a382bv1" target="_blank"><span style="color: #000080; text-decoration-color: #000080; text-decoration: underline">2-4931-90e8-8977ba9a382bv1'</span></a><span style="color: #000080; text-decoration-color: #000080; text-decoration: underline">.</span>                                       
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Output()</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">13:14:11 EDT </span>loading simulation from simulation_data.hdf5                       
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">             </span><span style="color: #800000; text-decoration-color: #800000">WARNING: </span><span style="color: #008080; text-decoration-color: #008080; font-weight: bold">2</span><span style="color: #800000; text-decoration-color: #800000"> unique frequencies detected in the output monitors with </span>
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">             </span><span style="color: #800000; text-decoration-color: #800000">a minimum spacing of </span><span style="color: #008080; text-decoration-color: #008080; font-weight: bold">3.720e+13</span><span style="color: #800000; text-decoration-color: #800000"> </span><span style="color: #800000; text-decoration-color: #800000; font-weight: bold">(</span><span style="color: #800000; text-decoration-color: #800000">Hz</span><span style="color: #800000; text-decoration-color: #800000; font-weight: bold">)</span><span style="color: #800000; text-decoration-color: #800000">. Setting the </span><span style="color: #008000; text-decoration-color: #008000">'fwidth'</span><span style="color: #800000; text-decoration-color: #800000"> of the   </span>
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">             </span><span style="color: #800000; text-decoration-color: #800000">adjoint sources to </span><span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0.1</span><span style="color: #800000; text-decoration-color: #800000"> times this value = </span><span style="color: #008080; text-decoration-color: #008080; font-weight: bold">3.720e+12</span><span style="color: #800000; text-decoration-color: #800000"> </span><span style="color: #800000; text-decoration-color: #800000; font-weight: bold">(</span><span style="color: #800000; text-decoration-color: #800000">Hz</span><span style="color: #800000; text-decoration-color: #800000; font-weight: bold">)</span><span style="color: #800000; text-decoration-color: #800000"> to avoid  </span>
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">             </span><span style="color: #800000; text-decoration-color: #800000">spectral overlap. To account for this, the corresponding </span><span style="color: #008000; text-decoration-color: #008000">'run_time'</span>
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">             </span><span style="color: #800000; text-decoration-color: #800000">in the adjoint simulation is will be set to </span><span style="color: #008080; text-decoration-color: #008080; font-weight: bold">2.688527e-11</span><span style="color: #800000; text-decoration-color: #800000"> compared  </span>
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">             </span><span style="color: #800000; text-decoration-color: #800000">to </span><span style="color: #008080; text-decoration-color: #008080; font-weight: bold">2.688527e-12</span><span style="color: #800000; text-decoration-color: #800000"> in the forward simulation. If the adjoint          </span>
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">             </span><span style="color: #008000; text-decoration-color: #008000">'run_time'</span><span style="color: #800000; text-decoration-color: #800000"> is large due to small frequency spacing, it could be    </span>
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">             </span><span style="color: #800000; text-decoration-color: #800000">better to instead run one simulation per frequency, which can be   </span>
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">             </span><span style="color: #800000; text-decoration-color: #800000">done in parallel using </span><span style="color: #008000; text-decoration-color: #008000">'tidy3d.plugins.adjoint.web.run_async'</span><span style="color: #800000; text-decoration-color: #800000">.     </span>
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">             </span>Created task <span style="color: #008000; text-decoration-color: #008000">'WDM_MULTIFREQ_adj'</span> with task_id                      
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">             </span><span style="color: #008000; text-decoration-color: #008000">'fdve-ac06b779-409c-4aab-9672-99508fa35ff5v1'</span> and task_type <span style="color: #008000; text-decoration-color: #008000">'FDTD'</span>.
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">             </span>View task using web UI at                                          
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">             </span><a href="https://tidy3d.simulation.cloud/workbench?taskId=fdve-ac06b779-409c-4aab-9672-99508fa35ff5v1" target="_blank"><span style="color: #008000; text-decoration-color: #008000">'https://tidy3d.simulation.cloud/workbench?taskId=fdve-ac06b779-409</span></a>
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">             </span><a href="https://tidy3d.simulation.cloud/workbench?taskId=fdve-ac06b779-409c-4aab-9672-99508fa35ff5v1" target="_blank"><span style="color: #008000; text-decoration-color: #008000">c-4aab-9672-99508fa35ff5v1'</span></a>.                                       
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Output()</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Output()</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">13:14:14 EDT </span>status = queued                                                    
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Output()</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">13:14:23 EDT </span>status = preprocess                                                
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">13:14:28 EDT </span>Maximum FlexCredit cost: <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0.025</span>. Use <span style="color: #008000; text-decoration-color: #008000">'web.real_cost(task_id)'</span> to get
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">             </span>the billed FlexCredit cost after a simulation run.                 
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">             </span>starting up solver                                                 
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">             </span>running solver                                                     
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">             </span>To cancel the simulation, use <span style="color: #008000; text-decoration-color: #008000">'web.abort(task_id)'</span> or              
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">             </span><span style="color: #008000; text-decoration-color: #008000">'web.delete(task_id)'</span> or abort/delete the task in the web UI.      
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">             </span>Terminating the Python script will not stop the job running on the 
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">             </span>cloud.                                                             
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Output()</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">13:14:39 EDT </span>early shutoff detected, exiting.                                   
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">             </span>status = postprocess                                               
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Output()</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">13:14:46 EDT </span>status = success                                                   
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">             </span>View simulation result at                                          
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">             </span><a href="https://tidy3d.simulation.cloud/workbench?taskId=fdve-ac06b779-409c-4aab-9672-99508fa35ff5v1" target="_blank"><span style="color: #000080; text-decoration-color: #000080; text-decoration: underline">'https://tidy3d.simulation.cloud/workbench?taskId=fdve-ac06b779-409</span></a>
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">             </span><a href="https://tidy3d.simulation.cloud/workbench?taskId=fdve-ac06b779-409c-4aab-9672-99508fa35ff5v1" target="_blank"><span style="color: #000080; text-decoration-color: #000080; text-decoration: underline">c-4aab-9672-99508fa35ff5v1'</span></a><span style="color: #000080; text-decoration-color: #000080; text-decoration: underline">.</span>                                       
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Output()</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=2351757c-e19c-4715-8bf5-71a775f47602">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="Run-Opimization">Run Opimization<a class="anchor-link" href="#Run-Opimization">¶</a></h2><p>Finally, we are ready to optimize our device. We will make use the <code>optax</code> package to define an optimizer using the <code>adam</code> method, as we've done in the previous adjoint tutorials.</p>
+<p>We record a history of objective function values, simulation data, and parameters for visualization later.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=4a24ecd3-f2d1-43b0-88cd-8e0a41cc515a">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[23]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">optax</span>
+
+<span class="c1"># we know that the source fwidth will be set automatically due to multi-freq adjoint, so suppress warnings</span>
+<span class="n">td</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">logging_level</span> <span class="o">=</span> <span class="s2">"ERROR"</span>
+
+<span class="c1"># hyperparameters</span>
+<span class="n">num_steps</span> <span class="o">=</span> <span class="mi">50</span>
+<span class="n">learning_rate</span> <span class="o">=</span> <span class="mf">5e-2</span>
+<span class="n">beta_min</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="n">beta_max</span> <span class="o">=</span> <span class="mi">30</span>
+
+<span class="c1"># initialize adam optimizer with starting parameters</span>
+<span class="n">params</span> <span class="o">=</span> <span class="n">params0</span>
+<span class="n">optimizer</span> <span class="o">=</span> <span class="n">optax</span><span class="o">.</span><span class="n">adam</span><span class="p">(</span><span class="n">learning_rate</span><span class="o">=</span><span class="n">learning_rate</span><span class="p">)</span>
+<span class="n">opt_state</span> <span class="o">=</span> <span class="n">optimizer</span><span class="o">.</span><span class="n">init</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+
+<span class="c1"># store history</span>
+<span class="n">Js</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">params_history</span> <span class="o">=</span> <span class="p">[</span><span class="n">params0</span><span class="p">]</span>
+<span class="n">data_history</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">beta_history</span> <span class="o">=</span> <span class="p">[]</span>
+
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_steps</span><span class="p">):</span>
+
+    <span class="n">perc_done</span> <span class="o">=</span> <span class="n">i</span> <span class="o">/</span> <span class="p">(</span><span class="n">num_steps</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">beta_i</span> <span class="o">=</span> <span class="n">beta_min</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">perc_done</span><span class="p">)</span> <span class="o">+</span> <span class="n">beta_max</span> <span class="o">*</span> <span class="n">perc_done</span>
+    
+    <span class="c1"># compute gradient and current objective funciton value</span>
+    <span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">data</span><span class="p">),</span> <span class="n">gradient</span> <span class="o">=</span> <span class="n">grad_fn</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="n">beta_i</span><span class="p">)</span>
+
+    <span class="c1"># outputs</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"step = </span><span class="si">{</span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="se">\t</span><span class="s2">J = </span><span class="si">{</span><span class="n">value</span><span class="si">:</span><span class="s2">.4e</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="se">\t</span><span class="s2">beta = </span><span class="si">{</span><span class="n">beta_i</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="se">\t</span><span class="s2">grad_norm = </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">gradient</span><span class="p">)</span><span class="si">:</span><span class="s2">.4e</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>    
+
+    <span class="c1"># compute and apply updates to the optimizer based on gradient (-1 sign to maximize obj_fn)</span>
+    <span class="n">updates</span><span class="p">,</span> <span class="n">opt_state</span> <span class="o">=</span> <span class="n">optimizer</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="o">-</span><span class="n">gradient</span><span class="p">,</span> <span class="n">opt_state</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
+    <span class="n">params</span> <span class="o">=</span> <span class="n">optax</span><span class="o">.</span><span class="n">apply_updates</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">updates</span><span class="p">)</span>
+
+    <span class="c1"># keep params between 0 and 1</span>
+    <span class="n">params</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
+    <span class="n">params</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
+
+    <span class="c1"># save history</span>
+    <span class="n">Js</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+    <span class="n">params_history</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+    <span class="n">beta_history</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">beta_i</span><span class="p">)</span>
+    <span class="n">data_history</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>step = 1
+	J = 1.1304e-01
+	beta = 1.00
+	grad_norm = 1.3146e-01
+step = 2
+	J = 1.7990e-01
+	beta = 1.59
+	grad_norm = 2.2436e-01
+step = 3
+	J = 1.9295e-01
+	beta = 2.18
+	grad_norm = 2.6208e-01
+step = 4
+	J = 5.7722e-02
+	beta = 2.78
+	grad_norm = 3.2809e-01
+step = 5
+	J = -2.6573e-02
+	beta = 3.37
+	grad_norm = 5.0954e-01
+step = 6
+	J = -1.0810e-01
+	beta = 3.96
+	grad_norm = 6.0937e-01
+step = 7
+	J = 5.5483e-02
+	beta = 4.55
+	grad_norm = 2.9692e-01
+step = 8
+	J = 1.3207e-01
+	beta = 5.14
+	grad_norm = 3.5711e-01
+step = 9
+	J = 1.9169e-01
+	beta = 5.73
+	grad_norm = 3.6781e-01
+step = 10
+	J = 2.2510e-01
+	beta = 6.33
+	grad_norm = 4.3558e-01
+step = 11
+	J = 2.2839e-01
+	beta = 6.92
+	grad_norm = 4.7313e-01
+step = 12
+	J = 2.8006e-01
+	beta = 7.51
+	grad_norm = 6.4329e-01
+step = 13
+	J = 3.4886e-01
+	beta = 8.10
+	grad_norm = 5.0031e-01
+step = 14
+	J = 3.8850e-01
+	beta = 8.69
+	grad_norm = 3.2984e-01
+step = 15
+	J = 4.0177e-01
+	beta = 9.29
+	grad_norm = 3.4545e-01
+step = 16
+	J = 4.1679e-01
+	beta = 9.88
+	grad_norm = 3.0066e-01
+step = 17
+	J = 4.5674e-01
+	beta = 10.47
+	grad_norm = 3.2095e-01
+step = 18
+	J = 4.5385e-01
+	beta = 11.06
+	grad_norm = 2.6492e-01
+step = 19
+	J = 4.6074e-01
+	beta = 11.65
+	grad_norm = 2.2217e-01
+step = 20
+	J = 4.8522e-01
+	beta = 12.24
+	grad_norm = 2.5342e-01
+step = 21
+	J = 5.1445e-01
+	beta = 12.84
+	grad_norm = 2.4852e-01
+step = 22
+	J = 5.3739e-01
+	beta = 13.43
+	grad_norm = 2.2100e-01
+step = 23
+	J = 5.5660e-01
+	beta = 14.02
+	grad_norm = 2.6047e-01
+step = 24
+	J = 5.8012e-01
+	beta = 14.61
+	grad_norm = 1.8017e-01
+step = 25
+	J = 5.9612e-01
+	beta = 15.20
+	grad_norm = 2.1880e-01
+step = 26
+	J = 6.1565e-01
+	beta = 15.80
+	grad_norm = 1.9455e-01
+step = 27
+	J = 6.3848e-01
+	beta = 16.39
+	grad_norm = 2.6951e-01
+step = 28
+	J = 6.6192e-01
+	beta = 16.98
+	grad_norm = 4.8207e-01
+step = 29
+	J = 6.9834e-01
+	beta = 17.57
+	grad_norm = 3.6163e-01
+step = 30
+	J = 6.7018e-01
+	beta = 18.16
+	grad_norm = 9.7225e-01
+step = 31
+	J = 5.8992e-01
+	beta = 18.76
+	grad_norm = 1.4539e+00
+step = 32
+	J = 6.6032e-01
+	beta = 19.35
+	grad_norm = 5.5199e-01
+step = 33
+	J = 6.3486e-01
+	beta = 19.94
+	grad_norm = 7.7368e-01
+step = 34
+	J = 6.7879e-01
+	beta = 20.53
+	grad_norm = 3.1729e-01
+step = 35
+	J = 6.9260e-01
+	beta = 21.12
+	grad_norm = 3.9760e-01
+step = 36
+	J = 6.8910e-01
+	beta = 21.71
+	grad_norm = 4.3376e-01
+step = 37
+	J = 7.0953e-01
+	beta = 22.31
+	grad_norm = 2.1688e-01
+step = 38
+	J = 7.2231e-01
+	beta = 22.90
+	grad_norm = 1.7996e-01
+step = 39
+	J = 7.3707e-01
+	beta = 23.49
+	grad_norm = 1.4756e-01
+step = 40
+	J = 7.4738e-01
+	beta = 24.08
+	grad_norm = 1.8689e-01
+step = 41
+	J = 7.4766e-01
+	beta = 24.67
+	grad_norm = 2.5960e-01
+step = 42
+	J = 7.5494e-01
+	beta = 25.27
+	grad_norm = 1.4756e-01
+step = 43
+	J = 7.5888e-01
+	beta = 25.86
+	grad_norm = 2.1101e-01
+step = 44
+	J = 7.6419e-01
+	beta = 26.45
+	grad_norm = 1.7915e-01
+step = 45
+	J = 7.6097e-01
+	beta = 27.04
+	grad_norm = 4.2852e-01
+step = 46
+	J = 7.4819e-01
+	beta = 27.63
+	grad_norm = 8.0884e-01
+step = 47
+	J = 7.3060e-01
+	beta = 28.22
+	grad_norm = 1.1788e+00
+step = 48
+	J = 7.5213e-01
+	beta = 28.82
+	grad_norm = 6.2305e-01
+step = 49
+	J = 7.6127e-01
+	beta = 29.41
+	grad_norm = 4.9933e-01
+step = 50
+	J = 7.7012e-01
+	beta = 30.00
+	grad_norm = 4.5721e-01
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=f082a060-208d-4678-8c60-9701db55faad">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="Visualize-Results">Visualize Results<a class="anchor-link" href="#Visualize-Results">¶</a></h2><p>Let's visualize the results of our optimization.</p>
+<h3 id="Objective-function-vs-Iteration">Objective function vs Iteration<a class="anchor-link" href="#Objective-function-vs-Iteration">¶</a></h3><p>First we inspect the objective function value as a function of optimization iteration number. We see that it steadily increases as expected.</p>
+<blockquote>
+<p>The presence of fabrication constraints tends to create some minor bumps in the optimization, which can be a signal that one needs to reduce the step size, but these results are sufficient for our purposes.</p>
+</blockquote>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=a3f9509b-2448-4505-a013-c2fd26b36052">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[24]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">Js</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">'iteration number'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">'objective function'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedImage jp-OutputArea-output" tabindex="0">
+<img alt="No description has been provided for this image" class="" src="/assets/tidy3d/examples/image/AdjointPlugin9WDM/AdjointPlugin9WDM_4.png"/>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=c9b97d20-1e6b-4b4c-9f35-fc3c21903e24">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h3 id="Final-Simulation">Final Simulation<a class="anchor-link" href="#Final-Simulation">¶</a></h3><p>Let's take a look at the final simulation, which we grab from our history.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=a20e8905-5699-47c8-8a97-26db6f5935c6">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[25]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">sim_data_final</span> <span class="o">=</span> <span class="n">data_history</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+<span class="n">sim_final</span> <span class="o">=</span> <span class="n">sim_data_final</span><span class="o">.</span><span class="n">simulation</span><span class="o">.</span><span class="n">to_simulation</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=54b3fc86-97d6-4bf7-99c1-347037583269">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>We notice that the structure has reasonably large feature sizes but is not well binarized. This could be improved by increasing the <code>beta</code> projection value slowly over iteration number, as was done in the <a href="https://www.flexcompute.com/tidy3d/examples/notebooks/AdjointPlugin6GratingCoupler/" target="_blank">grating coupler tutorial</a>.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=4ff1a822-6656-424c-8136-febe9672b20f">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[26]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">ax</span> <span class="o">=</span> <span class="n">sim_final</span><span class="o">.</span><span class="n">plot_eps</span><span class="p">(</span><span class="n">z</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">monitor_alpha</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">source_alpha</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedImage jp-OutputArea-output" tabindex="0">
+<img alt="No description has been provided for this image" class="" src="/assets/tidy3d/examples/image/AdjointPlugin9WDM/AdjointPlugin9WDM_5.png"/>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=d13065bd-e796-485f-8a18-1a55f0ebf2bd">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h3 id="Flux">Flux<a class="anchor-link" href="#Flux">¶</a></h3><p>Let's inspect the flux over each of the output ports as a function of wavelength.</p>
+<p>We notice that the top and bottom ports have peaks in transmission at their corresponding design wavelengths, as expected!</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=73629989-47bf-4dc4-8ed3-a518dd2cac1f">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[27]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># plot flux</span>
+<span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">color</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">((</span><span class="s2">"top"</span><span class="p">,</span> <span class="s2">"bot"</span><span class="p">),</span> <span class="p">(</span><span class="s1">'royalblue'</span><span class="p">,</span> <span class="s1">'firebrick'</span><span class="p">)):</span>
+    <span class="n">freq</span> <span class="o">=</span> <span class="n">freqs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+    <span class="n">flux_data</span> <span class="o">=</span> <span class="n">sim_data_final</span><span class="p">[</span><span class="n">flux_mnt_names</span><span class="p">[</span><span class="n">key</span><span class="p">]]</span>
+    <span class="n">wvl_nm</span> <span class="o">=</span> <span class="mi">1000</span> <span class="o">*</span> <span class="n">td</span><span class="o">.</span><span class="n">C_0</span> <span class="o">/</span> <span class="n">freq</span>
+    <span class="n">wavelengths_nm</span> <span class="o">=</span> <span class="mi">1000</span> <span class="o">*</span> <span class="n">td</span><span class="o">.</span><span class="n">C_0</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">flux_data</span><span class="o">.</span><span class="n">flux</span><span class="o">.</span><span class="n">f</span><span class="p">)</span>
+    <span class="n">flux</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">flux_data</span><span class="o">.</span><span class="n">flux</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+    <span class="n">flux_db</span> <span class="o">=</span> <span class="mi">10</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">flux</span><span class="p">)</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">wvl_nm</span><span class="p">)</span><span class="si">}</span><span class="s2"> nm)"</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">wavelengths_nm</span><span class="p">,</span> <span class="n">flux_db</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">([</span><span class="n">wvl_nm</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">100</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s2">"*"</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">'wavelength (nm)'</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">'transmission (dB)'</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedImage jp-OutputArea-output" tabindex="0">
+<img alt="No description has been provided for this image" class="" src="/assets/tidy3d/examples/image/AdjointPlugin9WDM/AdjointPlugin9WDM_6.png"/>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=5423e5c7-5e00-4a8f-b0fd-ccdbe1afc42c">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h3 id="Fields">Fields<a class="anchor-link" href="#Fields">¶</a></h3><p>Let's also plot the field intensity patterns at the two design wavelengths. We see from this plot the expected result that the power is directed to the design port at each frequency.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=3f5c895a-4543-4e2a-b34d-3aeab61c5914">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[28]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># plot fields at the two design wavelengths</span>
+
+<span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">tight_layout</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+
+<span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">ax</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">((</span><span class="s2">"top"</span><span class="p">,</span> <span class="s2">"bot"</span><span class="p">),</span> <span class="n">axes</span><span class="p">):</span>
+    <span class="n">freq</span> <span class="o">=</span> <span class="n">freqs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+    <span class="n">sim_data_final</span><span class="o">.</span><span class="n">plot_field</span><span class="p">(</span><span class="s2">"field"</span><span class="p">,</span> <span class="s2">"E"</span><span class="p">,</span> <span class="s2">"abs^2"</span><span class="p">,</span> <span class="n">f</span><span class="o">=</span><span class="n">freq</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="mi">1200</span><span class="p">)</span>
+    <span class="n">wvl</span> <span class="o">=</span> <span class="mi">1000</span> <span class="o">*</span> <span class="n">td</span><span class="o">.</span><span class="n">C_0</span> <span class="o">/</span> <span class="n">freq</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="sa">f</span><span class="s2">"wavelength = </span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">wvl</span><span class="p">)</span><span class="si">}</span><span class="s2"> nm"</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedImage jp-OutputArea-output" tabindex="0">
+<img alt="No description has been provided for this image" class="" src="/assets/tidy3d/examples/image/AdjointPlugin9WDM/AdjointPlugin9WDM_7.png"/>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=5997d513-a66e-44b6-81ce-ce7b7d59762a">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h3 id="Animation">Animation<a class="anchor-link" href="#Animation">¶</a></h3><p>Finally, we animate this plot as a function of iteration number. The animation shows the device quickly accomplishing our design objective.</p>
+<blockquote>
+<p>Note: can take a few minutes to complete</p>
+</blockquote>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=2cb45408-ffe0-4406-92e2-c2c4c79d8750">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[29]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">matplotlib.animation</span> <span class="k">as</span> <span class="nn">animation</span>
+<span class="kn">from</span> <span class="nn">IPython.display</span> <span class="kn">import</span> <span class="n">HTML</span>
+
+<span class="n">fig</span><span class="p">,</span> <span class="p">(</span><span class="n">ax1</span><span class="p">,</span> <span class="n">ax2</span><span class="p">,</span> <span class="n">ax3</span><span class="p">)</span> <span class="o">=</span> <span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">tight_layout</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">9</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
+
+<span class="k">def</span> <span class="nf">animate</span><span class="p">(</span><span class="n">i</span><span class="p">):</span>
+
+    <span class="n">sim_data_i</span> <span class="o">=</span> <span class="n">data_history</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+    <span class="n">sim_i</span> <span class="o">=</span> <span class="n">sim_data_i</span><span class="o">.</span><span class="n">simulation</span><span class="o">.</span><span class="n">to_simulation</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">sim_i</span><span class="o">.</span><span class="n">plot_eps</span><span class="p">(</span><span class="n">z</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">monitor_alpha</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">source_alpha</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax1</span><span class="p">)</span>
+    <span class="n">ax1</span><span class="o">.</span><span class="n">set_aspect</span><span class="p">(</span><span class="s1">'equal'</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">ax</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">((</span><span class="s2">"top"</span><span class="p">,</span> <span class="s2">"bot"</span><span class="p">),</span> <span class="p">(</span><span class="n">ax2</span><span class="p">,</span> <span class="n">ax3</span><span class="p">)):</span>
+
+        <span class="n">freq</span> <span class="o">=</span> <span class="n">freqs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+        <span class="n">wvl</span> <span class="o">=</span> <span class="mi">1000</span> <span class="o">*</span> <span class="n">td</span><span class="o">.</span><span class="n">C_0</span> <span class="o">/</span> <span class="n">freq</span>
+
+        <span class="n">int_i</span> <span class="o">=</span> <span class="n">sim_data_i</span><span class="o">.</span><span class="n">get_intensity</span><span class="p">(</span><span class="s2">"field"</span><span class="p">)</span><span class="o">.</span><span class="n">sel</span><span class="p">(</span><span class="n">f</span><span class="o">=</span><span class="n">freq</span><span class="p">)</span>
+        <span class="n">int_i</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">pcolormesh</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="s1">'x'</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s1">'y'</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span> <span class="n">add_colorbar</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s2">"magma"</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
+        
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_aspect</span><span class="p">(</span><span class="s1">'equal'</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="sa">f</span><span class="s2">"wavelength = </span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">wvl</span><span class="p">)</span><span class="si">}</span><span class="s2"> nm"</span><span class="p">)</span>
+    
+<span class="c1"># create animation</span>
+<span class="n">ani</span> <span class="o">=</span> <span class="n">animation</span><span class="o">.</span><span class="n">FuncAnimation</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="n">animate</span><span class="p">,</span> <span class="n">frames</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">data_history</span><span class="p">))</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=fc5bd204-d290-42bf-b3bc-187ce4ffa026">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[30]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># display the animation (press "play" to start)</span>
+<span class="n">HTML</span><span class="p">(</span><span class="n">ani</span><span class="o">.</span><span class="n">to_jshtml</span><span class="p">())</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child jp-OutputArea-executeResult">
+<div class="jp-OutputPrompt jp-OutputArea-prompt">[30]:</div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/html" tabindex="0">
+<link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css" rel="stylesheet"/>
+<script language="javascript">
+  function isInternetExplorer() {
+    ua = navigator.userAgent;
+    /* MSIE used to detect old browsers and Trident used to newer ones*/
+    return ua.indexOf("MSIE ") > -1 || ua.indexOf("Trident/") > -1;
+  }
+
+  /* Define the Animation class */
+  function Animation(frames, img_id, slider_id, interval, loop_select_id){
+    this.img_id = img_id;
+    this.slider_id = slider_id;
+    this.loop_select_id = loop_select_id;
+    this.interval = interval;
+    this.current_frame = 0;
+    this.direction = 0;
+    this.timer = null;
+    this.frames = new Array(frames.length);
+
+    for (var i=0; i<frames.length; i++)
+    {
+     this.frames[i] = new Image();
+     this.frames[i].src = frames[i];
+    }
+    var slider = document.getElementById(this.slider_id);
+    slider.max = this.frames.length - 1;
+    if (isInternetExplorer()) {
+        // switch from oninput to onchange because IE <= 11 does not conform
+        // with W3C specification. It ignores oninput and onchange behaves
+        // like oninput. In contrast, Microsoft Edge behaves correctly.
+        slider.setAttribute('onchange', slider.getAttribute('oninput'));
+        slider.setAttribute('oninput', null);
+    }
+    this.set_frame(this.current_frame);
+  }
+
+  Animation.prototype.get_loop_state = function(){
+    var button_group = document[this.loop_select_id].state;
+    for (var i = 0; i < button_group.length; i++) {
+        var button = button_group[i];
+        if (button.checked) {
+            return button.value;
+        }
+    }
+    return undefined;
+  }
+
+  Animation.prototype.set_frame = function(frame){
+    this.current_frame = frame;
+    document.getElementById(this.img_id).src =
+            this.frames[this.current_frame].src;
+    document.getElementById(this.slider_id).value = this.current_frame;
+  }
+
+  Animation.prototype.next_frame = function()
+  {
+    this.set_frame(Math.min(this.frames.length - 1, this.current_frame + 1));
+  }
+
+  Animation.prototype.previous_frame = function()
+  {
+    this.set_frame(Math.max(0, this.current_frame - 1));
+  }
+
+  Animation.prototype.first_frame = function()
+  {
+    this.set_frame(0);
+  }
+
+  Animation.prototype.last_frame = function()
+  {
+    this.set_frame(this.frames.length - 1);
+  }
+
+  Animation.prototype.slower = function()
+  {
+    this.interval /= 0.7;
+    if(this.direction > 0){this.play_animation();}
+    else if(this.direction < 0){this.reverse_animation();}
+  }
+
+  Animation.prototype.faster = function()
+  {
+    this.interval *= 0.7;
+    if(this.direction > 0){this.play_animation();}
+    else if(this.direction < 0){this.reverse_animation();}
+  }
+
+  Animation.prototype.anim_step_forward = function()
+  {
+    this.current_frame += 1;
+    if(this.current_frame < this.frames.length){
+      this.set_frame(this.current_frame);
+    }else{
+      var loop_state = this.get_loop_state();
+      if(loop_state == "loop"){
+        this.first_frame();
+      }else if(loop_state == "reflect"){
+        this.last_frame();
+        this.reverse_animation();
+      }else{
+        this.pause_animation();
+        this.last_frame();
+      }
+    }
+  }
+
+  Animation.prototype.anim_step_reverse = function()
+  {
+    this.current_frame -= 1;
+    if(this.current_frame >= 0){
+      this.set_frame(this.current_frame);
+    }else{
+      var loop_state = this.get_loop_state();
+      if(loop_state == "loop"){
+        this.last_frame();
+      }else if(loop_state == "reflect"){
+        this.first_frame();
+        this.play_animation();
+      }else{
+        this.pause_animation();
+        this.first_frame();
+      }
+    }
+  }
+
+  Animation.prototype.pause_animation = function()
+  {
+    this.direction = 0;
+    if (this.timer){
+      clearInterval(this.timer);
+      this.timer = null;
+    }
+  }
+
+  Animation.prototype.play_animation = function()
+  {
+    this.pause_animation();
+    this.direction = 1;
+    var t = this;
+    if (!this.timer) this.timer = setInterval(function() {
+        t.anim_step_forward();
+    }, this.interval);
+  }
+
+  Animation.prototype.reverse_animation = function()
+  {
+    this.pause_animation();
+    this.direction = -1;
+    var t = this;
+    if (!this.timer) this.timer = setInterval(function() {
+        t.anim_step_reverse();
+    }, this.interval);
+  }
+</script>
+<style>
+.animation {
+    display: inline-block;
+    text-align: center;
+}
+input[type=range].anim-slider {
+    width: 374px;
+    margin-left: auto;
+    margin-right: auto;
+}
+.anim-buttons {
+    margin: 8px 0px;
+}
+.anim-buttons button {
+    padding: 0;
+    width: 36px;
+}
+.anim-state label {
+    margin-right: 8px;
+}
+.anim-state input {
+    margin: 0;
+    vertical-align: middle;
+}
+</style>
+<div class="animation">
+<img alt="No description has been provided for this image" id="_anim_img331039c2054c4dab92590d4bb8811ba1"/>
+<div class="anim-controls">
+<input class="anim-slider" id="_anim_slider331039c2054c4dab92590d4bb8811ba1" max="1" min="0" name="points" oninput="anim331039c2054c4dab92590d4bb8811ba1.set_frame(parseInt(this.value));" step="1" type="range" value="0"/>
+<div class="anim-buttons">
+<button aria-label="Decrease speed" onclick="anim331039c2054c4dab92590d4bb8811ba1.slower()" title="Decrease speed">
+<i class="fa fa-minus"></i></button>
+<button aria-label="First frame" onclick="anim331039c2054c4dab92590d4bb8811ba1.first_frame()" title="First frame">
+<i class="fa fa-fast-backward"></i></button>
+<button aria-label="Previous frame" onclick="anim331039c2054c4dab92590d4bb8811ba1.previous_frame()" title="Previous frame">
+<i class="fa fa-step-backward"></i></button>
+<button aria-label="Play backwards" onclick="anim331039c2054c4dab92590d4bb8811ba1.reverse_animation()" title="Play backwards">
+<i class="fa fa-play fa-flip-horizontal"></i></button>
+<button aria-label="Pause" onclick="anim331039c2054c4dab92590d4bb8811ba1.pause_animation()" title="Pause">
+<i class="fa fa-pause"></i></button>
+<button aria-label="Play" onclick="anim331039c2054c4dab92590d4bb8811ba1.play_animation()" title="Play">
+<i class="fa fa-play"></i></button>
+<button aria-label="Next frame" onclick="anim331039c2054c4dab92590d4bb8811ba1.next_frame()" title="Next frame">
+<i class="fa fa-step-forward"></i></button>
+<button aria-label="Last frame" onclick="anim331039c2054c4dab92590d4bb8811ba1.last_frame()" title="Last frame">
+<i class="fa fa-fast-forward"></i></button>
+<button aria-label="Increase speed" onclick="anim331039c2054c4dab92590d4bb8811ba1.faster()" title="Increase speed">
+<i class="fa fa-plus"></i></button>
+</div>
+<form action="#n" aria-label="Repetition mode" class="anim-state" name="_anim_loop_select331039c2054c4dab92590d4bb8811ba1" title="Repetition mode">
+<input id="_anim_radio1_331039c2054c4dab92590d4bb8811ba1" name="state" type="radio" value="once"/>
+<label for="_anim_radio1_331039c2054c4dab92590d4bb8811ba1">Once</label>
+<input checked="" id="_anim_radio2_331039c2054c4dab92590d4bb8811ba1" name="state" type="radio" value="loop"/>
+<label for="_anim_radio2_331039c2054c4dab92590d4bb8811ba1">Loop</label>
+<input id="_anim_radio3_331039c2054c4dab92590d4bb8811ba1" name="state" type="radio" value="reflect"/>
+<label for="_anim_radio3_331039c2054c4dab92590d4bb8811ba1">Reflect</label>
+</form>
+</div>
+</div>
+<script language="javascript">
+  /* Instantiate the Animation class. */
+  /* The IDs given should match those used in the template above. */
+  (function() {
+    var img_id = "_anim_img331039c2054c4dab92590d4bb8811ba1";
+    var slider_id = "_anim_slider331039c2054c4dab92590d4bb8811ba1";
+    var loop_select_id = "_anim_loop_select331039c2054c4dab92590d4bb8811ba1";
+    var frames = new Array(50);
+    
+  frames[0] = "/assets/tidy3d/examples/image/AdjointPlugin9WDM_extra/AdjointPlugin9WDM_extra_1.png"
+  frames[1] = "/assets/tidy3d/examples/image/AdjointPlugin9WDM_extra/AdjointPlugin9WDM_extra_2.png"
+  frames[2] = "/assets/tidy3d/examples/image/AdjointPlugin9WDM_extra/AdjointPlugin9WDM_extra_3.png"
+  frames[3] = "/assets/tidy3d/examples/image/AdjointPlugin9WDM_extra/AdjointPlugin9WDM_extra_4.png"
+  frames[4] = "/assets/tidy3d/examples/image/AdjointPlugin9WDM_extra/AdjointPlugin9WDM_extra_5.png"
+  frames[5] = "/assets/tidy3d/examples/image/AdjointPlugin9WDM_extra/AdjointPlugin9WDM_extra_6.png"
+  frames[6] = "/assets/tidy3d/examples/image/AdjointPlugin9WDM_extra/AdjointPlugin9WDM_extra_7.png"
+  frames[7] = "/assets/tidy3d/examples/image/AdjointPlugin9WDM_extra/AdjointPlugin9WDM_extra_8.png"
+  frames[8] = "/assets/tidy3d/examples/image/AdjointPlugin9WDM_extra/AdjointPlugin9WDM_extra_9.png"
+  frames[9] = "/assets/tidy3d/examples/image/AdjointPlugin9WDM_extra/AdjointPlugin9WDM_extra_10.png"
+  frames[10] = "/assets/tidy3d/examples/image/AdjointPlugin9WDM_extra/AdjointPlugin9WDM_extra_11.png"
+  frames[11] = "/assets/tidy3d/examples/image/AdjointPlugin9WDM_extra/AdjointPlugin9WDM_extra_12.png"
+  frames[12] = "/assets/tidy3d/examples/image/AdjointPlugin9WDM_extra/AdjointPlugin9WDM_extra_13.png"
+  frames[13] = "/assets/tidy3d/examples/image/AdjointPlugin9WDM_extra/AdjointPlugin9WDM_extra_14.png"
+  frames[14] = "/assets/tidy3d/examples/image/AdjointPlugin9WDM_extra/AdjointPlugin9WDM_extra_15.png"
+  frames[15] = "/assets/tidy3d/examples/image/AdjointPlugin9WDM_extra/AdjointPlugin9WDM_extra_16.png"
+  frames[16] = "/assets/tidy3d/examples/image/AdjointPlugin9WDM_extra/AdjointPlugin9WDM_extra_17.png"
+  frames[17] = "/assets/tidy3d/examples/image/AdjointPlugin9WDM_extra/AdjointPlugin9WDM_extra_18.png"
+  frames[18] = "/assets/tidy3d/examples/image/AdjointPlugin9WDM_extra/AdjointPlugin9WDM_extra_19.png"
+  frames[19] = "/assets/tidy3d/examples/image/AdjointPlugin9WDM_extra/AdjointPlugin9WDM_extra_20.png"
+  frames[20] = "/assets/tidy3d/examples/image/AdjointPlugin9WDM_extra/AdjointPlugin9WDM_extra_21.png"
+  frames[21] = "/assets/tidy3d/examples/image/AdjointPlugin9WDM_extra/AdjointPlugin9WDM_extra_22.png"
+  frames[22] = "/assets/tidy3d/examples/image/AdjointPlugin9WDM_extra/AdjointPlugin9WDM_extra_23.png"
+  frames[23] = "/assets/tidy3d/examples/image/AdjointPlugin9WDM_extra/AdjointPlugin9WDM_extra_24.png"
+  frames[24] = "/assets/tidy3d/examples/image/AdjointPlugin9WDM_extra/AdjointPlugin9WDM_extra_25.png"
+  frames[25] = "/assets/tidy3d/examples/image/AdjointPlugin9WDM_extra/AdjointPlugin9WDM_extra_26.png"
+  frames[26] = "/assets/tidy3d/examples/image/AdjointPlugin9WDM_extra/AdjointPlugin9WDM_extra_27.png"
+  frames[27] = "/assets/tidy3d/examples/image/AdjointPlugin9WDM_extra/AdjointPlugin9WDM_extra_28.png"
+  frames[28] = "/assets/tidy3d/examples/image/AdjointPlugin9WDM_extra/AdjointPlugin9WDM_extra_29.png"
+  frames[29] = "/assets/tidy3d/examples/image/AdjointPlugin9WDM_extra/AdjointPlugin9WDM_extra_30.png"
+  frames[30] = "/assets/tidy3d/examples/image/AdjointPlugin9WDM_extra/AdjointPlugin9WDM_extra_31.png"
+  frames[31] = "/assets/tidy3d/examples/image/AdjointPlugin9WDM_extra/AdjointPlugin9WDM_extra_32.png"
+  frames[32] = "/assets/tidy3d/examples/image/AdjointPlugin9WDM_extra/AdjointPlugin9WDM_extra_33.png"
+  frames[33] = "/assets/tidy3d/examples/image/AdjointPlugin9WDM_extra/AdjointPlugin9WDM_extra_34.png"
+  frames[34] = "/assets/tidy3d/examples/image/AdjointPlugin9WDM_extra/AdjointPlugin9WDM_extra_35.png"
+  frames[35] = "/assets/tidy3d/examples/image/AdjointPlugin9WDM_extra/AdjointPlugin9WDM_extra_36.png"
+  frames[36] = "/assets/tidy3d/examples/image/AdjointPlugin9WDM_extra/AdjointPlugin9WDM_extra_37.png"
+  frames[37] = "/assets/tidy3d/examples/image/AdjointPlugin9WDM_extra/AdjointPlugin9WDM_extra_38.png"
+  frames[38] = "/assets/tidy3d/examples/image/AdjointPlugin9WDM_extra/AdjointPlugin9WDM_extra_39.png"
+  frames[39] = "/assets/tidy3d/examples/image/AdjointPlugin9WDM_extra/AdjointPlugin9WDM_extra_40.png"
+  frames[40] = "/assets/tidy3d/examples/image/AdjointPlugin9WDM_extra/AdjointPlugin9WDM_extra_41.png"
+  frames[41] = "/assets/tidy3d/examples/image/AdjointPlugin9WDM_extra/AdjointPlugin9WDM_extra_42.png"
+  frames[42] = "/assets/tidy3d/examples/image/AdjointPlugin9WDM_extra/AdjointPlugin9WDM_extra_43.png"
+  frames[43] = "/assets/tidy3d/examples/image/AdjointPlugin9WDM_extra/AdjointPlugin9WDM_extra_44.png"
+  frames[44] = "/assets/tidy3d/examples/image/AdjointPlugin9WDM_extra/AdjointPlugin9WDM_extra_45.png"
+  frames[45] = "/assets/tidy3d/examples/image/AdjointPlugin9WDM_extra/AdjointPlugin9WDM_extra_46.png"
+  frames[46] = "/assets/tidy3d/examples/image/AdjointPlugin9WDM_extra/AdjointPlugin9WDM_extra_47.png"
+  frames[47] = "/assets/tidy3d/examples/image/AdjointPlugin9WDM_extra/AdjointPlugin9WDM_extra_48.png"
+  frames[48] = "/assets/tidy3d/examples/image/AdjointPlugin9WDM_extra/AdjointPlugin9WDM_extra_49.png"
+  frames[49] = "/assets/tidy3d/examples/image/AdjointPlugin9WDM_extra/AdjointPlugin9WDM_extra_50.png"
+
+
+    /* set a timeout to make sure all the above elements are created before
+       the object is initialized. */
+    setTimeout(function() {
+        anim331039c2054c4dab92590d4bb8811ba1 = new Animation(frames, img_id, slider_id, 200.0,
+                                 loop_select_id);
+    }, 0);
+  })()
+</script>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>&lt;Figure size 640x480 with 0 Axes&gt;</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=8dfd4b1c-0f7b-438d-9c06-1abd3c2f8aa3">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>To save the animation as a file, uncomment the line below</p>
+<blockquote>
+<p>Note: can take several more minutes to complete</p>
+</blockquote>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=20b92a33-34b6-4c55-8036-99c19a05d251">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[31]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># ani.save('img/animation_wdm_adjoint.gif', fps=60)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body>
+</html>

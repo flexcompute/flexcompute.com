@@ -1,0 +1,198 @@
+.shadow-box {
+    border-radius: 20px;
+    box-shadow: 0 4px 6px 0 rgba(0, 0, 0, 0.05);
+}
+.bright-spot-wrapper {
+    display: flex;
+    flex-wrap: wrap;
+}
+.bright-spot-wrapper .bright-spot {
+    flex: 1;
+    min-width: 270px;
+}
+.bright-spot-wrapper .tidy3d-logo {
+    width: 157px;
+    flex-shrink: 0;
+}
+.bright-spot-wrapper .tidy3d-logo span {
+    flex-basis: 100%;
+    flex-shrink: 0;
+}
+
+.teaching-section .feature-box,
+.education-section .feature-box {
+    min-height: 60px;
+}
+
+.teaching-section .feature-box:hover,
+.education-section .feature-box:hover {
+    border-color: #D9D9D9;
+}
+
+.teaching-section .feature-box >span.index,
+.education-section .feature-box >span.index{
+    flex-shrink: 0;
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    line-height: 20px;
+    text-align: center;
+    color: var(--color-white);
+    border-radius: 10px;
+    background: var(--color-black-1);
+}
+
+.education-section .education-wrapper {
+    display: flex;
+    column-gap: 24px;
+    row-gap: 24px;
+    flex-wrap: wrap;
+}
+
+.education-section .education-wrapper .licenses-plan {
+    width: 370px;
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: 16px;
+}
+
+.education-section .education-wrapper .licenses-plan .license-box{
+    min-width: 350px;
+    flex-shrink: 0;
+
+}
+
+.education-section .education-wrapper .feature-list {
+    flex: 1;
+}
+
+.education-section .customer-box {
+    position: relative;
+    padding: 32px 48px;
+    border-radius: 20px;
+    background: #F6F7FC;
+}
+
+.education-section .customer-box p:before {
+    content: "\201C";
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--color-dark-5);
+}
+
+.education-section .customer-box .link-mask {
+    position: absolute;
+    left: -48px;
+    bottom: 0;
+    width: calc(100% + 48px);
+    height: 150px;
+    border-radius: 0 0 24px 24px;
+    opacity: 0;
+    background: linear-gradient(rgba(255, 255, 255, 0), rgba(255, 255, 255, 1));
+    transition: all .7s ease-out;
+}
+
+.education-section .customer-box:hover .link-mask {
+    display: block;
+    opacity: 1;
+}
+
+.education-section .customer-box .link-mask a {
+    position: absolute;
+    right: 8px;
+    bottom: 8px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 50px;
+    height: 50px;
+    border-radius: 25px;
+    background: var(--color-primary);
+}
+
+.education-section .customer-box .link-mask a i {
+    transform: scale(2, 1.5);
+}
+
+.education-section .license-box {
+    padding: 16px 32px;
+    margin-bottom: 24px;
+    border: 1px solid #9D8653;
+    border-radius: 4px;
+}
+
+.tidy3d-high-performance-box {
+    width: 339px;
+    padding: 35px 16px;
+    background: linear-gradient(#fff,#FCFCFC);
+}
+.university-box {
+    column-gap: 16px;
+    row-gap: 16px;
+}
+.university-box .item {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-shrink: 0;
+    width: 156px;
+    height: 70px;
+    border: 1px solid #D9D9D9;
+    border-radius: 20px;
+    background: linear-gradient(#FFFFFF00,#F4F4F4CC);
+}
+
+.form-area-border {
+    padding: 32px 79px;
+    border: 1px solid #D9D9D9;
+    border-radius: 20px;
+}
+
+.form-group {
+    margin-bottom: 8px;
+}
+
+.form-control.input-height-32 {
+    height: 32px !important;
+    line-height: unset !important;
+    border-radius: 4px !important;
+    padding: 0 8px;
+}
+
+.even-row {
+    transform: translateX(90px);
+}
+.form-area-border .form-row {
+    margin: 0;
+}
+
+@media (max-width: 768px) {
+    .tidy3d-high-performance-box {
+        position: unset !important;
+        width: 100% !important;
+        transform: unset !important;
+    }
+
+    .form-area-border {
+        padding: 16px;
+    }
+
+    .university-box {
+        justify-content: flex-start !important;
+        column-gap: 8px;
+    }
+
+    .university-box .even-row {
+        transform: translateX(0);
+    }
+}
+
+@media (max-width: 992px) {
+    .university-box .even-row {
+        transform: translateX(60px);
+    }
+    .education-section .education-wrapper .licenses-plan {
+        width: 100%;
+    }
+}
+

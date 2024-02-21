@@ -1,0 +1,24 @@
+<div class="col-md-12 {% if include.extra_class %} {{include.extra_class}} {% endif %}  box bg-white shadow pt-30 ">
+
+  {% if site.data.general_settings.recruit_section.steer_text %}
+  <p class="font-size-19 color-dark-gray mb-0">{{ site.data.general_settings.recruit_section.steer_text }}</p>
+  <div class="space15"></div>
+  {% endif %}
+  <div class="apply-action">
+    {% if site.data.general_settings.recruit_section.email %}
+    <a
+        id="{%if include.extra_id%}{{include.extra_id}}{%endif%}"
+        href="mailto:{{include.email | default: site.data.general_settings.recruit_section.email}}"
+        class="mr-10 mb-0 btn btn-s btn-sm btn-dashed-primary btn-dashed-primary-single font-size-14 line-height-18"
+        style="font-weight: 500;"
+    >
+      <i class="icofont-envelope-open"></i>
+      {{ include.email | default: site.data.general_settings.recruit_section.email }}
+    </a>
+    {% endif %}
+    {% if include.extra_linkedin-apply %}
+    {% include linkedin_apply.html %}
+    {%endif%}
+  </div>
+
+</div>

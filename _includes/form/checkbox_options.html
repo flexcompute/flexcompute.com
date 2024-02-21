@@ -1,0 +1,25 @@
+{% if include.extra_data_type %}
+{% case include.extra_data_type %}
+{% when "industry" %}
+{% assign dataSource = site.data.contact_us_options.industry_list  %}
+{% when "flow360_request_types" %}
+{% assign dataSource = site.data.contact_us_options.flow360_request_types %}
+{% when "product_of_interest" %}
+{% assign dataSource = site.data.contact_us_options.product_of_interest %}
+{% when "country" %}
+{% assign dataSource = site.data.contact_us_options.country_list  %}
+{% when "interested" %}
+{% assign dataSource = site.data.contact_us_options.interested_list  %}
+{% else %}
+{% assign dataSource = ''  %}
+{% endcase %}
+<div class="row">
+    {% for data in dataSource %}
+    <div class="col-lg-6 col-md-12 pr-0">
+        <input type="checkbox" name="{{include.extra_data_name}}" id="{{include.extra_data_name}}_{{data.value}}" value="{{data.value}}">
+        <label class="color-dark-6 font-weight-400" for="{{include.extra_data_name}}_{{data.value}}">{{data.label}}</label>
+    </div>
+    {%endfor%}
+</div>
+
+{%endif%}

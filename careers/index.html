@@ -1,0 +1,81 @@
+---
+layout: default
+title: Careers | Flexcompute
+description: At Flexcompute, we're constantly finding new ways to bring innovation to life through simulation.
+tags:
+- Hiring
+- CFD
+- EM
+- Photonics
+- development
+- technical
+author: Flexcompute
+custom_font: font2
+hero_section:
+  enable: true
+  title: Careers
+  description: "At Flexcompute, we're constantly finding new ways to bring innovation to life through simulation. Our team works on the boundary of physics and computing to push the limits of what's possible. The pursuit of excellence drives the technology and its development. If you are looking for a challenging and rewarding career, Flexcompute might be the place for you!"
+  email: hr@flexcompute.com
+  steer_text: 'If you’re interested in joining Flexcompute, please send your application'
+team_section:
+  enable: true
+  title: Our Team
+  sub_title: Our technical team is laser-focused on creating disruptive technology that can transform the industry
+position_section:
+  enable: true
+  title: Open Positions
+---
+
+<div class="content-wrapper">
+  {% include header.html extra_class="absolute transparent" logo_class="logo fc-logo" container_class="container" %}
+  {% if page.hero_section.enable %}
+  <div class="wrapper">
+    <div class="container inner pt-155 pb-50">
+      <div class="careers-container row justify-content-between align-items-start">
+        <div class="careers-des pl-15">
+          {% if page.hero_section.title %}
+          <h1 class="font-size-50 color-dark mb-0">{{ page.hero_section.title }}</h1>
+          <div class="space30"></div>
+          {% endif %}
+          {% if page.hero_section.description %}
+          <p class="font-size-19 color-dark-gray mb-0">{{ page.hero_section.description }}</p>
+          <div class="space55"></div>
+          {% endif %}
+          {% if page.hero_section.steer_text %}
+          {% include sent_email.html extra_class='col-lg-12' extra_id="__pg_careers_email_link_hr" %}
+          {% endif %}
+        </div>
+        {% if page.position_section.enable %}
+        <div class="careers-positions">
+          {% if page.position_section.title %}
+          <h2 class="mb-0 font-size-30 color-dark pr-60">{{ page.position_section.title }}</h2>
+          <div class="space20"></div>
+          {% endif %}
+          <div class="d-flex justify-content-between flex-column" style="row-gap: 16px">
+            {% for item in site.positions %}
+            {% if item.enable %}
+            {% assign itemPosition = item.position_title | upcase | slugify %}
+            <a href="{{ item.url }}" id="__pg_careers_link_{{itemPosition}}">
+              <div class="feature-box p-15 d-flex flex-column justify-content-center" style="min-height: 70px; height: 70px">
+                <span class="author color-dark-3 line-height-17 font-size-12">
+                {%if item.country %}
+                {{item.country}}&nbsp;
+                {%else%}
+                <i class="icofont-location-pin"></i>
+                {%endif%}
+                {{item.site | upcase}}</span>
+                <span class="font-weight-600 color-dark-3">{{ item.position_title }}</span>
+              </div>
+            </a>
+            {% endif %}
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
+  <div class="space50"></div>
+  {% include footer_2.html %}
+</div>

@@ -1,0 +1,82 @@
+{
+  "title": "CFD Essentials - Lecture 2",
+  "pages": [
+    {
+      "id": "",
+      "title": "",
+      "transcript": "Hello, this is Philippe with the second lecture on turbulence. This one will have equations."
+    },
+    {
+      "id": "",
+      "title": "",
+      "paragraphs": [
+        {
+          "title": "",
+          "transcript": "So let's go. Outline: three slides once again. We now expand the Reynolds Averaged Naviers Stokes equations starting from scratch. We will discuss the power and what I call the Paradox of Reynolds Averaging and turbulence modeling. And then we will talk about the intellectual nature of a turbulence model."
+        },
+        {
+          "title": "",
+          "transcript": "So on the right you can see a picture of a solution we have with a conventional turbulence model over a high lift wing. It shows the skin friction and of much interest is the high red skin fiction on the slat and then the dark blue regions which are very low skin friction: that’s separation. This has a lot of influence on the flow, on the forces, on the pitching moment and all that."
+        },
+        {
+          "title": "",
+          "transcript": "So we're asking the turbulence model to predict this very complex three-dimensional flow and to do a decent job in boundary layers around this slat bracket, on the nacelle, on the fuselage. We have a very long fuselage with the boundary layer thickening in the corner region and all that."
+        }
+      ]
+    },
+    {
+      "id": "",
+      "title": "",
+      "paragraphs": [
+        {
+          "title": "",
+          "transcript": "The equations: the true velocity field is three-dimensional and time dependent. This is the one we would have in a direct numerical simulation. I showed you pictures last time. We can assume that it averages in time so $$u(x, y, z, t)$$ becomes capital $$U(x,y,z)$$. We can also use the $$\\overline{u} $$ overline symbol to represent time averaging. In the little figure you can see an example of a turbulent signal and it's average. So we Define the fluctuation $${u}'$$ as a difference between the value of the function at a given time minus its average. Often we write that as $$U+{u}’$$, we also have the property that the time average of $$u’=0$$."
+        },
+        {
+          "title": "",
+          "transcript": "Let's take the incompressible Navier-Stokes equations and average them. The continuity condition $$\\delta u_i/\\delta x_i$$ with a summation over I, i.e over $$(x, y, z)$$ is this. It is linear, so for its average you just switch from lowercase $$u_i$$ to uppercase $$U_i$$.There is no change. So now let's look at the momentum equation: The material derivative of $$u_i$$ which is the linear derivative plus a convection term is made up of the pressure term and the viscous term. Let's average this and the time derivative goes away. The pressure term looks just like before for the continuity condition. We just put an overline over $$p$$."
+        },
+        {
+          "title": "",
+          "transcript": "And the same thing for the viscous term, which is linear. It just goes from value $$u_i$$ to capital $$U_i$$. This is when things get interesting, notice that this nonlinear convection term gives you first a term that looks like the old one but with capitals and also what we put on the right hand side: the term that contains the products of the fluctuations averaged over time. So this quantity created by nonlinearities is called the Reynolds stress and it's the entire object of turbulence modeling to represent the Reynolds stress. Now, with my partners at Nasa we did some cases in which we solved this equation for Capital $$U_i$$, took the Reynolds stress of the DNS, just added it to the right hand side and then we got the mean field of the DNS just fine."
+        }
+      ]
+    },
+    {
+      "id": "",
+      "title": "",
+      "paragraphs": [
+        {
+          "title": "",
+          "transcript": "Okay, so turbulence modeling. You know that its power is that it goes from this very complex simulation to a thorough field that is steady and often has fewer dimensions. So in this case we go from $$u(x, y, z, t)$$ to an average which is only a function of $$X$$ and $$Y$$, $$u(x, y)$$. But we need those Reynolds stresses. One way is to describe the Reynolds Averaged flow as a flow of a fluid with some very strange internal stresses, you know, worse than a non Newtonian fluid for instance."
+        },
+        {
+          "title": "",
+          "transcript": "Now the stresses are not a property of the fluid unlike the viscous stresses. They depend on the entire history of the flow. In this case, you can tell that this flow is unsteady. There's shedding of vortices and also a lot of dependence on the third direction. The job of a turbulence model is to give these stresses which are hidden inside the time averaging, the third direction and all that, while knowing only $$U(x,y)$$. So hoping for a rigorous approximation is not reasonable. This is why, for a hundred years since the days of Prandtl, turbulence modeling has been empirical and will never be perfect."
+        }
+      ]
+    },
+    {
+      "id": "",
+      "title": "",
+      "paragraphs": [
+        {
+          "title": "",
+          "transcript": "This is what I call the intellectual nature of a turbulence model. First of all, we're trying to serve the field of CFD. What they need in the solver is a simple and local mathematical model for these Reynolds stresses. So the most common way to produce them is the artificial concept of an added viscosity due to Boussinesq in which the Reynolds stress is equal to the eddy viscosity times the strain tensor. It's like the molecular viscous term, but now with an eddy viscosity that will come from somewhere else. $$\\nu_t$$ is much larger then $$\\nu_,$$. Again, it is a property of the flow which is different in a channel versus past a circular cylinder etc."
+        },
+        {
+          "title": "",
+          "transcript": "Not to be partial but I'll give you the simplest model that is in common use: the S-A model of ‘92 and I'm just showing you the basic form in the boundary layer and away from the wall. So I created an equation that gives you the evolution of $$\\nu_t$$. It has terms of three nature, y is the distance from the wall, $$U$$ is the velocity of the mean flow. There's a production term: the shearing $$\\delta u/\\delta y$$ creates turbulence. We know that. It directly just multiplies $$\\nu_t$$. Then we have the wall destruction term or wall confinement term which represents the fact that eddies that are tumbling along the wall cannot get larger than the distance from the wall. So when y is small it's going to draw down the eddy viscosity, that's why we have a negative sign."
+        },
+        {
+          "title": "",
+          "transcript": "Then we have a diffusion term which is made of two parts, the first part is kind of a classical representation: viscous terms with the eddy viscosity doing the mixing. Then we add a term that comes out of the human mind and has this derivative, ie. the gradient of $$\\nu_t^2$$. All of these were picked to have the right dimensions. Then the $$\\sigma$$ and the $$c$$ constants were adjusted to work on a few simple cases like a wake kind of mixing layer and a boundary layer."
+        },
+        {
+          "title": "",
+          "transcript": "Now, the idea of going to one equation models goes to Baldwin and Barth at Nasa around the late ‘80s. The SA model wouldn't exist without them. And then I found that it has much in common with the Russian model of Secundov called $$\\nu_t-92$$ that nobody knew about in the West. This model has been quite useful, and I've also put a lot of improvements on it, but in the basic form, as of today, the $$c_{b1}^\\ $$ one constant is exactly the same as it was in ‘92. Other common models have two equations, like K-Epsilon and K-Omega. Some have seven equations, they are the more elaborate models. They have directly an equation for each of the 6 Reynolds stresses and one for the dissipation. There's no eddy viscosity. I will get back to those later. Thank you."
+        }
+      ]
+    }
+  ]
+}

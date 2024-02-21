@@ -1,0 +1,67 @@
+<footer class="{% if include.extra_class %} {{include.extra_class}} {% else %} wrapper {% endif %} bg-opacity-default">
+    <div class="container">
+        <hr class="reset-hr">
+        <div class="space80 footer-space"></div>
+        <div class="row justify-content-between">
+            <div class="col-md-12 col-lg-4 pr-0 text-left text-lg-left">
+                <div class="widget">
+                    {% if include.light_logo == "true" %}
+                    <img width="180" height="23" src="{{site.data.general_settings.light_logo_1x}}" alt="{{site.data.general_settings.title}}"/>
+                    {% else %}
+                    <img width="180" height="23" src="{{site.data.general_settings.black_logo_1x}}" alt="{{site.data.general_settings.title}}"/>
+                    {% endif %}
+                </div>
+                <div class="space30"></div>
+                {% include mail_chimp.html %}
+                <div class="space30"></div>
+                <div class="d-flex">
+                    {% include channel.html %}
+                </div>
+                <!-- /.widget -->
+            </div>
+            <div class="col-md-12 col-lg-8 row justify-content-start">
+                {% for menu in site.data.site_map.main_menu %}
+                {% if menu.footer_enable %}
+                <div class="col-6 {{menu.footer_class}} pr-0">
+                    <div class="widget">
+                        {% if menu.text %}
+                        <span class="widget-title color-dark font-weight-600">
+                            {% if menu.submenu %}
+                            {{menu.text}}
+                            {% else %}
+                            <a class="color-dark" href="{{menu.url}}">{{menu.text}}</a>
+                            {% endif %}
+                        </span>
+                        {% endif %}
+                        <ul class="list-unstyled mb-0">
+                            {% for sub_menu in menu.submenu %}
+                            {% unless sub_menu.footer_hide %}
+                            <li><a class="color-dark-gray" id="__g_footer_{{sub_menu.click_id}}" target="{{sub_menu.target}}" href="{{sub_menu.url}}">{{sub_menu.text}}</a></li>
+                            {% endunless %}
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    <!-- /.widget -->
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+        <!-- /.row -->
+    </div>
+    <!-- /.container -->
+    <div class="space100"></div>
+    <div class="container inner pt-0 pb-40 d-flex align-items-center justify-content-between">
+        <ul class="social social-mute social-s">
+            {% for link in site.data.general_settings.footer_links %}
+            {% if link.url %}
+            <li>
+                <a id="{{link.id}}" class="color-dark" href="{{link.url}}">
+                    <span class="mb-0 mr-auto" style="font-size: 14px;">{{ link.text }}</span></a></li>
+            {% else %}
+            <li><span class="mb-0 mr-auto" style="font-size: 14px;">{{ link.text }}</span></li>
+            {% endif %}
+            {% endfor %}
+        </ul>
+    </div>
+</footer>

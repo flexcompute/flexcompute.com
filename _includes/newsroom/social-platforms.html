@@ -1,0 +1,31 @@
+{% assign socialPlatform = site.data.newsroom.social_platforms %}
+
+{% if socialPlatform.enable %}
+<section>
+  <h2>{{socialPlatform.title | default: 'Social Platforms'}}</h2>
+  {% for platform in socialPlatform.list %}
+  <div id="__pg_newsroom_social-platform_{{platform.title | slugify}}_card_link" class="d-flex flex-wrap align-items-center feature-box pt-16 pb-16 pl-32 pr-32 mb-15 column-gap-32 social-platforms" onclick="window.open('{{platform.link}}', '_blank')">
+    <div class="thumbnail border-1 position-relative border-radius-8" style="width: 160px; height: 82px">
+      {% if platform.thumbnail %}
+      <img width="160" height="80" src="{{platform.thumbnail}}" alt="{{platform.title}}" style="object-fit: contain">
+      {% endif %}
+      {% if platform.social_icon %}
+      <img class="position-absolute social-platform-icon" width="28" src="{{platform.social_icon}}" alt="{{platform.name | default: platform.title}}">
+      {% endif %}
+    </div>
+    <div class="post-content">
+      <span class="date font-size-14" style="color: #999999"><i class="jam jam-clock"></i>{{platform.date | date_to_string}}</span>
+      <h3 class="post-title font-size-20 line-height-24 mb-0">
+        <a target="_blank" id="__pg_newsroom_social-platform_{{platform.title | slugify}}_link" href="{{platform.link}}" class="color-dark-3 color-primary-hover" onclick="stopPropagation()">{{platform.title}}</a>
+      </h3>
+      {% if platform.authors != nil %}
+      {% assign authorSize = platform.authors | size%}
+      {% if authorSize>0  %}
+      <span class="author mr-20 font-size-14" style="color: #787878"><i class="jam jam-user"></i>By {{platform.authors}}</span>
+      {% endif %}
+      {% endif %}
+    </div>
+  </div>
+  {% endfor %}
+</section>
+{% endif %}

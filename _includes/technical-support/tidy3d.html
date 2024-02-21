@@ -1,0 +1,119 @@
+{% include hs-form-loading.html %}
+<div class="hubspot-form-wrapper">
+  <script type="module">
+    import { HbsptUtils, FileListItems } from '/assets/js/hubspot-form-utils.js';
+    const Tidy3DSupport = {
+      imageList: [],
+      MAX_UPLOAD: 2,
+      EACH_IMAGE_SIZE: 10,
+      imageUploadControl: (form) => {
+        const fileControl = $(form).find("input[name='attachments']");
+        return fileControl[0]
+      },
+      getPreviewPosition:(inputElement)=>{
+        const parentDiv = inputElement.parentNode;
+        const labelElement = $(parentDiv).children('label');
+        return labelElement[0]
+      },
+      updateImageValue: (form) => {
+        const previewWrapper = document.querySelector('.hs-form-file-preview')
+        if (!previewWrapper) return
+        if (Tidy3DSupport.imageList.length>0){
+          previewWrapper.style.display = 'block'
+        }else {
+          previewWrapper.style.display = 'none'
+        }
+        const fileControl = Tidy3DSupport.imageUploadControl(form)
+        fileControl.files = new FileListItems(Tidy3DSupport.imageList.filter(item=>!item.tips))
+      },
+      handleImageUpload: (event, form) => {
+        const files = event.target.files;
+        let verifyFieldElement = Tidy3DSupport.imageUploadControl(form);
+
+        if (
+          files.length + Tidy3DSupport.imageList.length > Tidy3DSupport.MAX_UPLOAD
+        ){
+          if (Tidy3DSupport.imageList.length){
+            HbsptUtils.setValidationFailureMsg(verifyFieldElement.parentNode, "Enter an integer value.");
+          }
+          event.stopPropagation();
+          event.preventDefault();
+          return
+        }
+        HbsptUtils.setValidationFailureMsg(verifyFieldElement.parentNode, "");
+        const filedDom = event.target.parentElement;
+        const previewDiv = Tidy3DSupport.getPreviewPosition(filedDom)
+        let previewWrapper = filedDom?.parentNode?.querySelector('.hs-form-file-preview')
+        if (!previewWrapper) {
+          previewWrapper = document.createElement("div");
+          previewWrapper.setAttribute('class', "hs-form-file-preview image-file");
+        }
+        for (let i = 0; i < files.length; i++) {
+          const currentFile = files[i];
+          const size = currentFile.size / 1024 / 1024;
+          if (size > Tidy3DSupport.EACH_IMAGE_SIZE) {
+            currentFile['tips'] = `The size of image should be no greater than ${Tidy3DSupport.EACH_IMAGE_SIZE} MB.`
+          }
+          Tidy3DSupport.imageList.push(currentFile)
+          const dom = HbsptUtils.filePreview(currentFile, () => {
+            const index = Tidy3DSupport.imageList.findIndex(item=>item === currentFile)
+            Tidy3DSupport.imageList.splice(index,1)
+            Tidy3DSupport.removeFile(form)
+          });
+          previewWrapper.append(dom);
+        }
+        $(previewDiv).after(previewWrapper);
+        Tidy3DSupport.updateImageValue(form)
+      },
+      removeFile: (form) => {
+        $(form).find("input[name='attachments']").change()
+        Tidy3DSupport.updateImageValue(form)
+      },
+      setDefaultSource: (form) => {
+        const sourceControl = $(form).find('input[name="source"]')
+        if (!sourceControl.length) return;
+        const urlOption = HbsptUtils.getURLOptions();
+        if (urlOption && urlOption.site === 'kb'){
+          sourceControl.val("kb site").change()
+        }else {
+          sourceControl.val("marketing site").change()
+        }
+      }
+      /*handleFormSubmit:(e, form)=>{
+        const fileControl = Tidy3DSupport.imageUploadControl(form);
+        console.log(fileControl.files);
+      }*/
+    }
+    hbspt.forms.create({
+      region: "na1",
+      portalId: "43542601",
+      formId: "aa3d2440-7110-436d-9443-5f3f54d2d8b6",
+      redirectUrl:'/tidy3d/technical-support/thankyou/',
+      onFormReady: $form => {
+        const form = $form[0]
+        if (!form) return;
+        HbsptUtils.removeLoading();
+        HbsptUtils.setInputMaxLength(form, [
+          { name: "summary", length: 255 },
+          { name: "description", length: 5000 },
+          { name: "tidy3d_version", length: 255 },
+          { name: "firstname", length: 255 },
+          { name: "lastname", length: 255 },
+          { name: "email", length: 255 },
+        ])
+        Tidy3DSupport.setDefaultSource(form)
+        const imageUploadDom = form.querySelector('input[name="attachments"]');
+        imageUploadDom.setAttribute('accept', 'image/jpeg,image/jpg,image/png,image/gif');
+        imageUploadDom?.addEventListener('change', (e) => Tidy3DSupport.handleImageUpload(e, form))
+        // const submitBtn = form.querySelector('input[type="submit"]')
+        // submitBtn?.addEventListener('click', e => Tidy3DSupport.handleFormSubmit(e, form), false)
+      },
+      onFormSubmit: $form => {
+        const form = $form[0]
+        HbsptUtils.setSubmittedDate(form)
+        const submitBtn = form.querySelector('input[type="submit"]')
+        HbsptUtils.setSubmitLoading(submitBtn)
+      }
+    });
+  </script>
+</div>

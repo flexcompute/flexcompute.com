@@ -1,0 +1,2693 @@
+example_menus:
+- enable: true
+  enable_more_examples: false
+  line: 13
+  menus:
+  - category: Tidy3D Basics
+    enable: true
+    enable_more_examples: false
+    more_examples:
+    - name: Tidy3D first walkthrough
+      path: notebooks/Simulation/
+    - name: Introduction on Tidy3D working principles
+      path: notebooks/Primer/
+    - name: How to troubleshoot a diverged FDTD simulation
+      path: notebooks/DivergedFDTDSimulation/
+    name: Quickstart
+    pagination:
+      next: &id001
+        name: Tidy3D first walkthrough
+        path: notebooks/Simulation/
+      previous: false
+    path: notebooks/StartHere/
+    type: python-tutorial
+  - category: Tidy3D Basics
+    enable: true
+    enable_more_examples: false
+    more_examples:
+    - name: Introduction on Tidy3D working principles
+      path: notebooks/Primer/
+    - name: Running simulations through the cloud
+      path: notebooks/WebAPI/
+    - name: How to troubleshoot a diverged FDTD simulation
+      path: notebooks/DivergedFDTDSimulation/
+    name: Tidy3D first walkthrough
+    pagination:
+      next: &id002
+        name: Introduction on Tidy3D working principles
+        path: notebooks/Primer/
+      previous:
+        name: Quickstart
+        path: notebooks/StartHere/
+    path: notebooks/Simulation/
+    type: python-tutorial
+  - category: Tidy3D Basics
+    enable: true
+    enable_more_examples: false
+    more_examples:
+    - name: Quickstart
+      path: notebooks/StartHere/
+    - name: Tidy3D first walkthrough
+      path: notebooks/Simulation/
+    - name: How to troubleshoot a diverged FDTD simulation
+      path: notebooks/DivergedFDTDSimulation/
+    name: Introduction on Tidy3D working principles
+    pagination:
+      next: &id003
+        name: Running simulations through the cloud
+        path: notebooks/WebAPI/
+      previous: *id001
+    path: notebooks/Primer/
+    type: python-tutorial
+  - category: Tidy3D Basics
+    enable: true
+    enable_more_examples: false
+    more_examples:
+    - name: Quickstart
+      path: notebooks/StartHere/
+    - name: Introduction on Tidy3D working principles
+      path: notebooks/Primer/
+    - name: How to troubleshoot a diverged FDTD simulation
+      path: notebooks/DivergedFDTDSimulation/
+    name: Running simulations through the cloud
+    pagination:
+      next: &id004
+        name: How to troubleshoot a diverged FDTD simulation
+        path: notebooks/DivergedFDTDSimulation/
+      previous: *id002
+    path: notebooks/WebAPI/
+    type: python-tutorial
+  - category: Tidy3D Basics
+    enable: true
+    enable_more_examples: false
+    more_examples:
+    - name: Quickstart
+      path: notebooks/StartHere/
+    - name: Tidy3D first walkthrough
+      path: notebooks/Simulation/
+    - name: Running simulations through the cloud
+      path: notebooks/WebAPI/
+    name: How to troubleshoot a diverged FDTD simulation
+    pagination:
+      next: &id005
+        name: Modeling dispersive materials
+        path: notebooks/Dispersion/
+      previous: *id003
+    path: notebooks/DivergedFDTDSimulation/
+    type: python-tutorial
+  title: Tidy3D Basics
+  type: python-tutorial
+- enable: true
+  enable_more_examples: false
+  line: 25
+  menus:
+  - enable: true
+    enable_more_examples: false
+    line: 28
+    menus:
+    - category: Mediums
+      enable: true
+      enable_more_examples: false
+      more_examples:
+      - name: Defining fully anisotropic materials
+        path: notebooks/FullyAnisotropic/
+      - name: Defining gyrotropic materials
+        path: notebooks/Gyrotropic/
+      - name: Defining spatially-varying dielectric structures
+        path: notebooks/CustomMediumTutorial/
+      name: Modeling dispersive materials
+      pagination:
+        next: &id006
+          name: Fitting dispersive material models
+          path: notebooks/Fitting/
+        previous: *id004
+      path: notebooks/Dispersion/
+      type: python-tutorial
+    - category: Mediums
+      enable: true
+      enable_more_examples: false
+      more_examples:
+      - name: Defining fully anisotropic materials
+        path: notebooks/FullyAnisotropic/
+      - name: Defining spatially-varying dielectric structures
+        path: notebooks/CustomMediumTutorial/
+      - name: Applying time modulation to materials
+        path: notebooks/TimeModulationTutorial/
+      name: Fitting dispersive material models
+      pagination:
+        next: &id007
+          name: Defining fully anisotropic materials
+          path: notebooks/FullyAnisotropic/
+        previous: *id005
+      path: notebooks/Fitting/
+      type: python-tutorial
+    - category: Mediums
+      enable: true
+      enable_more_examples: false
+      more_examples:
+      - name: Modeling dispersive materials
+        path: notebooks/Dispersion/
+      - name: Defining gyrotropic materials
+        path: notebooks/Gyrotropic/
+      - name: Defining spatially-varying dielectric structures
+        path: notebooks/CustomMediumTutorial/
+      name: Defining fully anisotropic materials
+      pagination:
+        next: &id008
+          name: Defining gyrotropic materials
+          path: notebooks/Gyrotropic/
+        previous: *id006
+      path: notebooks/FullyAnisotropic/
+      type: python-tutorial
+    - category: Mediums
+      enable: true
+      enable_more_examples: false
+      more_examples:
+      - name: Modeling dispersive materials
+        path: notebooks/Dispersion/
+      - name: Defining fully anisotropic materials
+        path: notebooks/FullyAnisotropic/
+      - name: Applying time modulation to materials
+        path: notebooks/TimeModulationTutorial/
+      name: Defining gyrotropic materials
+      pagination:
+        next: &id009
+          name: Defining spatially-varying dielectric structures
+          path: notebooks/CustomMediumTutorial/
+        previous: *id007
+      path: notebooks/Gyrotropic/
+      type: python-tutorial
+    - category: Mediums
+      enable: true
+      enable_more_examples: false
+      more_examples:
+      - name: Fitting dispersive material models
+        path: notebooks/Fitting/
+      - name: Defining fully anisotropic materials
+        path: notebooks/FullyAnisotropic/
+      - name: Defining gyrotropic materials
+        path: notebooks/Gyrotropic/
+      name: Defining spatially-varying dielectric structures
+      pagination:
+        next: &id010
+          name: Applying time modulation to materials
+          path: notebooks/TimeModulationTutorial/
+        previous: *id008
+      path: notebooks/CustomMediumTutorial/
+      type: python-tutorial
+    - category: Mediums
+      enable: true
+      enable_more_examples: false
+      more_examples:
+      - name: Fitting dispersive material models
+        path: notebooks/Fitting/
+      - name: Defining fully anisotropic materials
+        path: notebooks/FullyAnisotropic/
+      - name: Defining spatially-varying dielectric structures
+        path: notebooks/CustomMediumTutorial/
+      name: Applying time modulation to materials
+      pagination:
+        next: &id011
+          name: Importing GDS files
+          path: notebooks/GDSImport/
+        previous: *id009
+      path: notebooks/TimeModulationTutorial/
+      type: python-tutorial
+    title: Mediums
+    type: python-tutorial
+  - enable: true
+    enable_more_examples: false
+    line: 41
+    menus:
+    - category: Structures
+      enable: true
+      enable_more_examples: false
+      more_examples:
+      - name: Defining common integrated photonic components
+        path: notebooks/PICComponents/
+      - name: Defining common photonic crystal structures
+        path: notebooks/PhotonicCrystalsComponents/
+      - name: Defining complex geometries using trimesh
+        path: notebooks/CreatingGeometryUsingTrimesh/
+      name: Importing GDS files
+      pagination:
+        next: &id012
+          name: Importing STL files
+          path: notebooks/STLImport/
+        previous: *id010
+      path: notebooks/GDSImport/
+      type: python-tutorial
+    - category: Structures
+      enable: true
+      enable_more_examples: false
+      more_examples:
+      - name: Importing GDS files
+        path: notebooks/GDSImport/
+      - name: Defining self-intersecting polygons
+        path: notebooks/SelfIntersectingPolyslab/
+      - name: Defining complex geometries using trimesh
+        path: notebooks/CreatingGeometryUsingTrimesh/
+      name: Importing STL files
+      pagination:
+        next: &id013
+          name: Defining self-intersecting polygons
+          path: notebooks/SelfIntersectingPolyslab/
+        previous: *id011
+      path: notebooks/STLImport/
+      type: python-tutorial
+    - category: Structures
+      enable: true
+      enable_more_examples: false
+      more_examples:
+      - name: Importing STL files
+        path: notebooks/STLImport/
+      - name: Defining common integrated photonic components
+        path: notebooks/PICComponents/
+      - name: Defining common photonic crystal structures
+        path: notebooks/PhotonicCrystalsComponents/
+      name: Defining self-intersecting polygons
+      pagination:
+        next: &id014
+          name: Defining common integrated photonic components
+          path: notebooks/PICComponents/
+        previous: *id012
+      path: notebooks/SelfIntersectingPolyslab/
+      type: python-tutorial
+    - category: Structures
+      enable: true
+      enable_more_examples: false
+      more_examples:
+      - name: Importing GDS files
+        path: notebooks/GDSImport/
+      - name: Importing STL files
+        path: notebooks/STLImport/
+      - name: Defining self-intersecting polygons
+        path: notebooks/SelfIntersectingPolyslab/
+      name: Defining common integrated photonic components
+      pagination:
+        next: &id015
+          name: Defining common photonic crystal structures
+          path: notebooks/PhotonicCrystalsComponents/
+        previous: *id013
+      path: notebooks/PICComponents/
+      type: python-tutorial
+    - category: Structures
+      enable: true
+      enable_more_examples: false
+      more_examples:
+      - name: Importing STL files
+        path: notebooks/STLImport/
+      - name: Defining common integrated photonic components
+        path: notebooks/PICComponents/
+      - name: Defining complex geometries using trimesh
+        path: notebooks/CreatingGeometryUsingTrimesh/
+      name: Defining common photonic crystal structures
+      pagination:
+        next: &id016
+          name: Defining complex geometries using trimesh
+          path: notebooks/CreatingGeometryUsingTrimesh/
+        previous: *id014
+      path: notebooks/PhotonicCrystalsComponents/
+      type: python-tutorial
+    - category: Structures
+      enable: true
+      enable_more_examples: false
+      more_examples:
+      - name: Importing GDS files
+        path: notebooks/GDSImport/
+      - name: Importing STL files
+        path: notebooks/STLImport/
+      - name: Defining common photonic crystal structures
+        path: notebooks/PhotonicCrystalsComponents/
+      name: Defining complex geometries using trimesh
+      pagination:
+        next: &id017
+          name: Using automatic nonuniform meshing
+          path: notebooks/AutoGrid/
+        previous: *id015
+      path: notebooks/CreatingGeometryUsingTrimesh/
+      type: python-tutorial
+    title: Structures
+    type: python-tutorial
+  - enable: true
+    enable_more_examples: false
+    line: 54
+    menus:
+    - category: Grid Specification
+      enable: true
+      enable_more_examples: false
+      more_examples:
+      - name: Defining fully anisotropic materials
+        path: notebooks/FullyAnisotropic/
+      - name: Heat solver
+        path: notebooks/HeatSolver/
+      - name: Multi-objective adjoint optimization
+        path: notebooks/AdjointPlugin4MultiObjective/
+      name: Using automatic nonuniform meshing
+      pagination:
+        next: &id018
+          name: Defining and using symmetries
+          path: notebooks/Symmetry/
+        previous: *id016
+      path: notebooks/AutoGrid/
+      type: python-tutorial
+    title: Grid Specification
+    type: python-tutorial
+  - enable: true
+    enable_more_examples: false
+    line: 62
+    menus:
+    - category: Symmetry and Boundary Conditions
+      enable: true
+      enable_more_examples: false
+      more_examples:
+      - name: Setting up boundary conditions
+        path: notebooks/BoundaryConditions/
+      - name: Inverse design integrated with circuit simulation
+        path: notebooks/AdjointPlugin11CircuitMZI/
+      - name: Injecting modes in bent and angled waveguides
+        path: notebooks/ModesBentAngled/
+      name: Defining and using symmetries
+      pagination:
+        next: &id019
+          name: Setting up boundary conditions
+          path: notebooks/BoundaryConditions/
+        previous: *id017
+      path: notebooks/Symmetry/
+      thumbnail:
+        description: Defining and using symmetries
+        image: /assets/tidy3d/examples/image/pec_pmc.png
+      type: python-tutorial
+    - category: Symmetry and Boundary Conditions
+      enable: true
+      enable_more_examples: false
+      more_examples:
+      - name: Defining and using symmetries
+        path: notebooks/Symmetry/
+        thumbnail:
+          description: Defining and using symmetries
+          image: /assets/tidy3d/examples/image/pec_pmc.png
+      - name: Defining common photonic crystal structures
+        path: notebooks/PhotonicCrystalsComponents/
+      - name: Building a simple, Python-based GUI for Tidy3D
+        path: notebooks/WaveguideBendSimulator/
+        thumbnail:
+          description: Building a simple, Python-based GUI for Tidy3D
+          image: /assets/tidy3d/examples/image/tkinter_gui.png
+      name: Setting up boundary conditions
+      pagination:
+        next: &id020
+          name: Defining mode sources and monitors
+          path: notebooks/ModalSourcesMonitors/
+        previous: *id018
+      path: notebooks/BoundaryConditions/
+      type: python-tutorial
+    title: Symmetry and Boundary Conditions
+    type: python-tutorial
+  - enable: true
+    enable_more_examples: false
+    line: 71
+    menus:
+    - category: Sources
+      enable: true
+      enable_more_examples: false
+      more_examples:
+      - name: Injecting modes in bent and angled waveguides
+        path: notebooks/ModesBentAngled/
+      - name: Defining a total-field scattered-field (TFSF) plane wave source
+        path: notebooks/TFSF/
+      - name: Defining spatially-varying sources
+        path: notebooks/CustomFieldSource/
+      name: Defining mode sources and monitors
+      pagination:
+        next: &id021
+          name: Injecting modes in bent and angled waveguides
+          path: notebooks/ModesBentAngled/
+        previous: *id019
+      path: notebooks/ModalSourcesMonitors/
+      type: python-tutorial
+    - category: Sources
+      enable: true
+      enable_more_examples: false
+      more_examples:
+      - name: Defining mode sources and monitors
+        path: notebooks/ModalSourcesMonitors/
+      - name: Defining a total-field scattered-field (TFSF) plane wave source
+        path: notebooks/TFSF/
+      - name: Defining spatially-varying sources
+        path: notebooks/CustomFieldSource/
+      name: Injecting modes in bent and angled waveguides
+      pagination:
+        next: &id022
+          name: Defining a total-field scattered-field (TFSF) plane wave source
+          path: notebooks/TFSF/
+        previous: *id020
+      path: notebooks/ModesBentAngled/
+      type: python-tutorial
+    - category: Sources
+      enable: true
+      enable_more_examples: false
+      more_examples:
+      - name: Defining mode sources and monitors
+        path: notebooks/ModalSourcesMonitors/
+      - name: Injecting modes in bent and angled waveguides
+        path: notebooks/ModesBentAngled/
+      - name: Defining spatially-varying sources
+        path: notebooks/CustomFieldSource/
+      name: Defining a total-field scattered-field (TFSF) plane wave source
+      pagination:
+        next: &id023
+          name: Defining spatially-varying sources
+          path: notebooks/CustomFieldSource/
+        previous: *id021
+      path: notebooks/TFSF/
+      type: python-tutorial
+    - category: Sources
+      enable: true
+      enable_more_examples: false
+      more_examples:
+      - name: Defining mode sources and monitors
+        path: notebooks/ModalSourcesMonitors/
+      - name: Injecting modes in bent and angled waveguides
+        path: notebooks/ModesBentAngled/
+      - name: Defining a total-field scattered-field (TFSF) plane wave source
+        path: notebooks/TFSF/
+      name: Defining spatially-varying sources
+      pagination:
+        next: &id024
+          name: Visualizing geometries in Tidy3D
+          path: notebooks/VizSimulation/
+        previous: *id022
+      path: notebooks/CustomFieldSource/
+      type: python-tutorial
+    title: Sources
+    type: python-tutorial
+  - enable: true
+    enable_more_examples: false
+    line: 82
+    menus:
+    - category: Data Visualization and Postprocessing
+      enable: true
+      enable_more_examples: false
+      more_examples:
+      - name: Performing visualization of simulation data
+        path: notebooks/VizData/
+      - name: Advanced monitor data manipulation and visualization
+        path: notebooks/XarrayTutorial/
+      - name: Creating FDTD animations
+        path: notebooks/AnimationTutorial/
+      name: Visualizing geometries in Tidy3D
+      pagination:
+        next: &id025
+          name: Performing visualization of simulation data
+          path: notebooks/VizData/
+        previous: *id023
+      path: notebooks/VizSimulation/
+      type: python-tutorial
+    - category: Data Visualization and Postprocessing
+      enable: true
+      enable_more_examples: false
+      more_examples:
+      - name: Visualizing geometries in Tidy3D
+        path: notebooks/VizSimulation/
+      - name: Creating FDTD animations
+        path: notebooks/AnimationTutorial/
+      - name: Performing near field to far field projections
+        path: notebooks/FieldProjections/
+      name: Performing visualization of simulation data
+      pagination:
+        next: &id026
+          name: Advanced monitor data manipulation and visualization
+          path: notebooks/XarrayTutorial/
+        previous: *id024
+      path: notebooks/VizData/
+      type: python-tutorial
+    - category: Data Visualization and Postprocessing
+      enable: true
+      enable_more_examples: false
+      more_examples:
+      - name: Performing visualization of simulation data
+        path: notebooks/VizData/
+      - name: Creating FDTD animations
+        path: notebooks/AnimationTutorial/
+      - name: Performing near field to far field projections
+        path: notebooks/FieldProjections/
+      name: Advanced monitor data manipulation and visualization
+      pagination:
+        next: &id027
+          name: Creating FDTD animations
+          path: notebooks/AnimationTutorial/
+        previous: *id025
+      path: notebooks/XarrayTutorial/
+      type: python-tutorial
+    - category: Data Visualization and Postprocessing
+      enable: true
+      enable_more_examples: false
+      more_examples:
+      - name: Performing visualization of simulation data
+        path: notebooks/VizData/
+      - name: Advanced monitor data manipulation and visualization
+        path: notebooks/XarrayTutorial/
+      - name: Performing near field to far field projections
+        path: notebooks/FieldProjections/
+      name: Creating FDTD animations
+      pagination:
+        next: &id028
+          name: Performing near field to far field projections
+          path: notebooks/FieldProjections/
+        previous: *id026
+      path: notebooks/AnimationTutorial/
+      type: python-tutorial
+    - category: Data Visualization and Postprocessing
+      enable: true
+      enable_more_examples: false
+      more_examples:
+      - name: Performing visualization of simulation data
+        path: notebooks/VizData/
+      - name: Advanced monitor data manipulation and visualization
+        path: notebooks/XarrayTutorial/
+      - name: Creating FDTD animations
+        path: notebooks/AnimationTutorial/
+      name: Performing near field to far field projections
+      pagination:
+        next: &id029
+          name: Using the mode solver for optical mode analysis
+          path: notebooks/ModeSolver/
+        previous: *id027
+      path: notebooks/FieldProjections/
+      type: python-tutorial
+    title: Data Visualization and Postprocessing
+    type: python-tutorial
+  - enable: true
+    enable_more_examples: false
+    line: 94
+    menus:
+    - category: Mode Solver
+      enable: true
+      enable_more_examples: false
+      more_examples:
+      - name: Using the waveguide plugin to analyze waveguide modes
+        path: notebooks/WaveguidePluginDemonstration/
+      - name: Defining spatially-varying sources
+        path: notebooks/CustomFieldSource/
+      - name: Defining and using symmetries
+        path: notebooks/Symmetry/
+        thumbnail:
+          description: Defining and using symmetries
+          image: /assets/tidy3d/examples/image/pec_pmc.png
+      name: Using the mode solver for optical mode analysis
+      pagination:
+        next: &id030
+          name: Using the waveguide plugin to analyze waveguide modes
+          path: notebooks/WaveguidePluginDemonstration/
+        previous: *id028
+      path: notebooks/ModeSolver/
+      type: python-tutorial
+    - category: Mode Solver
+      enable: true
+      enable_more_examples: false
+      more_examples:
+      - name: Using the mode solver for optical mode analysis
+        path: notebooks/ModeSolver/
+      - name: Adjoint inverse design of a quantum emitter light extractor
+        path: notebooks/AdjointPlugin12LightExtractor/
+      - name: Performing parallel / batch processing of simulations
+        path: notebooks/ParameterScan/
+      name: Using the waveguide plugin to analyze waveguide modes
+      pagination:
+        next: &id031
+          name: Performing parallel / batch processing of simulations
+          path: notebooks/ParameterScan/
+        previous: *id029
+      path: notebooks/WaveguidePluginDemonstration/
+      type: python-tutorial
+    title: Mode Solver
+    type: python-tutorial
+  - enable: true
+    enable_more_examples: false
+    line: 103
+    menus:
+    - category: Parameter Sweep
+      enable: true
+      enable_more_examples: false
+      more_examples:
+      - name: Defining spatially-varying dielectric structures
+        path: notebooks/CustomMediumTutorial/
+      - name: Importing STL files
+        path: notebooks/STLImport/
+      - name: Parameterized level set optimization of a y-branch
+        path: notebooks/AdjointPlugin10YBranchLevelSet/
+      name: Performing parallel / batch processing of simulations
+      pagination:
+        next: &id032
+          name: Computing the scattering matrix of a device
+          path: notebooks/SMatrix/
+        previous: *id030
+      path: notebooks/ParameterScan/
+      type: python-tutorial
+    title: Parameter Sweep
+    type: python-tutorial
+  - enable: true
+    enable_more_examples: false
+    line: 111
+    menus:
+    - category: Scattering Matrix
+      enable: true
+      enable_more_examples: false
+      more_examples:
+      - name: Importing GDS files
+        path: notebooks/GDSImport/
+      - name: Defining complex geometries using trimesh
+        path: notebooks/CreatingGeometryUsingTrimesh/
+      - name: Modeling dispersive materials
+        path: notebooks/Dispersion/
+      name: Computing the scattering matrix of a device
+      pagination:
+        next: &id033
+          name: Extracting resonance information using Resonance Finder
+          path: notebooks/ResonanceFinder/
+        previous: *id031
+      path: notebooks/SMatrix/
+      type: python-tutorial
+    title: Scattering Matrix
+    type: python-tutorial
+  - enable: true
+    enable_more_examples: false
+    line: 119
+    menus:
+    - category: Resonance Finder
+      enable: true
+      enable_more_examples: false
+      more_examples:
+      - name: Cavity quality factor, effective mode volume, and Purcell factor
+        path: notebooks/CavityFOM/
+      - name: Thermally tuned ring resonator
+        path: notebooks/ThermallyTunedRingResonator/
+      - name: Inverse design optimization of a compact grating coupler
+        path: notebooks/AdjointPlugin6GratingCoupler/
+      name: Extracting resonance information using Resonance Finder
+      pagination:
+        next: &id034
+          name: Cavity quality factor, effective mode volume, and Purcell factor
+          path: notebooks/CavityFOM/
+        previous: *id032
+      path: notebooks/ResonanceFinder/
+      type: python-tutorial
+    - category: Resonance Finder
+      enable: true
+      enable_more_examples: false
+      more_examples:
+      - name: Extracting resonance information using Resonance Finder
+        path: notebooks/ResonanceFinder/
+      - name: Defining complex geometries using trimesh
+        path: notebooks/CreatingGeometryUsingTrimesh/
+      - name: Adjoint inverse design of a quantum emitter light extractor
+        path: notebooks/AdjointPlugin12LightExtractor/
+      name: Cavity quality factor, effective mode volume, and Purcell factor
+      pagination:
+        next: &id035
+          name: 'Jax, automatic differentiation, and adjoint optimization: basics'
+          path: notebooks/AdjointPlugin1Intro/
+        previous: *id033
+      path: notebooks/CavityFOM/
+      type: python-tutorial
+    title: Resonance Finder
+    type: python-tutorial
+  - enable: true
+    enable_more_examples: false
+    line: 128
+    menus:
+    - category: FDTD Adjoint Optimization
+      enable: true
+      enable_more_examples: false
+      more_examples:
+      - name: Inverse design optimization of a mode converter
+        path: notebooks/AdjointPlugin3InverseDesign/
+      - name: Adjoint-based shape optimization of a waveguide bend
+        path: notebooks/AdjointPlugin8WaveguideBend/
+      - name: Adjoint inverse design of a quantum emitter light extractor
+        path: notebooks/AdjointPlugin12LightExtractor/
+      name: 'Jax, automatic differentiation, and adjoint optimization: basics'
+      pagination:
+        next: &id036
+          name: Adjoint analysis of a multi-layer slab
+          path: notebooks/AdjointPlugin2GradientChecking/
+        previous: *id034
+      path: notebooks/AdjointPlugin1Intro/
+      type: python-tutorial
+    - category: FDTD Adjoint Optimization
+      enable: true
+      enable_more_examples: false
+      more_examples:
+      - name: Inverse design optimization of a mode converter
+        path: notebooks/AdjointPlugin3InverseDesign/
+      - name: Inverse design optimization of a compact grating coupler
+        path: notebooks/AdjointPlugin6GratingCoupler/
+      - name: Parameterized level set optimization of a y-branch
+        path: notebooks/AdjointPlugin10YBranchLevelSet/
+      name: Adjoint analysis of a multi-layer slab
+      pagination:
+        next: &id037
+          name: Inverse design optimization of a mode converter
+          path: notebooks/AdjointPlugin3InverseDesign/
+        previous: *id035
+      path: notebooks/AdjointPlugin2GradientChecking/
+      type: python-tutorial
+    - category: FDTD Adjoint Optimization
+      enable: true
+      enable_more_examples: false
+      more_examples:
+      - name: Inverse design optimization of a waveguide taper
+        path: notebooks/AdjointPlugin5BoundaryGradients/
+      - name: Inverse design optimization of a metalens
+        path: notebooks/AdjointPlugin7Metalens/
+      - name: Adjoint optimization of a wavelength division multiplexer
+        path: notebooks/AdjointPlugin9WDM/
+      name: Inverse design optimization of a mode converter
+      pagination:
+        next: &id038
+          name: Multi-objective adjoint optimization
+          path: notebooks/AdjointPlugin4MultiObjective/
+        previous: *id036
+      path: notebooks/AdjointPlugin3InverseDesign/
+      type: python-tutorial
+    - category: FDTD Adjoint Optimization
+      enable: true
+      enable_more_examples: false
+      more_examples:
+      - name: Inverse design optimization of a mode converter
+        path: notebooks/AdjointPlugin3InverseDesign/
+      - name: Inverse design optimization of a waveguide taper
+        path: notebooks/AdjointPlugin5BoundaryGradients/
+      - name: Adjoint inverse design of a quantum emitter light extractor
+        path: notebooks/AdjointPlugin12LightExtractor/
+      name: Multi-objective adjoint optimization
+      pagination:
+        next: &id039
+          name: Inverse design optimization of a waveguide taper
+          path: notebooks/AdjointPlugin5BoundaryGradients/
+        previous: *id037
+      path: notebooks/AdjointPlugin4MultiObjective/
+      type: python-tutorial
+    - category: FDTD Adjoint Optimization
+      enable: true
+      enable_more_examples: false
+      more_examples:
+      - name: Multi-objective adjoint optimization
+        path: notebooks/AdjointPlugin4MultiObjective/
+      - name: Inverse design optimization of a compact grating coupler
+        path: notebooks/AdjointPlugin6GratingCoupler/
+      - name: Inverse design integrated with circuit simulation
+        path: notebooks/AdjointPlugin11CircuitMZI/
+      name: Inverse design optimization of a waveguide taper
+      pagination:
+        next: &id040
+          name: Inverse design optimization of a compact grating coupler
+          path: notebooks/AdjointPlugin6GratingCoupler/
+        previous: *id038
+      path: notebooks/AdjointPlugin5BoundaryGradients/
+      type: python-tutorial
+    - category: FDTD Adjoint Optimization
+      enable: true
+      enable_more_examples: false
+      more_examples:
+      - name: 'Jax, automatic differentiation, and adjoint optimization: basics'
+        path: notebooks/AdjointPlugin1Intro/
+      - name: Inverse design integrated with circuit simulation
+        path: notebooks/AdjointPlugin11CircuitMZI/
+      - name: Adjoint inverse design of a quantum emitter light extractor
+        path: notebooks/AdjointPlugin12LightExtractor/
+      name: Inverse design optimization of a compact grating coupler
+      pagination:
+        next: &id041
+          name: Inverse design optimization of a metalens
+          path: notebooks/AdjointPlugin7Metalens/
+        previous: *id039
+      path: notebooks/AdjointPlugin6GratingCoupler/
+      type: python-tutorial
+    - category: FDTD Adjoint Optimization
+      enable: true
+      enable_more_examples: false
+      more_examples:
+      - name: Multi-objective adjoint optimization
+        path: notebooks/AdjointPlugin4MultiObjective/
+      - name: Inverse design optimization of a compact grating coupler
+        path: notebooks/AdjointPlugin6GratingCoupler/
+      - name: Adjoint inverse design of a quantum emitter light extractor
+        path: notebooks/AdjointPlugin12LightExtractor/
+      name: Inverse design optimization of a metalens
+      pagination:
+        next: &id042
+          name: Adjoint-based shape optimization of a waveguide bend
+          path: notebooks/AdjointPlugin8WaveguideBend/
+        previous: *id040
+      path: notebooks/AdjointPlugin7Metalens/
+      type: python-tutorial
+    - category: FDTD Adjoint Optimization
+      enable: true
+      enable_more_examples: false
+      more_examples:
+      - name: Multi-objective adjoint optimization
+        path: notebooks/AdjointPlugin4MultiObjective/
+      - name: Inverse design optimization of a compact grating coupler
+        path: notebooks/AdjointPlugin6GratingCoupler/
+      - name: Adjoint optimization of a wavelength division multiplexer
+        path: notebooks/AdjointPlugin9WDM/
+      name: Adjoint-based shape optimization of a waveguide bend
+      pagination:
+        next: &id043
+          name: Adjoint optimization of a wavelength division multiplexer
+          path: notebooks/AdjointPlugin9WDM/
+        previous: *id041
+      path: notebooks/AdjointPlugin8WaveguideBend/
+      type: python-tutorial
+    - category: FDTD Adjoint Optimization
+      enable: true
+      enable_more_examples: false
+      more_examples:
+      - name: Inverse design optimization of a mode converter
+        path: notebooks/AdjointPlugin3InverseDesign/
+      - name: Inverse design optimization of a waveguide taper
+        path: notebooks/AdjointPlugin5BoundaryGradients/
+      - name: Parameterized level set optimization of a y-branch
+        path: notebooks/AdjointPlugin10YBranchLevelSet/
+      name: Adjoint optimization of a wavelength division multiplexer
+      pagination:
+        next: &id044
+          name: Parameterized level set optimization of a y-branch
+          path: notebooks/AdjointPlugin10YBranchLevelSet/
+        previous: *id042
+      path: notebooks/AdjointPlugin9WDM/
+      type: python-tutorial
+    - category: FDTD Adjoint Optimization
+      enable: true
+      enable_more_examples: false
+      more_examples:
+      - name: Inverse design optimization of a waveguide taper
+        path: notebooks/AdjointPlugin5BoundaryGradients/
+      - name: Adjoint-based shape optimization of a waveguide bend
+        path: notebooks/AdjointPlugin8WaveguideBend/
+      - name: Adjoint optimization of a wavelength division multiplexer
+        path: notebooks/AdjointPlugin9WDM/
+      name: Parameterized level set optimization of a y-branch
+      pagination:
+        next: &id045
+          name: Inverse design integrated with circuit simulation
+          path: notebooks/AdjointPlugin11CircuitMZI/
+        previous: *id043
+      path: notebooks/AdjointPlugin10YBranchLevelSet/
+      type: python-tutorial
+    - category: FDTD Adjoint Optimization
+      enable: true
+      enable_more_examples: false
+      more_examples:
+      - name: Adjoint analysis of a multi-layer slab
+        path: notebooks/AdjointPlugin2GradientChecking/
+      - name: Inverse design optimization of a mode converter
+        path: notebooks/AdjointPlugin3InverseDesign/
+      - name: Inverse design optimization of a waveguide taper
+        path: notebooks/AdjointPlugin5BoundaryGradients/
+      name: Inverse design integrated with circuit simulation
+      pagination:
+        next: &id046
+          name: Adjoint inverse design of a quantum emitter light extractor
+          path: notebooks/AdjointPlugin12LightExtractor/
+        previous: *id044
+      path: notebooks/AdjointPlugin11CircuitMZI/
+      type: python-tutorial
+    - category: FDTD Adjoint Optimization
+      enable: true
+      enable_more_examples: false
+      more_examples:
+      - name: Inverse design optimization of a waveguide taper
+        path: notebooks/AdjointPlugin5BoundaryGradients/
+      - name: Inverse design optimization of a metalens
+        path: notebooks/AdjointPlugin7Metalens/
+      - name: Adjoint optimization of a wavelength division multiplexer
+        path: notebooks/AdjointPlugin9WDM/
+      name: Adjoint inverse design of a quantum emitter light extractor
+      pagination:
+        next: &id047
+          name: Heat solver
+          path: notebooks/HeatSolver/
+        previous: *id045
+      path: notebooks/AdjointPlugin12LightExtractor/
+      type: python-tutorial
+    title: FDTD Adjoint Optimization
+    type: python-tutorial
+  - enable: true
+    enable_more_examples: false
+    line: 147
+    menus:
+    - category: Heat Solver
+      enable: true
+      enable_more_examples: false
+      more_examples:
+      - name: Thermally tuned waveguide
+        path: notebooks/MetalHeaterPhaseShifter/
+      - name: Thermally tuned ring resonator
+        path: notebooks/ThermallyTunedRingResonator/
+      - name: Fitting dispersive material models
+        path: notebooks/Fitting/
+      name: Heat solver
+      pagination:
+        next: &id048
+          name: Thermally tuned waveguide
+          path: notebooks/MetalHeaterPhaseShifter/
+        previous: *id046
+      path: notebooks/HeatSolver/
+      type: python-tutorial
+    - category: Heat Solver
+      enable: true
+      enable_more_examples: false
+      more_examples:
+      - name: Heat solver
+        path: notebooks/HeatSolver/
+      - name: Thermally tuned ring resonator
+        path: notebooks/ThermallyTunedRingResonator/
+      - name: Using the mode solver for optical mode analysis
+        path: notebooks/ModeSolver/
+      name: Thermally tuned waveguide
+      pagination:
+        next: &id049
+          name: Thermally tuned ring resonator
+          path: notebooks/ThermallyTunedRingResonator/
+        previous: *id047
+      path: notebooks/MetalHeaterPhaseShifter/
+      type: python-tutorial
+    - category: Heat Solver
+      enable: true
+      enable_more_examples: false
+      more_examples:
+      - name: Heat solver
+        path: notebooks/HeatSolver/
+      - name: Thermally tuned waveguide
+        path: notebooks/MetalHeaterPhaseShifter/
+      - name: Injecting modes in bent and angled waveguides
+        path: notebooks/ModesBentAngled/
+      name: Thermally tuned ring resonator
+      pagination:
+        next:
+          name: Building a simple, Python-based GUI for Tidy3D
+          path: notebooks/WaveguideBendSimulator/
+        previous: *id048
+      path: notebooks/ThermallyTunedRingResonator/
+      type: python-tutorial
+    title: Heat Solver
+    type: python-tutorial
+  - enable: true
+    enable_more_examples: false
+    line: 157
+    menus:
+    - category: Advance Applications
+      enable: true
+      enable_more_examples: false
+      more_examples:
+      - name: Defining a total-field scattered-field (TFSF) plane wave source
+        path: notebooks/TFSF/
+      - name: Using the mode solver for optical mode analysis
+        path: notebooks/ModeSolver/
+      - name: Fitting dispersive material models
+        path: notebooks/Fitting/
+      name: Building a simple, Python-based GUI for Tidy3D
+      pagination:
+        next: false
+        previous: *id049
+      path: notebooks/WaveguideBendSimulator/
+      thumbnail:
+        description: Building a simple, Python-based GUI for Tidy3D
+        image: /assets/tidy3d/examples/image/tkinter_gui.png
+      type: python-tutorial
+    title: Advance Applications
+    type: python-tutorial
+  title: Feature Tutorials
+  type: python-tutorial
+- enable: true
+  enable_library: true
+  enable_more_examples: true
+  line: 165
+  menus:
+  - enable: true
+    enable_more_examples: true
+    line: 168
+    menus:
+    - category: Photonic Integrated Circuit Components
+      enable: true
+      enable_more_examples: true
+      more_examples:
+      - name: Waveguide mode size converters
+        path: notebooks/WaveguideSizeConverter/
+        thumbnail:
+          description: Waveguide mode size converters
+          image: /assets/tidy3d/examples/image/luneburg_lens_taper.png
+      - name: Broadband directional coupler
+        path: notebooks/BroadbandDirectionalCoupler/
+        thumbnail:
+          description: Broadband directional coupler
+          image: /assets/tidy3d/examples/image/broadband_DC_1.png
+      - name: THz integrated demultiplexer/filter based on a ring resonator
+        path: notebooks/THzDemultiplexerFilter/
+        thumbnail:
+          description: THz integrated demultiplexer/filter based on a ring resonator
+          image: /assets/tidy3d/examples/image/thz_ring_resonator.png
+      name: Waveguide Y junction
+      pagination:
+        next: &id050
+          name: Waveguide to ring coupling
+          path: notebooks/WaveguideToRingCoupling/
+        previous: false
+      path: notebooks/YJunction/
+      thumbnail:
+        description: Waveguide Y junction
+        image: /assets/tidy3d/examples/image/y_junction_schematic.png
+      type: example-library
+    - category: Photonic Integrated Circuit Components
+      enable: true
+      enable_more_examples: true
+      more_examples:
+      - name: Uniform grating coupler
+        path: notebooks/GratingCoupler/
+        thumbnail:
+          description: Uniform grating coupler
+          image: /assets/tidy3d/examples/image/grating_coupler_schematic.png
+      - name: 1x4 MMI power splitter
+        path: notebooks/MMI1x4/
+        thumbnail:
+          description: 1x4 MMI power splitter
+          image: /assets/tidy3d/examples/image/mmi_schematic2.png
+      - name: 2D ring resonator
+        path: notebooks/RingResonator/
+        thumbnail:
+          description: 2D ring resonator
+          image: /assets/tidy3d/examples/image/ring_resonator_2d.png
+      name: Waveguide to ring coupling
+      pagination:
+        next: &id051
+          name: Waveguide crossing based on cosine tapers
+          path: notebooks/WaveguideCrossing/
+        previous:
+          name: Waveguide Y junction
+          path: notebooks/YJunction/
+      path: notebooks/WaveguideToRingCoupling/
+      thumbnail:
+        description: Waveguide to ring coupling
+        image: /assets/tidy3d/examples/image/waveguide_to_ring.png
+      type: example-library
+    - category: Photonic Integrated Circuit Components
+      enable: true
+      enable_more_examples: true
+      more_examples:
+      - name: 2D ring resonator
+        path: notebooks/RingResonator/
+        thumbnail:
+          description: 2D ring resonator
+          image: /assets/tidy3d/examples/image/ring_resonator_2d.png
+      - name: Waveguide bragg gratings
+        path: notebooks/BraggGratings/
+        thumbnail:
+          description: Waveguide bragg gratings
+          image: /assets/tidy3d/examples/image/bragg_waveguide.png
+      - name: Particle swarm optimization of a bullseye cavity for quantum emitter
+          light extraction
+        path: notebooks/BullseyeCavityPSO/
+        thumbnail:
+          description: Particle swarm optimization of a bullseye cavity for quantum
+            emitter light extraction
+          image: /assets/tidy3d/examples/image/bullseye_psa_thumb.png
+      name: Waveguide crossing based on cosine tapers
+      pagination:
+        next: &id052
+          name: Euler waveguide bend
+          path: notebooks/EulerWaveguideBend/
+        previous: *id050
+      path: notebooks/WaveguideCrossing/
+      thumbnail:
+        description: Waveguide crossing based on cosine tapers
+        image: /assets/tidy3d/examples/image/waveguide_crossing.png
+      type: example-library
+    - category: Photonic Integrated Circuit Components
+      enable: true
+      enable_more_examples: true
+      more_examples:
+      - name: Waveguide crossing based on cosine tapers
+        path: notebooks/WaveguideCrossing/
+        thumbnail:
+          description: Waveguide crossing based on cosine tapers
+          image: /assets/tidy3d/examples/image/waveguide_crossing.png
+      - name: 2D ring resonator
+        path: notebooks/RingResonator/
+        thumbnail:
+          description: 2D ring resonator
+          image: /assets/tidy3d/examples/image/ring_resonator_2d.png
+      - name: Waveguide bragg gratings
+        path: notebooks/BraggGratings/
+        thumbnail:
+          description: Waveguide bragg gratings
+          image: /assets/tidy3d/examples/image/bragg_waveguide.png
+      name: Euler waveguide bend
+      pagination:
+        next: &id053
+          name: Inverse taper edge coupler
+          path: notebooks/EdgeCoupler/
+        previous: *id051
+      path: notebooks/EulerWaveguideBend/
+      thumbnail:
+        description: Euler waveguide bend
+        image: /assets/tidy3d/examples/image/waveguide_bend.png
+      type: example-library
+    - category: Photonic Integrated Circuit Components
+      enable: true
+      enable_more_examples: true
+      more_examples:
+      - name: Waveguide bragg gratings
+        path: notebooks/BraggGratings/
+        thumbnail:
+          description: Waveguide bragg gratings
+          image: /assets/tidy3d/examples/image/bragg_waveguide.png
+      - name: Polarization splitter and rotator based on 90 degree bends
+        path: notebooks/90BendPolarizationSplitterRotator/
+        thumbnail:
+          description: Polarization splitter and rotator based on 90 degree bends
+          image: /assets/tidy3d/examples/image/90_bend_PSR_1.png
+      - name: Plasmonic waveguide sensor for carbon dioxide detection
+        path: notebooks/PlasmonicWaveguideCO2Sensor/
+        thumbnail:
+          description: Plasmonic waveguide sensor for carbon dioxide detection
+          image: /assets/tidy3d/examples/image/mim_co2_sensor.png
+      name: Inverse taper edge coupler
+      pagination:
+        next: &id054
+          name: Uniform grating coupler
+          path: notebooks/GratingCoupler/
+        previous: *id052
+      path: notebooks/EdgeCoupler/
+      thumbnail:
+        description: Inverse taper edge coupler
+        image: /assets/tidy3d/examples/image/EdgeCoupler.png
+      type: example-library
+    - category: Photonic Integrated Circuit Components
+      enable: true
+      enable_more_examples: true
+      more_examples:
+      - name: Euler waveguide bend
+        path: notebooks/EulerWaveguideBend/
+        thumbnail:
+          description: Euler waveguide bend
+          image: /assets/tidy3d/examples/image/waveguide_bend.png
+      - name: Broadband bi-level taper polarization rotator-splitter
+        path: notebooks/BilevelPSR/
+        thumbnail:
+          description: Broadband bi-level taper polarization rotator-splitter
+          image: /assets/tidy3d/examples/image/bilevel_PSR.png
+      - name: Broadband polarizer assisted by anisotropic metamaterial
+        path: notebooks/SWGBroadbandPolarizer/
+        thumbnail:
+          description: Broadband polarizer assisted by anisotropic metamaterial
+          image: /assets/tidy3d/examples/image/swg_polarizer.png
+      name: Uniform grating coupler
+      pagination:
+        next: &id055
+          name: Focusing apodized grating coupler
+          path: notebooks/FocusedApodGC/
+        previous: *id053
+      path: notebooks/GratingCoupler/
+      thumbnail:
+        description: Uniform grating coupler
+        image: /assets/tidy3d/examples/image/grating_coupler_schematic.png
+      type: example-library
+    - category: Photonic Integrated Circuit Components
+      enable: true
+      enable_more_examples: true
+      more_examples:
+      - name: Waveguide crossing based on cosine tapers
+        path: notebooks/WaveguideCrossing/
+        thumbnail:
+          description: Waveguide crossing based on cosine tapers
+          image: /assets/tidy3d/examples/image/waveguide_crossing.png
+      - name: Waveguide bragg gratings
+        path: notebooks/BraggGratings/
+        thumbnail:
+          description: Waveguide bragg gratings
+          image: /assets/tidy3d/examples/image/bragg_waveguide.png
+      - name: Exceptional coupling for waveguide crosstalk reduction
+        path: notebooks/ZeroCrossTalkTE/
+        thumbnail:
+          description: Exceptional coupling for waveguide crosstalk reduction
+          image: /assets/tidy3d/examples/image/exceptional_coupling_te.png
+      name: Focusing apodized grating coupler
+      pagination:
+        next: &id056
+          name: 1x4 MMI power splitter
+          path: notebooks/MMI1x4/
+        previous: *id054
+      path: notebooks/FocusedApodGC/
+      thumbnail:
+        description: Focusing apodized grating coupler
+        image: /assets/tidy3d/examples/image/apodized_grating_feature_image.png
+      type: example-library
+    - category: Photonic Integrated Circuit Components
+      enable: true
+      enable_more_examples: true
+      more_examples:
+      - name: Waveguide to ring coupling
+        path: notebooks/WaveguideToRingCoupling/
+        thumbnail:
+          description: Waveguide to ring coupling
+          image: /assets/tidy3d/examples/image/waveguide_to_ring.png
+      - name: 2D ring resonator
+        path: notebooks/RingResonator/
+        thumbnail:
+          description: 2D ring resonator
+          image: /assets/tidy3d/examples/image/ring_resonator_2d.png
+      - name: 8-Channel mode and polarization de-multiplexer
+        path: notebooks/8ChannelDemultiplexer/
+        thumbnail:
+          description: 8-Channel mode and polarization de-multiplexer
+          image: /assets/tidy3d/examples/image/8_channel_demultiplexer_1.png
+      name: 1x4 MMI power splitter
+      pagination:
+        next: &id057
+          name: 2D ring resonator
+          path: notebooks/RingResonator/
+        previous: *id055
+      path: notebooks/MMI1x4/
+      thumbnail:
+        description: 1x4 MMI power splitter
+        image: /assets/tidy3d/examples/image/mmi_schematic2.png
+      type: example-library
+    - category: Photonic Integrated Circuit Components
+      enable: true
+      enable_more_examples: true
+      more_examples:
+      - name: Waveguide to ring coupling
+        path: notebooks/WaveguideToRingCoupling/
+        thumbnail:
+          description: Waveguide to ring coupling
+          image: /assets/tidy3d/examples/image/waveguide_to_ring.png
+      - name: Strip to slot waveguide converters
+        path: notebooks/StripToSlotConverters/
+        thumbnail:
+          description: Strip to slot waveguide converters
+          image: /assets/tidy3d/examples/image/strip_to_slot_1.png
+      - name: 90 degree optical hybrid
+        path: notebooks/90OpticalHybrid/
+        thumbnail:
+          description: 90 degree optical hybrid
+          image: /assets/tidy3d/examples/image/optical_hybrid_schematic.png
+      name: 2D ring resonator
+      pagination:
+        next: &id058
+          name: Broadband bi-level taper polarization rotator-splitter
+          path: notebooks/BilevelPSR/
+        previous: *id056
+      path: notebooks/RingResonator/
+      thumbnail:
+        description: 2D ring resonator
+        image: /assets/tidy3d/examples/image/ring_resonator_2d.png
+      type: example-library
+    - category: Photonic Integrated Circuit Components
+      enable: true
+      enable_more_examples: true
+      more_examples:
+      - name: Uniform grating coupler
+        path: notebooks/GratingCoupler/
+        thumbnail:
+          description: Uniform grating coupler
+          image: /assets/tidy3d/examples/image/grating_coupler_schematic.png
+      - name: 1x4 MMI power splitter
+        path: notebooks/MMI1x4/
+        thumbnail:
+          description: 1x4 MMI power splitter
+          image: /assets/tidy3d/examples/image/mmi_schematic2.png
+      - name: 2D ring resonator
+        path: notebooks/RingResonator/
+        thumbnail:
+          description: 2D ring resonator
+          image: /assets/tidy3d/examples/image/ring_resonator_2d.png
+      name: Broadband bi-level taper polarization rotator-splitter
+      pagination:
+        next: &id059
+          name: Waveguide mode size converters
+          path: notebooks/WaveguideSizeConverter/
+        previous: *id057
+      path: notebooks/BilevelPSR/
+      thumbnail:
+        description: Broadband bi-level taper polarization rotator-splitter
+        image: /assets/tidy3d/examples/image/bilevel_PSR.png
+      type: example-library
+    - category: Photonic Integrated Circuit Components
+      enable: true
+      enable_more_examples: true
+      more_examples:
+      - name: Compact polarization splitter-rotator
+        path: notebooks/PolarizationSplitterRotator/
+        thumbnail:
+          description: Compact polarization splitter-rotator
+          image: /assets/tidy3d/examples/image/polarizer_rotator.png
+      - name: Exceptional coupling for waveguide crosstalk reduction
+        path: notebooks/ZeroCrossTalkTE/
+        thumbnail:
+          description: Exceptional coupling for waveguide crosstalk reduction
+          image: /assets/tidy3d/examples/image/exceptional_coupling_te.png
+      - name: Plasmonic waveguide sensor for carbon dioxide detection
+        path: notebooks/PlasmonicWaveguideCO2Sensor/
+        thumbnail:
+          description: Plasmonic waveguide sensor for carbon dioxide detection
+          image: /assets/tidy3d/examples/image/mim_co2_sensor.png
+      name: Waveguide mode size converters
+      pagination:
+        next: &id060
+          name: Strip to slot waveguide converters
+          path: notebooks/StripToSlotConverters/
+        previous: *id058
+      path: notebooks/WaveguideSizeConverter/
+      thumbnail:
+        description: Waveguide mode size converters
+        image: /assets/tidy3d/examples/image/luneburg_lens_taper.png
+      type: example-library
+    - category: Photonic Integrated Circuit Components
+      enable: true
+      enable_more_examples: true
+      more_examples:
+      - name: 2D ring resonator
+        path: notebooks/RingResonator/
+        thumbnail:
+          description: 2D ring resonator
+          image: /assets/tidy3d/examples/image/ring_resonator_2d.png
+      - name: Waveguide mode size converters
+        path: notebooks/WaveguideSizeConverter/
+        thumbnail:
+          description: Waveguide mode size converters
+          image: /assets/tidy3d/examples/image/luneburg_lens_taper.png
+      - name: Exceptional coupling for waveguide crosstalk reduction
+        path: notebooks/ZeroCrossTalkTE/
+        thumbnail:
+          description: Exceptional coupling for waveguide crosstalk reduction
+          image: /assets/tidy3d/examples/image/exceptional_coupling_te.png
+      name: Strip to slot waveguide converters
+      pagination:
+        next: &id061
+          name: Waveguide bragg gratings
+          path: notebooks/BraggGratings/
+        previous: *id059
+      path: notebooks/StripToSlotConverters/
+      thumbnail:
+        description: Strip to slot waveguide converters
+        image: /assets/tidy3d/examples/image/strip_to_slot_1.png
+      type: example-library
+    - category: Photonic Integrated Circuit Components
+      enable: true
+      enable_more_examples: true
+      more_examples:
+      - name: Inverse taper edge coupler
+        path: notebooks/EdgeCoupler/
+        thumbnail:
+          description: Inverse taper edge coupler
+          image: /assets/tidy3d/examples/image/EdgeCoupler.png
+      - name: Broadband bi-level taper polarization rotator-splitter
+        path: notebooks/BilevelPSR/
+        thumbnail:
+          description: Broadband bi-level taper polarization rotator-splitter
+          image: /assets/tidy3d/examples/image/bilevel_PSR.png
+      - name: Dielectric waveguide with scale-invariant effective index
+        path: notebooks/ScaleInvariantWaveguide/
+        thumbnail:
+          description: Dielectric waveguide with scale-invariant effective index
+          image: /assets/tidy3d/examples/image/scale_invariant_waveguide.png
+      name: Waveguide bragg gratings
+      pagination:
+        next: &id062
+          name: Broadband directional coupler
+          path: notebooks/BroadbandDirectionalCoupler/
+        previous: *id060
+      path: notebooks/BraggGratings/
+      thumbnail:
+        description: Waveguide bragg gratings
+        image: /assets/tidy3d/examples/image/bragg_waveguide.png
+      type: example-library
+    - category: Photonic Integrated Circuit Components
+      enable: true
+      enable_more_examples: true
+      more_examples:
+      - name: Euler waveguide bend
+        path: notebooks/EulerWaveguideBend/
+        thumbnail:
+          description: Euler waveguide bend
+          image: /assets/tidy3d/examples/image/waveguide_bend.png
+      - name: Waveguide mode size converters
+        path: notebooks/WaveguideSizeConverter/
+        thumbnail:
+          description: Waveguide mode size converters
+          image: /assets/tidy3d/examples/image/luneburg_lens_taper.png
+      - name: Compact polarization splitter-rotator
+        path: notebooks/PolarizationSplitterRotator/
+        thumbnail:
+          description: Compact polarization splitter-rotator
+          image: /assets/tidy3d/examples/image/polarizer_rotator.png
+      name: Broadband directional coupler
+      pagination:
+        next: &id063
+          name: Compact polarization splitter-rotator
+          path: notebooks/PolarizationSplitterRotator/
+        previous: *id061
+      path: notebooks/BroadbandDirectionalCoupler/
+      thumbnail:
+        description: Broadband directional coupler
+        image: /assets/tidy3d/examples/image/broadband_DC_1.png
+      type: example-library
+    - category: Photonic Integrated Circuit Components
+      enable: true
+      enable_more_examples: true
+      more_examples:
+      - name: Waveguide to ring coupling
+        path: notebooks/WaveguideToRingCoupling/
+        thumbnail:
+          description: Waveguide to ring coupling
+          image: /assets/tidy3d/examples/image/waveguide_to_ring.png
+      - name: Waveguide bragg gratings
+        path: notebooks/BraggGratings/
+        thumbnail:
+          description: Waveguide bragg gratings
+          image: /assets/tidy3d/examples/image/bragg_waveguide.png
+      - name: THz integrated demultiplexer/filter based on a ring resonator
+        path: notebooks/THzDemultiplexerFilter/
+        thumbnail:
+          description: THz integrated demultiplexer/filter based on a ring resonator
+          image: /assets/tidy3d/examples/image/thz_ring_resonator.png
+      name: Compact polarization splitter-rotator
+      pagination:
+        next: &id064
+          name: 8-Channel mode and polarization de-multiplexer
+          path: notebooks/8ChannelDemultiplexer/
+        previous: *id062
+      path: notebooks/PolarizationSplitterRotator/
+      thumbnail:
+        description: Compact polarization splitter-rotator
+        image: /assets/tidy3d/examples/image/polarizer_rotator.png
+      type: example-library
+    - category: Photonic Integrated Circuit Components
+      enable: true
+      enable_more_examples: true
+      more_examples:
+      - name: Broadband directional coupler
+        path: notebooks/BroadbandDirectionalCoupler/
+        thumbnail:
+          description: Broadband directional coupler
+          image: /assets/tidy3d/examples/image/broadband_DC_1.png
+      - name: Photonic crystal waveguide polarization filter
+        path: notebooks/PhotonicCrystalWaveguidePolarizationFilter/
+        thumbnail:
+          description: Photonic crystal waveguide polarization filter
+          image: /assets/tidy3d/examples/image/phc_polarization_filter.png
+      - name: Particle swarm optimization of a polarization beam splitter
+        path: notebooks/ParticleSwarmOptimizedPBS/
+        thumbnail:
+          description: Particle swarm optimization of a polarization beam splitter
+          image: /assets/tidy3d/examples/image/particle_swarm_optimization_pbs.png
+      name: 8-Channel mode and polarization de-multiplexer
+      pagination:
+        next: &id065
+          name: THz integrated demultiplexer/filter based on a ring resonator
+          path: notebooks/THzDemultiplexerFilter/
+        previous: *id063
+      path: notebooks/8ChannelDemultiplexer/
+      thumbnail:
+        description: 8-Channel mode and polarization de-multiplexer
+        image: /assets/tidy3d/examples/image/8_channel_demultiplexer_1.png
+      type: example-library
+    - category: Photonic Integrated Circuit Components
+      enable: true
+      enable_more_examples: true
+      more_examples:
+      - name: 2D ring resonator
+        path: notebooks/RingResonator/
+        thumbnail:
+          description: 2D ring resonator
+          image: /assets/tidy3d/examples/image/ring_resonator_2d.png
+      - name: Broadband bi-level taper polarization rotator-splitter
+        path: notebooks/BilevelPSR/
+        thumbnail:
+          description: Broadband bi-level taper polarization rotator-splitter
+          image: /assets/tidy3d/examples/image/bilevel_PSR.png
+      - name: Polarization splitter and rotator based on 90 degree bends
+        path: notebooks/90BendPolarizationSplitterRotator/
+        thumbnail:
+          description: Polarization splitter and rotator based on 90 degree bends
+          image: /assets/tidy3d/examples/image/90_bend_PSR_1.png
+      name: THz integrated demultiplexer/filter based on a ring resonator
+      pagination:
+        next: &id066
+          name: Photonic crystal waveguide polarization filter
+          path: notebooks/PhotonicCrystalWaveguidePolarizationFilter/
+        previous: *id064
+      path: notebooks/THzDemultiplexerFilter/
+      thumbnail:
+        description: THz integrated demultiplexer/filter based on a ring resonator
+        image: /assets/tidy3d/examples/image/thz_ring_resonator.png
+      type: example-library
+    - category: Photonic Integrated Circuit Components
+      enable: true
+      enable_more_examples: true
+      more_examples:
+      - name: Strip to slot waveguide converters
+        path: notebooks/StripToSlotConverters/
+        thumbnail:
+          description: Strip to slot waveguide converters
+          image: /assets/tidy3d/examples/image/strip_to_slot_1.png
+      - name: Particle swarm optimization of a polarization beam splitter
+        path: notebooks/ParticleSwarmOptimizedPBS/
+        thumbnail:
+          description: Particle swarm optimization of a polarization beam splitter
+          image: /assets/tidy3d/examples/image/particle_swarm_optimization_pbs.png
+      - name: Plasmonic waveguide sensor for carbon dioxide detection
+        path: notebooks/PlasmonicWaveguideCO2Sensor/
+        thumbnail:
+          description: Plasmonic waveguide sensor for carbon dioxide detection
+          image: /assets/tidy3d/examples/image/mim_co2_sensor.png
+      name: Photonic crystal waveguide polarization filter
+      pagination:
+        next: &id067
+          name: 90 degree optical hybrid
+          path: notebooks/90OpticalHybrid/
+        previous: *id065
+      path: notebooks/PhotonicCrystalWaveguidePolarizationFilter/
+      thumbnail:
+        description: Photonic crystal waveguide polarization filter
+        image: /assets/tidy3d/examples/image/phc_polarization_filter.png
+      type: example-library
+    - category: Photonic Integrated Circuit Components
+      enable: true
+      enable_more_examples: true
+      more_examples:
+      - name: Euler waveguide bend
+        path: notebooks/EulerWaveguideBend/
+        thumbnail:
+          description: Euler waveguide bend
+          image: /assets/tidy3d/examples/image/waveguide_bend.png
+      - name: 2D ring resonator
+        path: notebooks/RingResonator/
+        thumbnail:
+          description: 2D ring resonator
+          image: /assets/tidy3d/examples/image/ring_resonator_2d.png
+      - name: Broadband directional coupler
+        path: notebooks/BroadbandDirectionalCoupler/
+        thumbnail:
+          description: Broadband directional coupler
+          image: /assets/tidy3d/examples/image/broadband_DC_1.png
+      name: 90 degree optical hybrid
+      pagination:
+        next: &id068
+          name: Broadband polarizer assisted by anisotropic metamaterial
+          path: notebooks/SWGBroadbandPolarizer/
+        previous: *id066
+      path: notebooks/90OpticalHybrid/
+      thumbnail:
+        description: 90 degree optical hybrid
+        image: /assets/tidy3d/examples/image/optical_hybrid_schematic.png
+      type: example-library
+    - category: Photonic Integrated Circuit Components
+      enable: true
+      enable_more_examples: true
+      more_examples:
+      - name: Uniform grating coupler
+        path: notebooks/GratingCoupler/
+        thumbnail:
+          description: Uniform grating coupler
+          image: /assets/tidy3d/examples/image/grating_coupler_schematic.png
+      - name: Strip to slot waveguide converters
+        path: notebooks/StripToSlotConverters/
+        thumbnail:
+          description: Strip to slot waveguide converters
+          image: /assets/tidy3d/examples/image/strip_to_slot_1.png
+      - name: Compact polarization splitter-rotator
+        path: notebooks/PolarizationSplitterRotator/
+        thumbnail:
+          description: Compact polarization splitter-rotator
+          image: /assets/tidy3d/examples/image/polarizer_rotator.png
+      name: Broadband polarizer assisted by anisotropic metamaterial
+      pagination:
+        next: &id069
+          name: Exceptional coupling for waveguide crosstalk reduction
+          path: notebooks/ZeroCrossTalkTE/
+        previous: *id067
+      path: notebooks/SWGBroadbandPolarizer/
+      thumbnail:
+        description: Broadband polarizer assisted by anisotropic metamaterial
+        image: /assets/tidy3d/examples/image/swg_polarizer.png
+      type: example-library
+    - category: Photonic Integrated Circuit Components
+      enable: true
+      enable_more_examples: true
+      more_examples:
+      - name: Inverse taper edge coupler
+        path: notebooks/EdgeCoupler/
+        thumbnail:
+          description: Inverse taper edge coupler
+          image: /assets/tidy3d/examples/image/EdgeCoupler.png
+      - name: THz integrated demultiplexer/filter based on a ring resonator
+        path: notebooks/THzDemultiplexerFilter/
+        thumbnail:
+          description: THz integrated demultiplexer/filter based on a ring resonator
+          image: /assets/tidy3d/examples/image/thz_ring_resonator.png
+      - name: Thin film lithium niobate adiabatic waveguide coupler
+        path: notebooks/AdiabaticCouplerLN/
+        thumbnail:
+          description: Thin film lithium niobate adiabatic waveguide coupler
+          image: /assets/tidy3d/examples/image/LN_adiabatic_coupler.png
+      name: Exceptional coupling for waveguide crosstalk reduction
+      pagination:
+        next: &id070
+          name: Thin film lithium niobate adiabatic waveguide coupler
+          path: notebooks/AdiabaticCouplerLN/
+        previous: *id068
+      path: notebooks/ZeroCrossTalkTE/
+      thumbnail:
+        description: Exceptional coupling for waveguide crosstalk reduction
+        image: /assets/tidy3d/examples/image/exceptional_coupling_te.png
+      type: example-library
+    - category: Photonic Integrated Circuit Components
+      enable: true
+      enable_more_examples: true
+      more_examples:
+      - name: Waveguide bragg gratings
+        path: notebooks/BraggGratings/
+        thumbnail:
+          description: Waveguide bragg gratings
+          image: /assets/tidy3d/examples/image/bragg_waveguide.png
+      - name: 8-Channel mode and polarization de-multiplexer
+        path: notebooks/8ChannelDemultiplexer/
+        thumbnail:
+          description: 8-Channel mode and polarization de-multiplexer
+          image: /assets/tidy3d/examples/image/8_channel_demultiplexer_1.png
+      - name: Particle swarm optimization of a polarization beam splitter
+        path: notebooks/ParticleSwarmOptimizedPBS/
+        thumbnail:
+          description: Particle swarm optimization of a polarization beam splitter
+          image: /assets/tidy3d/examples/image/particle_swarm_optimization_pbs.png
+      name: Thin film lithium niobate adiabatic waveguide coupler
+      pagination:
+        next: &id071
+          name: Polarization splitter and rotator based on 90 degree bends
+          path: notebooks/90BendPolarizationSplitterRotator/
+        previous: *id069
+      path: notebooks/AdiabaticCouplerLN/
+      thumbnail:
+        description: Thin film lithium niobate adiabatic waveguide coupler
+        image: /assets/tidy3d/examples/image/LN_adiabatic_coupler.png
+      type: example-library
+    - category: Photonic Integrated Circuit Components
+      enable: true
+      enable_more_examples: true
+      more_examples:
+      - name: Euler waveguide bend
+        path: notebooks/EulerWaveguideBend/
+        thumbnail:
+          description: Euler waveguide bend
+          image: /assets/tidy3d/examples/image/waveguide_bend.png
+      - name: Focusing apodized grating coupler
+        path: notebooks/FocusedApodGC/
+        thumbnail:
+          description: Focusing apodized grating coupler
+          image: /assets/tidy3d/examples/image/apodized_grating_feature_image.png
+      - name: Plasmonic waveguide sensor for carbon dioxide detection
+        path: notebooks/PlasmonicWaveguideCO2Sensor/
+        thumbnail:
+          description: Plasmonic waveguide sensor for carbon dioxide detection
+          image: /assets/tidy3d/examples/image/mim_co2_sensor.png
+      name: Polarization splitter and rotator based on 90 degree bends
+      pagination:
+        next: &id072
+          name: Particle swarm optimization of a polarization beam splitter
+          path: notebooks/ParticleSwarmOptimizedPBS/
+        previous: *id070
+      path: notebooks/90BendPolarizationSplitterRotator/
+      thumbnail:
+        description: Polarization splitter and rotator based on 90 degree bends
+        image: /assets/tidy3d/examples/image/90_bend_PSR_1.png
+      type: example-library
+    - category: Photonic Integrated Circuit Components
+      enable: true
+      enable_more_examples: true
+      more_examples:
+      - name: Waveguide Y junction
+        path: notebooks/YJunction/
+        thumbnail:
+          description: Waveguide Y junction
+          image: /assets/tidy3d/examples/image/y_junction_schematic.png
+      - name: 90 degree optical hybrid
+        path: notebooks/90OpticalHybrid/
+        thumbnail:
+          description: 90 degree optical hybrid
+          image: /assets/tidy3d/examples/image/optical_hybrid_schematic.png
+      - name: Thin film lithium niobate adiabatic waveguide coupler
+        path: notebooks/AdiabaticCouplerLN/
+        thumbnail:
+          description: Thin film lithium niobate adiabatic waveguide coupler
+          image: /assets/tidy3d/examples/image/LN_adiabatic_coupler.png
+      name: Particle swarm optimization of a polarization beam splitter
+      pagination:
+        next: &id073
+          name: Particle swarm optimization of a bullseye cavity for quantum emitter
+            light extraction
+          path: notebooks/BullseyeCavityPSO/
+        previous: *id071
+      path: notebooks/ParticleSwarmOptimizedPBS/
+      thumbnail:
+        description: Particle swarm optimization of a polarization beam splitter
+        image: /assets/tidy3d/examples/image/particle_swarm_optimization_pbs.png
+      type: example-library
+    - category: Photonic Integrated Circuit Components
+      enable: true
+      enable_more_examples: true
+      more_examples:
+      - name: Waveguide crossing based on cosine tapers
+        path: notebooks/WaveguideCrossing/
+        thumbnail:
+          description: Waveguide crossing based on cosine tapers
+          image: /assets/tidy3d/examples/image/waveguide_crossing.png
+      - name: Plasmonic waveguide sensor for carbon dioxide detection
+        path: notebooks/PlasmonicWaveguideCO2Sensor/
+        thumbnail:
+          description: Plasmonic waveguide sensor for carbon dioxide detection
+          image: /assets/tidy3d/examples/image/mim_co2_sensor.png
+      - name: Dielectric waveguide with scale-invariant effective index
+        path: notebooks/ScaleInvariantWaveguide/
+        thumbnail:
+          description: Dielectric waveguide with scale-invariant effective index
+          image: /assets/tidy3d/examples/image/scale_invariant_waveguide.png
+      name: Particle swarm optimization of a bullseye cavity for quantum emitter light
+        extraction
+      pagination:
+        next: &id074
+          name: Plasmonic waveguide sensor for carbon dioxide detection
+          path: notebooks/PlasmonicWaveguideCO2Sensor/
+        previous: *id072
+      path: notebooks/BullseyeCavityPSO/
+      thumbnail:
+        description: Particle swarm optimization of a bullseye cavity for quantum
+          emitter light extraction
+        image: /assets/tidy3d/examples/image/bullseye_psa_thumb.png
+      type: example-library
+    - category: Photonic Integrated Circuit Components
+      enable: true
+      enable_more_examples: true
+      more_examples:
+      - name: Waveguide crossing based on cosine tapers
+        path: notebooks/WaveguideCrossing/
+        thumbnail:
+          description: Waveguide crossing based on cosine tapers
+          image: /assets/tidy3d/examples/image/waveguide_crossing.png
+      - name: Strip to slot waveguide converters
+        path: notebooks/StripToSlotConverters/
+        thumbnail:
+          description: Strip to slot waveguide converters
+          image: /assets/tidy3d/examples/image/strip_to_slot_1.png
+      - name: THz integrated demultiplexer/filter based on a ring resonator
+        path: notebooks/THzDemultiplexerFilter/
+        thumbnail:
+          description: THz integrated demultiplexer/filter based on a ring resonator
+          image: /assets/tidy3d/examples/image/thz_ring_resonator.png
+      name: Plasmonic waveguide sensor for carbon dioxide detection
+      pagination:
+        next: &id075
+          name: Bi-layer SiN edge coupler in the visible frequency
+          path: notebooks/BilayerSiNEdgeCoupler/
+        previous: *id073
+      path: notebooks/PlasmonicWaveguideCO2Sensor/
+      thumbnail:
+        description: Plasmonic waveguide sensor for carbon dioxide detection
+        image: /assets/tidy3d/examples/image/mim_co2_sensor.png
+      type: example-library
+    - category: Photonic Integrated Circuit Components
+      enable: true
+      enable_more_examples: true
+      more_examples:
+      - name: Euler waveguide bend
+        path: notebooks/EulerWaveguideBend/
+        thumbnail:
+          description: Euler waveguide bend
+          image: /assets/tidy3d/examples/image/waveguide_bend.png
+      - name: 8-Channel mode and polarization de-multiplexer
+        path: notebooks/8ChannelDemultiplexer/
+        thumbnail:
+          description: 8-Channel mode and polarization de-multiplexer
+          image: /assets/tidy3d/examples/image/8_channel_demultiplexer_1.png
+      - name: THz integrated demultiplexer/filter based on a ring resonator
+        path: notebooks/THzDemultiplexerFilter/
+        thumbnail:
+          description: THz integrated demultiplexer/filter based on a ring resonator
+          image: /assets/tidy3d/examples/image/thz_ring_resonator.png
+      name: Bi-layer SiN edge coupler in the visible frequency
+      pagination:
+        next: &id076
+          name: Dielectric waveguide with scale-invariant effective index
+          path: notebooks/ScaleInvariantWaveguide/
+        previous: *id074
+      path: notebooks/BilayerSiNEdgeCoupler/
+      thumbnail:
+        description: Bi-layer SiN edge coupler in the visible frequency
+        image: /assets/tidy3d/examples/image/bilayer_edge_coupler.png
+      type: example-library
+    - category: Photonic Integrated Circuit Components
+      enable: true
+      enable_more_examples: true
+      more_examples:
+      - name: Uniform grating coupler
+        path: notebooks/GratingCoupler/
+        thumbnail:
+          description: Uniform grating coupler
+          image: /assets/tidy3d/examples/image/grating_coupler_schematic.png
+      - name: 90 degree optical hybrid
+        path: notebooks/90OpticalHybrid/
+        thumbnail:
+          description: 90 degree optical hybrid
+          image: /assets/tidy3d/examples/image/optical_hybrid_schematic.png
+      - name: Plasmonic waveguide sensor for carbon dioxide detection
+        path: notebooks/PlasmonicWaveguideCO2Sensor/
+        thumbnail:
+          description: Plasmonic waveguide sensor for carbon dioxide detection
+          image: /assets/tidy3d/examples/image/mim_co2_sensor.png
+      name: Dielectric waveguide with scale-invariant effective index
+      pagination:
+        next: &id077
+          name: Dielectric metasurface absorber
+          path: notebooks/DielectricMetasurfaceAbsorber/
+        previous: *id075
+      path: notebooks/ScaleInvariantWaveguide/
+      thumbnail:
+        description: Dielectric waveguide with scale-invariant effective index
+        image: /assets/tidy3d/examples/image/scale_invariant_waveguide.png
+      type: example-library
+    title: Photonic Integrated Circuit Components
+    type: example-library
+  - enable: true
+    enable_more_examples: true
+    line: 202
+    menus:
+    - category: Metamaterials, Gratings, and Other Periodic Structures
+      enable: true
+      enable_more_examples: true
+      more_examples:
+      - name: Graphene metamaterial absorber
+        path: notebooks/GrapheneMetamaterial/
+        thumbnail:
+          description: Graphene metamaterial absorber
+          image: /assets/tidy3d/examples/image/graphene_metamaterial_schematic.png
+      - name: Multilevel blazed diffraction grating
+        path: notebooks/GratingEfficiency/
+        thumbnail:
+          description: Multilevel blazed diffraction grating
+          image: /assets/tidy3d/examples/image/blazed_grating.png
+      - name: Biosensor grating simulation
+        path: notebooks/BiosensorGrating/
+        thumbnail:
+          description: Biosensor grating simulation
+          image: /assets/tidy3d/examples/image/biosensor_grating.png
+      name: Dielectric metasurface absorber
+      pagination:
+        next: &id078
+          name: Gradient metasurface reflector
+          path: notebooks/GradientMetasurfaceReflector/
+        previous: *id076
+      path: notebooks/DielectricMetasurfaceAbsorber/
+      thumbnail:
+        description: Dielectric metasurface absorber
+        image: /assets/tidy3d/examples/image/metasurface.png
+      type: example-library
+    - category: Metamaterials, Gratings, and Other Periodic Structures
+      enable: true
+      enable_more_examples: true
+      more_examples:
+      - name: Dielectric metasurface absorber
+        path: notebooks/DielectricMetasurfaceAbsorber/
+        thumbnail:
+          description: Dielectric metasurface absorber
+          image: /assets/tidy3d/examples/image/metasurface.png
+      - name: Microwave frequency selective surface
+        path: notebooks/MicrowaveFrequencySelectiveSurface/
+        thumbnail:
+          description: Microwave frequency selective surface
+          image: /assets/tidy3d/examples/image/frequency_selective_surface.png
+      - name: Multilevel blazed diffraction grating
+        path: notebooks/GratingEfficiency/
+        thumbnail:
+          description: Multilevel blazed diffraction grating
+          image: /assets/tidy3d/examples/image/blazed_grating.png
+      name: Gradient metasurface reflector
+      pagination:
+        next: &id079
+          name: Graphene metamaterial absorber
+          path: notebooks/GrapheneMetamaterial/
+        previous: *id077
+      path: notebooks/GradientMetasurfaceReflector/
+      thumbnail:
+        description: Gradient metasurface reflector
+        image: /assets/tidy3d/examples/image/gradient_metasurface_reflector_schematic.png
+      type: example-library
+    - category: Metamaterials, Gratings, and Other Periodic Structures
+      enable: true
+      enable_more_examples: true
+      more_examples:
+      - name: Dielectric metasurface absorber
+        path: notebooks/DielectricMetasurfaceAbsorber/
+        thumbnail:
+          description: Dielectric metasurface absorber
+          image: /assets/tidy3d/examples/image/metasurface.png
+      - name: Germanium Fano metasurface
+        path: notebooks/HighQGe/
+        thumbnail:
+          description: Germanium Fano metasurface
+          image: /assets/tidy3d/examples/image/fano_metasurface.png
+      - name: CMOS RGB image sensor
+        path: notebooks/CMOSRGBSensor/
+        thumbnail:
+          description: CMOS RGB image sensor
+          image: /assets/tidy3d/examples/image/rgb_cmos_sensor.png
+      name: Graphene metamaterial absorber
+      pagination:
+        next: &id080
+          name: Tunable chiral metasurface based on phase change material
+          path: notebooks/TunableChiralMetasurface/
+        previous: *id078
+      path: notebooks/GrapheneMetamaterial/
+      thumbnail:
+        description: Graphene metamaterial absorber
+        image: /assets/tidy3d/examples/image/graphene_metamaterial_schematic.png
+      type: example-library
+    - category: Metamaterials, Gratings, and Other Periodic Structures
+      enable: true
+      enable_more_examples: true
+      more_examples:
+      - name: Dielectric metasurface absorber
+        path: notebooks/DielectricMetasurfaceAbsorber/
+        thumbnail:
+          description: Dielectric metasurface absorber
+          image: /assets/tidy3d/examples/image/metasurface.png
+      - name: Germanium Fano metasurface
+        path: notebooks/HighQGe/
+        thumbnail:
+          description: Germanium Fano metasurface
+          image: /assets/tidy3d/examples/image/fano_metasurface.png
+      - name: Distributed Bragg reflector and cavity
+        path: notebooks/DistributedBraggReflectorCavity/
+        thumbnail:
+          description: Distributed Bragg reflector and cavity
+          image: /assets/tidy3d/examples/image/dbr_schematic.png
+      name: Tunable chiral metasurface based on phase change material
+      pagination:
+        next: &id081
+          name: Microwave frequency selective surface
+          path: notebooks/MicrowaveFrequencySelectiveSurface/
+        previous: *id079
+      path: notebooks/TunableChiralMetasurface/
+      thumbnail:
+        description: Tunable chiral metasurface based on phase change material
+        image: /assets/tidy3d/examples/image/tunable_chiral_metasurface.png
+      type: example-library
+    - category: Metamaterials, Gratings, and Other Periodic Structures
+      enable: true
+      enable_more_examples: true
+      more_examples:
+      - name: Germanium Fano metasurface
+        path: notebooks/HighQGe/
+        thumbnail:
+          description: Germanium Fano metasurface
+          image: /assets/tidy3d/examples/image/fano_metasurface.png
+      - name: Multilevel blazed diffraction grating
+        path: notebooks/GratingEfficiency/
+        thumbnail:
+          description: Multilevel blazed diffraction grating
+          image: /assets/tidy3d/examples/image/blazed_grating.png
+      - name: Distributed Bragg reflector and cavity
+        path: notebooks/DistributedBraggReflectorCavity/
+        thumbnail:
+          description: Distributed Bragg reflector and cavity
+          image: /assets/tidy3d/examples/image/dbr_schematic.png
+      name: Microwave frequency selective surface
+      pagination:
+        next: &id082
+          name: High-Q silicon resonator
+          path: notebooks/HighQSi/
+        previous: *id080
+      path: notebooks/MicrowaveFrequencySelectiveSurface/
+      thumbnail:
+        description: Microwave frequency selective surface
+        image: /assets/tidy3d/examples/image/frequency_selective_surface.png
+      type: example-library
+    - category: Metamaterials, Gratings, and Other Periodic Structures
+      enable: true
+      enable_more_examples: true
+      more_examples:
+      - name: Dielectric metasurface absorber
+        path: notebooks/DielectricMetasurfaceAbsorber/
+        thumbnail:
+          description: Dielectric metasurface absorber
+          image: /assets/tidy3d/examples/image/metasurface.png
+      - name: Graphene metamaterial absorber
+        path: notebooks/GrapheneMetamaterial/
+        thumbnail:
+          description: Graphene metamaterial absorber
+          image: /assets/tidy3d/examples/image/graphene_metamaterial_schematic.png
+      - name: CMOS RGB image sensor
+        path: notebooks/CMOSRGBSensor/
+        thumbnail:
+          description: CMOS RGB image sensor
+          image: /assets/tidy3d/examples/image/rgb_cmos_sensor.png
+      name: High-Q silicon resonator
+      pagination:
+        next: &id083
+          name: Germanium Fano metasurface
+          path: notebooks/HighQGe/
+        previous: *id081
+      path: notebooks/HighQSi/
+      thumbnail:
+        description: High-Q silicon resonator
+        image: /assets/tidy3d/examples/image/high_q_silicon_feature_image.png
+      type: example-library
+    - category: Metamaterials, Gratings, and Other Periodic Structures
+      enable: true
+      enable_more_examples: true
+      more_examples:
+      - name: High-Q silicon resonator
+        path: notebooks/HighQSi/
+        thumbnail:
+          description: High-Q silicon resonator
+          image: /assets/tidy3d/examples/image/high_q_silicon_feature_image.png
+      - name: Distributed Bragg reflector and cavity
+        path: notebooks/DistributedBraggReflectorCavity/
+        thumbnail:
+          description: Distributed Bragg reflector and cavity
+          image: /assets/tidy3d/examples/image/dbr_schematic.png
+      - name: CMOS RGB image sensor
+        path: notebooks/CMOSRGBSensor/
+        thumbnail:
+          description: CMOS RGB image sensor
+          image: /assets/tidy3d/examples/image/rgb_cmos_sensor.png
+      name: Germanium Fano metasurface
+      pagination:
+        next: &id084
+          name: Multilevel blazed diffraction grating
+          path: notebooks/GratingEfficiency/
+        previous: *id082
+      path: notebooks/HighQGe/
+      thumbnail:
+        description: Germanium Fano metasurface
+        image: /assets/tidy3d/examples/image/fano_metasurface.png
+      type: example-library
+    - category: Metamaterials, Gratings, and Other Periodic Structures
+      enable: true
+      enable_more_examples: true
+      more_examples:
+      - name: Gradient metasurface reflector
+        path: notebooks/GradientMetasurfaceReflector/
+        thumbnail:
+          description: Gradient metasurface reflector
+          image: /assets/tidy3d/examples/image/gradient_metasurface_reflector_schematic.png
+      - name: Graphene metamaterial absorber
+        path: notebooks/GrapheneMetamaterial/
+        thumbnail:
+          description: Graphene metamaterial absorber
+          image: /assets/tidy3d/examples/image/graphene_metamaterial_schematic.png
+      - name: Tunable chiral metasurface based on phase change material
+        path: notebooks/TunableChiralMetasurface/
+        thumbnail:
+          description: Tunable chiral metasurface based on phase change material
+          image: /assets/tidy3d/examples/image/tunable_chiral_metasurface.png
+      name: Multilevel blazed diffraction grating
+      pagination:
+        next: &id085
+          name: Biosensor grating simulation
+          path: notebooks/BiosensorGrating/
+        previous: *id083
+      path: notebooks/GratingEfficiency/
+      thumbnail:
+        description: Multilevel blazed diffraction grating
+        image: /assets/tidy3d/examples/image/blazed_grating.png
+      type: example-library
+    - category: Metamaterials, Gratings, and Other Periodic Structures
+      enable: true
+      enable_more_examples: true
+      more_examples:
+      - name: Graphene metamaterial absorber
+        path: notebooks/GrapheneMetamaterial/
+        thumbnail:
+          description: Graphene metamaterial absorber
+          image: /assets/tidy3d/examples/image/graphene_metamaterial_schematic.png
+      - name: High-Q silicon resonator
+        path: notebooks/HighQSi/
+        thumbnail:
+          description: High-Q silicon resonator
+          image: /assets/tidy3d/examples/image/high_q_silicon_feature_image.png
+      - name: Multilevel blazed diffraction grating
+        path: notebooks/GratingEfficiency/
+        thumbnail:
+          description: Multilevel blazed diffraction grating
+          image: /assets/tidy3d/examples/image/blazed_grating.png
+      name: Biosensor grating simulation
+      pagination:
+        next: &id086
+          name: Distributed Bragg reflector and cavity
+          path: notebooks/DistributedBraggReflectorCavity/
+        previous: *id084
+      path: notebooks/BiosensorGrating/
+      thumbnail:
+        description: Biosensor grating simulation
+        image: /assets/tidy3d/examples/image/biosensor_grating.png
+      type: example-library
+    - category: Metamaterials, Gratings, and Other Periodic Structures
+      enable: true
+      enable_more_examples: true
+      more_examples:
+      - name: Gradient metasurface reflector
+        path: notebooks/GradientMetasurfaceReflector/
+        thumbnail:
+          description: Gradient metasurface reflector
+          image: /assets/tidy3d/examples/image/gradient_metasurface_reflector_schematic.png
+      - name: Graphene metamaterial absorber
+        path: notebooks/GrapheneMetamaterial/
+        thumbnail:
+          description: Graphene metamaterial absorber
+          image: /assets/tidy3d/examples/image/graphene_metamaterial_schematic.png
+      - name: Multilevel blazed diffraction grating
+        path: notebooks/GratingEfficiency/
+        thumbnail:
+          description: Multilevel blazed diffraction grating
+          image: /assets/tidy3d/examples/image/blazed_grating.png
+      name: Distributed Bragg reflector and cavity
+      pagination:
+        next: &id087
+          name: CMOS RGB image sensor
+          path: notebooks/CMOSRGBSensor/
+        previous: *id085
+      path: notebooks/DistributedBraggReflectorCavity/
+      thumbnail:
+        description: Distributed Bragg reflector and cavity
+        image: /assets/tidy3d/examples/image/dbr_schematic.png
+      type: example-library
+    - category: Metamaterials, Gratings, and Other Periodic Structures
+      enable: true
+      enable_more_examples: true
+      more_examples:
+      - name: Dielectric metasurface absorber
+        path: notebooks/DielectricMetasurfaceAbsorber/
+        thumbnail:
+          description: Dielectric metasurface absorber
+          image: /assets/tidy3d/examples/image/metasurface.png
+      - name: Germanium Fano metasurface
+        path: notebooks/HighQGe/
+        thumbnail:
+          description: Germanium Fano metasurface
+          image: /assets/tidy3d/examples/image/fano_metasurface.png
+      - name: Distributed Bragg reflector and cavity
+        path: notebooks/DistributedBraggReflectorCavity/
+        thumbnail:
+          description: Distributed Bragg reflector and cavity
+          image: /assets/tidy3d/examples/image/dbr_schematic.png
+      name: CMOS RGB image sensor
+      pagination:
+        next: &id088
+          name: Band structure calculation of a photonic crystal slab
+          path: notebooks/Bandstructure/
+        previous: *id086
+      path: notebooks/CMOSRGBSensor/
+      thumbnail:
+        description: CMOS RGB image sensor
+        image: /assets/tidy3d/examples/image/rgb_cmos_sensor.png
+      type: example-library
+    title: Metamaterials, Gratings, and Other Periodic Structures
+    type: example-library
+  - enable: true
+    enable_more_examples: true
+    line: 219
+    menus:
+    - category: Photonic Crystals
+      enable: true
+      enable_more_examples: true
+      more_examples:
+      - name: Optimized photonic crystal L3 cavity
+        path: notebooks/OptimizedL3/
+        thumbnail:
+          description: Optimized photonic crystal L3 cavity
+          image: /assets/tidy3d/examples/image/l3_cavity.png
+      - name: Bistability in photonic crystal microcavities
+        path: notebooks/BistablePCCavity/
+        thumbnail:
+          description: Bistability in photonic crystal microcavities
+          image: /assets/tidy3d/examples/image/bistability.png
+      - name: Plasmonic waveguide sensor for carbon dioxide detection
+        path: notebooks/PlasmonicWaveguideCO2Sensor/
+        thumbnail:
+          description: Plasmonic waveguide sensor for carbon dioxide detection
+          image: /assets/tidy3d/examples/image/mim_co2_sensor.png
+      name: Band structure calculation of a photonic crystal slab
+      pagination:
+        next: &id089
+          name: Optimized photonic crystal L3 cavity
+          path: notebooks/OptimizedL3/
+        previous: *id087
+      path: notebooks/Bandstructure/
+      thumbnail:
+        description: Band structure calculation of a photonic crystal slab
+        image: /assets/tidy3d/examples/image/band_structure.png
+      type: example-library
+    - category: Photonic Crystals
+      enable: true
+      enable_more_examples: true
+      more_examples:
+      - name: Band structure calculation of a photonic crystal slab
+        path: notebooks/Bandstructure/
+        thumbnail:
+          description: Band structure calculation of a photonic crystal slab
+          image: /assets/tidy3d/examples/image/band_structure.png
+      - name: Bistability in photonic crystal microcavities
+        path: notebooks/BistablePCCavity/
+        thumbnail:
+          description: Bistability in photonic crystal microcavities
+          image: /assets/tidy3d/examples/image/bistability.png
+      - name: Particle swarm optimization of a polarization beam splitter
+        path: notebooks/ParticleSwarmOptimizedPBS/
+        thumbnail:
+          description: Particle swarm optimization of a polarization beam splitter
+          image: /assets/tidy3d/examples/image/particle_swarm_optimization_pbs.png
+      name: Optimized photonic crystal L3 cavity
+      pagination:
+        next: &id090
+          name: Bistability in photonic crystal microcavities
+          path: notebooks/BistablePCCavity/
+        previous: *id088
+      path: notebooks/OptimizedL3/
+      thumbnail:
+        description: Optimized photonic crystal L3 cavity
+        image: /assets/tidy3d/examples/image/l3_cavity.png
+      type: example-library
+    - category: Photonic Crystals
+      enable: true
+      enable_more_examples: true
+      more_examples:
+      - name: Band structure calculation of a photonic crystal slab
+        path: notebooks/Bandstructure/
+        thumbnail:
+          description: Band structure calculation of a photonic crystal slab
+          image: /assets/tidy3d/examples/image/band_structure.png
+      - name: Optimized photonic crystal L3 cavity
+        path: notebooks/OptimizedL3/
+        thumbnail:
+          description: Optimized photonic crystal L3 cavity
+          image: /assets/tidy3d/examples/image/l3_cavity.png
+      - name: Tunable chiral metasurface based on phase change material
+        path: notebooks/TunableChiralMetasurface/
+        thumbnail:
+          description: Tunable chiral metasurface based on phase change material
+          image: /assets/tidy3d/examples/image/tunable_chiral_metasurface.png
+      name: Bistability in photonic crystal microcavities
+      pagination:
+        next: &id091
+          name: Scattering cross-section calculation of a dielectric sphere
+          path: notebooks/Near2FarSphereRCS/
+        previous: *id089
+      path: notebooks/BistablePCCavity/
+      thumbnail:
+        description: Bistability in photonic crystal microcavities
+        image: /assets/tidy3d/examples/image/bistability.png
+      type: example-library
+    title: Photonic Crystals
+    type: example-library
+  - enable: true
+    enable_more_examples: true
+    line: 228
+    menus:
+    - category: Optical Scattering and Far-field Radiation
+      enable: true
+      enable_more_examples: true
+      more_examples:
+      - name: Scattering of a plasmonic nanoparticle
+        path: notebooks/PlasmonicNanoparticle/
+        thumbnail:
+          description: Scattering of a plasmonic nanoparticle
+          image: /assets/tidy3d/examples/image/plasmonic_nanoparticle_feature_image.png
+      - name: Plasmonic Yagi-Uda nanoantenna
+        path: notebooks/PlasmonicYagiUdaNanoantenna/
+        thumbnail:
+          description: Plasmonic Yagi-Uda nanoantenna
+          image: /assets/tidy3d/examples/image/yagi_uda_antenna_schematic_2.png
+      - name: Field projection for a zone plate
+        path: notebooks/ZonePlateFieldProjection/
+        thumbnail:
+          description: Field projection for a zone plate
+          image: /assets/tidy3d/examples/image/zone_plate.png
+      name: Scattering cross-section calculation of a dielectric sphere
+      pagination:
+        next: &id092
+          name: Scattering of a plasmonic nanoparticle
+          path: notebooks/PlasmonicNanoparticle/
+        previous: *id090
+      path: notebooks/Near2FarSphereRCS/
+      thumbnail:
+        description: Scattering cross-section calculation of a dielectric sphere
+        image: /assets/tidy3d/examples/image/sphere_rcs_feature_image.png
+      type: example-library
+    - category: Optical Scattering and Far-field Radiation
+      enable: true
+      enable_more_examples: true
+      more_examples:
+      - name: Scattering cross-section calculation of a dielectric sphere
+        path: notebooks/Near2FarSphereRCS/
+        thumbnail:
+          description: Scattering cross-section calculation of a dielectric sphere
+          image: /assets/tidy3d/examples/image/sphere_rcs_feature_image.png
+      - name: Plasmonic Yagi-Uda nanoantenna
+        path: notebooks/PlasmonicYagiUdaNanoantenna/
+        thumbnail:
+          description: Plasmonic Yagi-Uda nanoantenna
+          image: /assets/tidy3d/examples/image/yagi_uda_antenna_schematic_2.png
+      - name: Field projection for a zone plate
+        path: notebooks/ZonePlateFieldProjection/
+        thumbnail:
+          description: Field projection for a zone plate
+          image: /assets/tidy3d/examples/image/zone_plate.png
+      name: Scattering of a plasmonic nanoparticle
+      pagination:
+        next: &id093
+          name: Plasmonic Yagi-Uda nanoantenna
+          path: notebooks/PlasmonicYagiUdaNanoantenna/
+        previous: *id091
+      path: notebooks/PlasmonicNanoparticle/
+      thumbnail:
+        description: Scattering of a plasmonic nanoparticle
+        image: /assets/tidy3d/examples/image/plasmonic_nanoparticle_feature_image.png
+      type: example-library
+    - category: Optical Scattering and Far-field Radiation
+      enable: true
+      enable_more_examples: true
+      more_examples:
+      - name: Scattering cross-section calculation of a dielectric sphere
+        path: notebooks/Near2FarSphereRCS/
+        thumbnail:
+          description: Scattering cross-section calculation of a dielectric sphere
+          image: /assets/tidy3d/examples/image/sphere_rcs_feature_image.png
+      - name: Scattering of a plasmonic nanoparticle
+        path: notebooks/PlasmonicNanoparticle/
+        thumbnail:
+          description: Scattering of a plasmonic nanoparticle
+          image: /assets/tidy3d/examples/image/plasmonic_nanoparticle_feature_image.png
+      - name: Field projection for a zone plate
+        path: notebooks/ZonePlateFieldProjection/
+        thumbnail:
+          description: Field projection for a zone plate
+          image: /assets/tidy3d/examples/image/zone_plate.png
+      name: Plasmonic Yagi-Uda nanoantenna
+      pagination:
+        next: &id094
+          name: Field projection for a zone plate
+          path: notebooks/ZonePlateFieldProjection/
+        previous: *id092
+      path: notebooks/PlasmonicYagiUdaNanoantenna/
+      thumbnail:
+        description: Plasmonic Yagi-Uda nanoantenna
+        image: /assets/tidy3d/examples/image/yagi_uda_antenna_schematic_2.png
+      type: example-library
+    - category: Optical Scattering and Far-field Radiation
+      enable: true
+      enable_more_examples: true
+      more_examples:
+      - name: Scattering cross-section calculation of a dielectric sphere
+        path: notebooks/Near2FarSphereRCS/
+        thumbnail:
+          description: Scattering cross-section calculation of a dielectric sphere
+          image: /assets/tidy3d/examples/image/sphere_rcs_feature_image.png
+      - name: Scattering of a plasmonic nanoparticle
+        path: notebooks/PlasmonicNanoparticle/
+        thumbnail:
+          description: Scattering of a plasmonic nanoparticle
+          image: /assets/tidy3d/examples/image/plasmonic_nanoparticle_feature_image.png
+      - name: Plasmonic Yagi-Uda nanoantenna
+        path: notebooks/PlasmonicYagiUdaNanoantenna/
+        thumbnail:
+          description: Plasmonic Yagi-Uda nanoantenna
+          image: /assets/tidy3d/examples/image/yagi_uda_antenna_schematic_2.png
+      name: Field projection for a zone plate
+      pagination:
+        next: &id095
+          name: 3D optical Luneburg lens
+          path: notebooks/OpticalLuneburgLens/
+        previous: *id093
+      path: notebooks/ZonePlateFieldProjection/
+      thumbnail:
+        description: Field projection for a zone plate
+        image: /assets/tidy3d/examples/image/zone_plate.png
+      type: example-library
+    title: Optical Scattering and Far-field Radiation
+    type: example-library
+  - enable: true
+    enable_more_examples: true
+    line: 238
+    menus:
+    - category: Lenses
+      enable: true
+      enable_more_examples: true
+      more_examples:
+      - name: Metalens in the visible frequency range
+        path: notebooks/Metalens/
+        thumbnail:
+          description: Metalens in the visible frequency range
+          image: /assets/tidy3d/examples/image/metalens.png
+      - name: Spherical Fresnel lens
+        path: notebooks/FresnelLens/
+        thumbnail:
+          description: Spherical Fresnel lens
+          image: /assets/tidy3d/examples/image/fresnel_lens.png
+      - name: Band structure calculation of a photonic crystal slab
+        path: notebooks/Bandstructure/
+        thumbnail:
+          description: Band structure calculation of a photonic crystal slab
+          image: /assets/tidy3d/examples/image/band_structure.png
+      name: 3D optical Luneburg lens
+      pagination:
+        next: &id096
+          name: Metalens in the visible frequency range
+          path: notebooks/Metalens/
+        previous: *id094
+      path: notebooks/OpticalLuneburgLens/
+      thumbnail:
+        description: 3D optical Luneburg lens
+        image: /assets/tidy3d/examples/image/optical_luneburg_lens_schematic.png
+      type: example-library
+    - category: Lenses
+      enable: true
+      enable_more_examples: true
+      more_examples:
+      - name: 3D optical Luneburg lens
+        path: notebooks/OpticalLuneburgLens/
+        thumbnail:
+          description: 3D optical Luneburg lens
+          image: /assets/tidy3d/examples/image/optical_luneburg_lens_schematic.png
+      - name: Spherical Fresnel lens
+        path: notebooks/FresnelLens/
+        thumbnail:
+          description: Spherical Fresnel lens
+          image: /assets/tidy3d/examples/image/fresnel_lens.png
+      - name: Thin film lithium niobate adiabatic waveguide coupler
+        path: notebooks/AdiabaticCouplerLN/
+        thumbnail:
+          description: Thin film lithium niobate adiabatic waveguide coupler
+          image: /assets/tidy3d/examples/image/LN_adiabatic_coupler.png
+      name: Metalens in the visible frequency range
+      pagination:
+        next: &id097
+          name: Spherical Fresnel lens
+          path: notebooks/FresnelLens/
+        previous: *id095
+      path: notebooks/Metalens/
+      thumbnail:
+        description: Metalens in the visible frequency range
+        image: /assets/tidy3d/examples/image/metalens.png
+      type: example-library
+    - category: Lenses
+      enable: true
+      enable_more_examples: true
+      more_examples:
+      - name: 3D optical Luneburg lens
+        path: notebooks/OpticalLuneburgLens/
+        thumbnail:
+          description: 3D optical Luneburg lens
+          image: /assets/tidy3d/examples/image/optical_luneburg_lens_schematic.png
+      - name: Metalens in the visible frequency range
+        path: notebooks/Metalens/
+        thumbnail:
+          description: Metalens in the visible frequency range
+          image: /assets/tidy3d/examples/image/metalens.png
+      - name: High-Q silicon resonator
+        path: notebooks/HighQSi/
+        thumbnail:
+          description: High-Q silicon resonator
+          image: /assets/tidy3d/examples/image/high_q_silicon_feature_image.png
+      name: Spherical Fresnel lens
+      pagination:
+        next: &id098
+          name: Hyperbolic polaritons in nanostructured hBN
+          path: notebooks/NanostructuredBoronNitride/
+        previous: *id096
+      path: notebooks/FresnelLens/
+      thumbnail:
+        description: Spherical Fresnel lens
+        image: /assets/tidy3d/examples/image/fresnel_lens.png
+      type: example-library
+    title: Lenses
+    type: example-library
+  - enable: true
+    enable_more_examples: true
+    line: 247
+    menus:
+    - category: Nanophotonics
+      enable: true
+      enable_more_examples: true
+      more_examples:
+      - name: Anderson localization of electromagnetic waves in 3D
+        path: notebooks/AndersonLocalization/
+        thumbnail:
+          description: Anderson localization of electromagnetic waves in 3D
+          image: /assets/tidy3d/examples/image/Anderson_localization_feature_image.png
+      - name: Atomically thin waveguides based on MoS<sub>2</sub> monolayers
+        path: notebooks/MoS2Waveguide/
+        thumbnail:
+          description: Atomically thin waveguides based on MoS<sub>2</sub> monolayers
+          image: /assets/tidy3d/examples/image/MoS2_waveguide.png
+      - name: Radiative cooling glass coating
+        path: notebooks/RadiativeCoolingGlass/
+        thumbnail:
+          description: Radiative cooling glass coating
+          image: /assets/tidy3d/examples/image/radiative_cooling_glass.png
+      name: Hyperbolic polaritons in nanostructured hBN
+      pagination:
+        next: &id099
+          name: Unidirectional SPP from non-Hermitian metagratings
+          path: notebooks/NonHermitianMetagratings/
+        previous: *id097
+      path: notebooks/NanostructuredBoronNitride/
+      thumbnail:
+        description: Hyperbolic polaritons in nanostructured hBN
+        image: /assets/tidy3d/examples/image/hBN_metamaterial.png
+      type: example-library
+    - category: Nanophotonics
+      enable: true
+      enable_more_examples: true
+      more_examples:
+      - name: Hyperbolic polaritons in nanostructured hBN
+        path: notebooks/NanostructuredBoronNitride/
+        thumbnail:
+          description: Hyperbolic polaritons in nanostructured hBN
+          image: /assets/tidy3d/examples/image/hBN_metamaterial.png
+      - name: Atomically thin waveguides based on MoS<sub>2</sub> monolayers
+        path: notebooks/MoS2Waveguide/
+        thumbnail:
+          description: Atomically thin waveguides based on MoS<sub>2</sub> monolayers
+          image: /assets/tidy3d/examples/image/MoS2_waveguide.png
+      - name: Radiative cooling glass coating
+        path: notebooks/RadiativeCoolingGlass/
+        thumbnail:
+          description: Radiative cooling glass coating
+          image: /assets/tidy3d/examples/image/radiative_cooling_glass.png
+      name: Unidirectional SPP from non-Hermitian metagratings
+      pagination:
+        next: &id100
+          name: Anderson localization of electromagnetic waves in 3D
+          path: notebooks/AndersonLocalization/
+        previous: *id098
+      path: notebooks/NonHermitianMetagratings/
+      thumbnail:
+        description: Unidirectional SPP from non-Hermitian metagratings
+        image: /assets/tidy3d/examples/image/nonhermitian_metagrating.png
+      type: example-library
+    - category: Nanophotonics
+      enable: true
+      enable_more_examples: true
+      more_examples:
+      - name: Hyperbolic polaritons in nanostructured hBN
+        path: notebooks/NanostructuredBoronNitride/
+        thumbnail:
+          description: Hyperbolic polaritons in nanostructured hBN
+          image: /assets/tidy3d/examples/image/hBN_metamaterial.png
+      - name: Atomically thin waveguides based on MoS<sub>2</sub> monolayers
+        path: notebooks/MoS2Waveguide/
+        thumbnail:
+          description: Atomically thin waveguides based on MoS<sub>2</sub> monolayers
+          image: /assets/tidy3d/examples/image/MoS2_waveguide.png
+      - name: Radiative cooling glass coating
+        path: notebooks/RadiativeCoolingGlass/
+        thumbnail:
+          description: Radiative cooling glass coating
+          image: /assets/tidy3d/examples/image/radiative_cooling_glass.png
+      name: Anderson localization of electromagnetic waves in 3D
+      pagination:
+        next: &id101
+          name: Atomically thin waveguides based on MoS<sub>2</sub> monolayers
+          path: notebooks/MoS2Waveguide/
+        previous: *id099
+      path: notebooks/AndersonLocalization/
+      thumbnail:
+        description: Anderson localization of electromagnetic waves in 3D
+        image: /assets/tidy3d/examples/image/Anderson_localization_feature_image.png
+      type: example-library
+    - category: Nanophotonics
+      enable: true
+      enable_more_examples: true
+      more_examples:
+      - name: Hyperbolic polaritons in nanostructured hBN
+        path: notebooks/NanostructuredBoronNitride/
+        thumbnail:
+          description: Hyperbolic polaritons in nanostructured hBN
+          image: /assets/tidy3d/examples/image/hBN_metamaterial.png
+      - name: Anderson localization of electromagnetic waves in 3D
+        path: notebooks/AndersonLocalization/
+        thumbnail:
+          description: Anderson localization of electromagnetic waves in 3D
+          image: /assets/tidy3d/examples/image/Anderson_localization_feature_image.png
+      - name: Radiative cooling glass coating
+        path: notebooks/RadiativeCoolingGlass/
+        thumbnail:
+          description: Radiative cooling glass coating
+          image: /assets/tidy3d/examples/image/radiative_cooling_glass.png
+      name: Atomically thin waveguides based on MoS<sub>2</sub> monolayers
+      pagination:
+        next:
+          name: Radiative cooling glass coating
+          path: notebooks/RadiativeCoolingGlass/
+        previous: *id100
+      path: notebooks/MoS2Waveguide/
+      thumbnail:
+        description: Atomically thin waveguides based on MoS<sub>2</sub> monolayers
+        image: /assets/tidy3d/examples/image/MoS2_waveguide.png
+      type: example-library
+    - category: Nanophotonics
+      enable: true
+      enable_more_examples: true
+      more_examples:
+      - name: Hyperbolic polaritons in nanostructured hBN
+        path: notebooks/NanostructuredBoronNitride/
+        thumbnail:
+          description: Hyperbolic polaritons in nanostructured hBN
+          image: /assets/tidy3d/examples/image/hBN_metamaterial.png
+      - name: Unidirectional SPP from non-Hermitian metagratings
+        path: notebooks/NonHermitianMetagratings/
+        thumbnail:
+          description: Unidirectional SPP from non-Hermitian metagratings
+          image: /assets/tidy3d/examples/image/nonhermitian_metagrating.png
+      - name: Atomically thin waveguides based on MoS<sub>2</sub> monolayers
+        path: notebooks/MoS2Waveguide/
+        thumbnail:
+          description: Atomically thin waveguides based on MoS<sub>2</sub> monolayers
+          image: /assets/tidy3d/examples/image/MoS2_waveguide.png
+      name: Radiative cooling glass coating
+      pagination:
+        next: false
+        previous: *id101
+      path: notebooks/RadiativeCoolingGlass/
+      thumbnail:
+        description: Radiative cooling glass coating
+        image: /assets/tidy3d/examples/image/radiative_cooling_glass.png
+      type: example-library
+    title: Nanophotonics
+    type: example-library
+  title: Case Studies
+  type: example-library
+title: Tidy3D Example Library

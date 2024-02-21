@@ -1,0 +1,113 @@
+{
+  "title": "FDTD 101: Lecture 10",
+  "pages": [
+    {
+      "id": "",
+      "title": "",
+      "transcript": "We'll continue our tutorial on the FDTD method. In particular, we would be talking about subpixel averaging."
+    },
+    {
+      "id": "",
+      "title": "How to capture geometric features below grid size in FDTD?",
+      "paragraphs": [
+        {
+          "title": "How to capture geometric features below grid size in FDTD?",
+          "transcript": "In the previous lecture, we highlighted the importance of understanding how the dielectric function is distributed over the grids. As a simple illustration, we simulate the transmission of light through a dielectric slab. Naturally, the electric constant is assigned to reflect the thickness of the slab. Now suppose that the discretization level is 25 nm. In the simplest algorithm, you examine every single grid point (electric grid point here), and if the electric field grid point is inside the dielectric slab, the dielectric constant of the grid is assigned to be the dielectric value in the slab. For example, in the case of silicon, it will be 12.25. If the grid point is outside the slab, as indicated as blue dots here, the dielectric constant is assigned to be that of the air, which is 1."
+        },
+        {
+          "title": "",
+          "transcript": "However, because the grid size is always larger than 0, the variation of the slab thickness below the discretization level will not be captured. Here is an example: suppose you intend to simulate a slab of thickness of 150 nm, in the upper figure, the red dots are assigned to be silicon; however, when you increase the thickness to 175 nm where the change is right at the discretization level, the number of grid points assigned to silicon remains the same. So even though you intend to simulate two slabs of different thickness, the results are actually identical. Thus you don’t have access to the information about the thickness beyond the spatial discretization level. It will be nicer to develop a scheme that takes into account the dielectric function distribution beyond integer multiples of the grid size."
+        }
+      ]
+    },
+    {
+      "id": "",
+      "title": "Basic idea of subpixel averaging",
+      "transcript": "That's where the idea of subpixel averaging comes in. In subpixel averaging, for the grid point in the vicinity of the material boundary, one assigns the dielectric constant in a way that takes into account where the boundary lies within the unit cell."
+    },
+    {
+      "id": "",
+      "title": "Simplest scheme of subpixel averaging",
+      "paragraphs": [
+        {
+          "title": "Simplest scheme of subpixel averaging",
+          "transcript": "Here we illustrate a very simple idea of what one can do: as shown in the left figure, the open region is air and the solid region is the dielectric, and there is a grid point in the vicinity of this boundary. Now let’s focus on the computational unit cell around the grid point. In the top figure where the slab thickness is 150 nm, the grid point lies right at the interface between silicon and air. Therefore, in the computational unit cell around the grid point, half is air and half is silicon. As a simplest way to average it, you can assign the dielectric constant at this grid point to be the average of silicon and air."
+        },
+        {
+          "title": "",
+          "transcript": "On the other hand, in the bottom figure where the thickness is 175 nm, by repeating the same process, you can see that in the computational unit cell around the grid point in the vicinity of the boundary, it is entirely silicon. Thus, the dielectric can be assigned to be silicon."
+        },
+        {
+          "title": "",
+          "transcript": "So with a simple formula, the dielectric constant assigned to the grid point has information about where the interface between the two materials really is. In both these cases, the permittivity assignment depends on the thickness of the layer."
+        }
+      ]
+    },
+    {
+      "id": "",
+      "title": "Numerical demonstration of the simplest scheme of subpixel averaging",
+      "paragraphs": [
+        {
+          "title": "Numerical demonstration of the simplest scheme of subpixel averaging",
+          "transcript": "This is a very simple idea, but it actually works quite well. Here we illustrate a numerical demonstration. We consider the light propagating along the z-axis, which is perpendicular to the slab. The electric field is assumed to polarize along the x-direction which is parallel to the slab."
+        },
+        {
+          "title": "",
+          "transcript": "The simulation results are shown in the figure on the right. The blue and the green curves correspond to the two cases where we change the thickness from 175 nm to be 150 nm. As you can see, the spectrum from the FDTD simulation agrees actually quite well with the analytical results. Also the spectrum from the FDTD simulation for the two thicknesses are different even though the change in the thickness is far below the length scale of the grid size. Thus this simple formula actually works quite well."
+        },
+        {
+          "title": "",
+          "transcript": "Now perhaps fortunately or unfortunately, this simple idea in fact only works in this particular setup where the electric field is parallel to the interface. To illustrate that, it will be helpful to go through a bit of a rigorous derivation of where subpixel averaging formulas come from."
+        }
+      ]
+    },
+    {
+      "id": "",
+      "title": "Field update procedure during time stepping",
+      "transcript": "In FDTD, a typical field update procedure is shown in the figure. One updates both the <span class='font-weight-bold'>D</span>-field and the <span class='font-weight-bold'>B</span>-field using the Maxwell equation that contains the curl operations; and then converts the <span class='font-weight-bold'>D</span>-field to the <span class='font-weight-bold'>E</span>-field through dielectric permittivity, as well as <span class='font-weight-bold'>B</span>-field to <span class='font-weight-bold'>H</span>-field through magnetic permeability."
+    },
+    {
+      "id": "",
+      "title": "The role of subpixel averaging in time stepping",
+      "transcript": "To do subpixel averaging, one would need to look carefully at both of these curl equations in order to derive the effective dielectric function near the interface. This would allow a conversion from the <span class='font-weight-bold'>D</span>-field to the <span class='font-weight-bold'>E</span>-field that takes into account the actual geometry of the structure."
+    },
+    {
+      "id": "",
+      "title": "Derivation of subpixel averaging for tangential components with Ampere’s law",
+      "paragraphs": [
+        {
+          "title": "Derivation of subpixel averaging for tangential components with Ampere’s law",
+          "transcript": "In our simple case with one-dimensional configuration, the electric field is polarized along the x-direction, and propagating along the z-direction. In this case, the only relevant E-grid points are those for the <span class='font-weight-bold'>$$E_x$$</span>-fields as indicated by the red dots. Likewise, the grids for the <span class='font-weight-bold'>$$H_y$$</span>-fields are indicated by the blue dots. The curl equation that relates the update of <span class='font-weight-bold'>D</span>-field to the curl of H-field can be converted to an integral form. In this form, the <span class='font-weight-bold'>D</span>-field is now spatially integrated along the line that connects the two <span class='font-weight-bold'>H</span>-field components."
+        },
+        {
+          "title": "",
+          "transcript": "Up to this point at the FDTD level, this is an exact representation of the curl equation. The next step is to convert the <span class='font-weight-bold'>D</span>-field to the <span class='font-weight-bold'>E</span>-field in order to update the <span class='font-weight-bold'>B</span>-field in the next step."
+        }
+      ]
+    },
+    {
+      "id": "",
+      "title": "Interface condition in deriving subpixel averaging formula",
+      "transcript": "An important observation is that the <span class='font-weight-bold'>$$E_x$$</span>-field is continuous because it's parallel to the interface. Consequently, to carry out the spatial integration of the <span class='font-weight-bold'>$$D_x$$</span>-field in a small enough unit cell, one can assume <span class='font-weight-bold'>$$E_x$$</span> to be uniform, and take it out of the integration. This leads to the effective dielectric formula: it is the spatial average of the dielectric function within the unit cell. That is exactly the formula that we have naively guessed and tested."
+    },
+    {
+      "id": "",
+      "title": "Limitation of the simple subpixel averaging formula",
+      "transcript": "To repeat, the formula here is a simple spatial average of the dielectric function within the unit cell surrounding the grid point. Note that the derivation here strongly relies upon the fact that the <span class='font-weight-bold'>$$E_x$$</span>-field is continuous parallel to the interface. In other words, it works well only in the case where the dominant electric field is parallel to the interface. As you can see in the figure, it does work well."
+    },
+    {
+      "id": "",
+      "title": "Subpixel averaging formula is more complicated in 2D and 3D",
+      "paragraphs": [
+        {
+          "title": "Subpixel averaging formula is more complicated in 2D and 3D",
+          "transcript": "The derivation here points to the fact that in general, subpixel averaging in fact is quite a bit more complicated. In the two dimensional case, the subpixel averaging would be different depending on the polarization: the s-polarization where the electric field is parallel to the interface, and the p-polarization where the electric field has both the parallel and perpendicular field components to the interface. The subpixel formulas are different for the two polarizations. In the three dimensional case, the interface and the field in general can have arbitrary orientation with respect to each other, so a tensorial average is needed in order to do correct subpixel averaging. This is the algorithm that we have implemented in Tidy3D."
+        },
+        {
+          "title": "",
+          "transcript": "To summarize the discussion, I hope to give you an illustration of the basic idea behind subpixel averaging. I also show perhaps the simplest example where you can take a simple spatial average of the dielectric function. But I also want to point to some of the subtleties associated with subpixel averaging that are related to the field component and the surface orientation. When implemented correctly, it is a very powerful algorithm in the FDTD code because it allows you to simulate certain geometric features at the length scale smaller than the discretization level."
+        }
+      ]
+    }
+  ]
+}

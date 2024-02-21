@@ -1,0 +1,74 @@
+{
+  "title": "Tidy3D GUI: Tutorial 13",
+  "pages": [
+    {
+      "id": "",
+      "title": "",
+      "transcript": "Script objects offer a convenient approach for creating complex structures, especially ones like this L3 photonic crystal cavity, where precise positioning of numerous geometries is essential."
+    },
+    {
+      "id": "",
+      "title": "",
+      "paragraphs": [
+        {
+          "title": "",
+          "transcript": "Upon selecting \"Add Script Object\", a library of script objects will unfold, each carefully tailored to allow you to construct various predefined structures. You can find simple waveguide or taper structures, more intricate geometries like s-bends and directional couplers, and 2D and 3D periodic lattices."
+        },{
+          "title": "",
+          "transcript": "Let's delve into the Directional coupler. Click on it to access its script in the \"Edit Script\" window. Inside, you'll find a Python script that begins with library imports and proceeds to define the \"generate_object\" function. All the variables and code required to build the directional coupler are already in place within this function. Then, it returns a \"Structure\" object outlining the directional coupler's geometry and materials. You can change the default parameters before running the script and observe the resulting structure."
+        },{
+          "title": "",
+          "transcript": "Delete the directional coupler script to exclude its entry in the \"Structures\" list. Then, create a ring, modify some default parameters like the ring radius, and run the script to see the new ring structure. What about repeating this process to build an \"H cavity\"? When you want to change some design parameter, you can select the existing script, make the changes you need, and rerun the script to update the geometry."
+        }
+      ]
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "Let's clear these scripts to prepare the FDTD model for building an L3 photonic crystal cavity."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "Move to the \"Parameter\" tab and insert these variables, which you'll utilize to parameterize the cavity structure."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "Configure the \"Simulation Domain\" using these parameters. Set the run time to 6.25 picoseconds, minimum steps per wavelength to 20, and wavelength to 1.55 microns in \"Grid Specification\"."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "Retain the boundary condition at its default PML value, and adjust the symmetry options as indicated for the x-, y-, and z-directions."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "Create an \"Ey\" polarized dipole source positioned at the simulation domain's center, and adjust its wavelength range between 1.47 and 1.6 microns."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "Finally, define a \"FieldTimeMonitor\" to visualize the fields at the simulation's end. Adjust the size to 4 microns in the x-direction and 3.5 microns in the y-direction. Then, set the start time to 6.25 picoseconds."
+    },
+    {
+      "id": "",
+      "title": "",
+      "paragraphs": [
+        {
+          "title": "",
+          "transcript": "Click \"Add Script Object\" and select the L cavity script. Let's customize the \"hex_l_cavity\" function to generate the slab medium alongside the cavity air holes. This function accepts a parameter, the \"param\" variable, allowing access to all data created under the \"Parameter\" tab. Adjust the cylinder radius from 0.3 to \"param.hole_rad\". This way, you bind the cavity hole's radius and the value entered in the \"hole_rad\" variable. Do the same to the \"side_R\" variable. The two subsequent variables define the distance between the centers of the holes in the x-, and y-directions. As we have a triangular photonic crystal lattice, you can set their values to 0.5 and sin(60) times the lattice constant. Replace the cylinder values in the x- and y-directions with \"param.nx\" and \"param.ny\" variables and set the height to \"param.slab_t\"."
+        },
+        {
+          "title": "",
+          "transcript": "To assign the hole's material as air, set the medium variable to \"param.medium.Vacuum.\" Create the \"medium_slab\" variable and link it to \"param.medium.Si\". To define the silicon slab, insert this code block, creating a structure object of type \"Box\"."
+        },
+        {
+          "title": "",
+          "transcript": "Form a list to return the silicon slab and hole objects within the return statement. Alongside structures, you can also return sources and monitor objects if needed. Run the script to verify the L cavity design. Then, launch the simulation to observe the time-domain field distribution of the cavity mode obtained at the end of the simulation. To modify the structure, simply adjust the variable values under the parameter tab, and the cavity will promptly update."
+        }
+      ]
+    }
+  ]
+}

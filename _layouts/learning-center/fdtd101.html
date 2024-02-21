@@ -1,0 +1,208 @@
+---
+layout: learning-center/home
+---
+<div class="learn-center-item-container">
+  <div class="row">
+    <div class="col-12 offset-0 col-lg-11 offset-lg-1 pl-30 pr-30 pb-30 pt-0 shadow-box background-linear-white">
+      {% assign type = page.menu_config.selected | default: 'fdtd101' | slugify | downcase %}
+      {% assign typeParameter = site.data.general_settings[type] %}
+      <div class="d-none d-md-flex navigation-header align-items-center justify-content-between color-dark-gray">
+        <p class="mb-0 text-truncate">
+          <a href="{{typeParameter.link}}?name={{page.lecture_title | slugify}}" class="color-dark-gray-12 color-primary-hover">{{typeParameter.title}}</a>
+          / <span class="color-dark-3">{% include learning-center/fdtd101/lecture-title.html lecture_title=page.lecture_title %}</span>
+        </p>
+        <div class="d-flex align-items-center" style="column-gap: 30px">
+          {% if page.time_consuming %}
+          <span class="color-dark-gray-2 font-size-16 d-flex align-items-center" style="column-gap: 8px"><i class="jam jam-clock font-size-20"></i> {{page.time_consuming}}</span>
+          {% endif %}
+          {% if page.course_number < 10 %}
+          {% assign formattedNumber = "0" | append: page.course_number %}
+          {% else %}
+          {% assign formattedNumber = page.course_number %}
+          {% endif %}
+          <span class="font-size-20 color-dark-gray font-weight-600">{{typeParameter.course_type}} {{formattedNumber}}</span>
+        </div>
+      </div>
+      <div class="d-flex d-md-none navigation-header flex-column">
+        <p class="mb-0 text-truncate">
+          <a href="{{typeParameter.link}}?name={{page.lecture_title | slugify}}" class="color-dark-gray-12 color-primary-hover">{{typeParameter.title}}</a>
+          / <span class="color-dark-3">{% include learning-center/fdtd101/lecture-title.html lecture_title=page.lecture_title %}</span>
+        </p>
+        <div class="d-flex align-items-center justify-content-between">
+          {% if page.course_number < 10 %}
+          {% assign formattedNumber = "0" | append: page.course_number %}
+          {% else %}
+          {% assign formattedNumber = page.course_number %}
+          {% endif %}
+          <span class="font-size-20 color-dark-gray font-weight-600">{{typeParameter.course_type}} {{formattedNumber}}</span>
+          {% if page.time_consuming %}
+          <span class="color-dark-gray-2 font-size-16 d-flex align-items-center" style="column-gap: 8px"><i class="jam jam-clock font-size-20"></i> {{page.time_consuming}}</span>
+          {% endif %}
+        </div>
+      </div>
+      <div class="space20"></div>
+      <div class="lecture-abstract">
+        <h1 class="font-size-32 color-dark mb-0">
+          {% include learning-center/fdtd101/lecture-title.html lecture_title=page.lecture_title %}
+        </h1>
+        <span class="color-dark-gray-3">By {{page.author}}</span>
+        <div class="space10"></div>
+        {% if page.lecture_description %}
+        <p class="font-size-16 color-dark-gray line-height-28 mb-0">
+          {{page.lecture_description}}
+        </p>
+        {% endif %}
+        {% if page.container %}
+        <p class="font-size-16 color-dark-gray line-height-32 mb-0">
+          {{page.container}}
+        </p>
+        {% endif %}
+        <div class="space10"></div>
+        <div class="d-flex flex-wrap justify-content-between align-items-center" style="row-gap: 10px">
+          {%if page.click_id_prefix %}
+          {% assign subscribe_btn = 'btn,subscribe-to-receive-update' | split: ',' %}
+          {% assign sign_up_btn = 'btn,sign-up-tidy3d' | split: ',' %}
+          {% assign share_btn = 'share,btn' | split: ',' %}
+          {% assign subscribe_prefix = page.click_id_prefix | split: '_' | concat:subscribe_btn | join: '_'  %}
+          {% assign sign_up_prefix = page.click_id_prefix | split: '_' | concat:sign_up_btn | join: '_'  %}
+          {% assign share_prefix = page.click_id_prefix | split: '_' | concat:share_btn | join: '_'  %}
+          <div class="d-flex flex-wrap" style="row-gap: 5px; column-gap: 5px">
+            {% include subscribe_btn.html extra_id=subscribe_prefix %}
+          </div>
+          {% include social_link.html extra_id=share_prefix %}
+          {%else%}
+          <div class="d-flex flex-wrap" style="row-gap: 5px; column-gap: 5px">
+            {% include sign-up-tidy3d-button/default.html%}
+            {% include subscribe_btn_dashed.html%}
+          </div>
+          {% include social_link.html %}
+          {%endif%}
+        </div>
+        <div class="space20"></div>
+        {% include learning-center/fdtd101/lecture-actions.html item=page %}
+        <div class="space30"></div>
+        {% if page.videoId %}
+        <div style="width: 80%; margin: auto">
+          <lite-vimeo id="{{page.click_id_prefix}}_video" videoid="{{page.videoId}}"></lite-vimeo>
+        </div>
+        {% endif %}
+        <div class="space20"></div>
+        <div class="lecture-extra-info d-flex justify-content-between">
+          {% if page.date %}
+          <div style="max-width: 210px">
+            <span class="d-block color-black line-height-22">Additional information:</span>
+            <span class="d-block color-dark-gray line-height-22">This {{typeParameter.course_type}} was updated in {{page.date | date: "%b %d, %Y"}}</span>
+          </div>
+          {% endif %}
+          {% if page.references %}
+          <div>
+            <span>References:</span>
+            <span></span>
+          </div>
+          {% endif %}
+          {% if page.notes %}
+          <div>
+            <span>Notes:</span>
+            <span></span>
+          </div>
+          {% endif %}
+        </div>
+
+        <div class="space20"></div>
+        <div class="pagination">
+          <ul class="d-flex justify-content-between align-items-center">
+            <li class="pagination-item" style="text-align: start">
+              {% if page.previous_link %}
+              <a id="{{page.click_id_prefix}}_previous-lecture_btn" href="{{ page.previous_link }}" class="d-flex align-items-center color-primary-hover" style="column-gap: 10px">
+                <i class="jam jam-arrow-left"></i>
+                Previous {{typeParameter.course_type}}
+              </a>
+              {% endif %}
+            </li>
+            <li class="pagination-item" style="text-align: end">
+              {% if page.next_link %}
+              <a id="{{page.click_id_prefix}}_next-lecture_btn" href="{{ page.next_link }}" class="d-flex align-items-center color-primary-hover" style="column-gap: 10px">
+                Next {{typeParameter.course_type}}
+                <i class="jam jam-arrow-right"></i>
+              </a>
+              {% endif %}
+            </li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+    <div class="space30"></div>
+    <div class="col-12 offset-0 col-lg-11 offset-lg-1 p-0 shadow-box background-linear-white">
+      <div id="{{page.active}}" class="accordion-wrapper simple custom-collapsed">
+        <!-- source html -->
+        {% if page.source_html_list %}
+        <div class="card">
+          <div class="card-header" id="introduction" style="background: var(--color-white)">
+            <button
+                class="lecture-collapsed-header"
+                data-toggle="collapse"
+                data-target="#introduction-content"
+                data-expanded="true"
+                data-controls="introduction-content">
+              Lecture Tutorial
+            </button>
+          </div>
+          <!-- /.card-header -->
+          <div id="introduction-content" class="collapse show" data-labelledby="introduction" data-target="#{{page.active}}">
+            <div class="card-body">
+              {% for html in page.source_html_list %}
+              {% include {{html.html}} %}
+              <div class="space50"></div>
+              {% endfor %}
+            </div>
+            <!-- /.card-body -->
+          </div>
+          <!-- /.collapse -->
+        </div>
+        {% endif %}
+        <!-- /.card -->
+        <!-- ppt -->
+        {% if page.pdf_url %}
+        <div class="card">
+          <div class="card-header d-flex flex-wrap align-items-center justify-content-between" id="presentation-slides" style="background: var(--color-white)">
+            <button
+                class="lecture-collapsed-header"
+                data-toggle="collapse"
+                data-target="#presentation-slides-content"
+                data-expanded="true"
+                data-controls="presentation-slides-content">
+              View Presentation Slides
+            </button>
+            <div class="collapse-header-ext">
+              <img width="27" height="27" src="/assets/images/pdf.png" alt="">
+              <span class="font-size-16 color-black-1">
+                        {% assign download_btn = 'btn,download-pdf' | split: ',' %}
+                        {% assign download_prefix = page.click_id_prefix | split: '_' | concat:download_btn | join: '_'  %}
+                        {% include download_pdf.html
+                          extra_id=download_prefix
+                          url=page.pdf_url
+                          title=page.download_pdf_title
+                        %}
+                      </span>
+            </div>
+          </div>
+          <!-- /.card-header -->
+          <div id="presentation-slides-content" class="collapse show" data-labelledby="presentation-slides" data-target="#{{page.active}}">
+            <div class="card-body p-20">
+              {% if page.transcript %}
+              {% assign type = page.menu_config.selected | default: 'fdtd101' | slugify | downcase %}
+              {% assign transcript = site.data.transcripts[type][page.transcript] | jsonfy %}
+              {% include pdf-viewer.html transcript=transcript %}
+              {% endif %}
+            </div>
+            <!-- /.card-body -->
+          </div>
+          <!-- /.collapse -->
+        </div>
+        {% endif %}
+        <!-- /.card -->
+      </div>
+    </div>
+  </div>
+</div>

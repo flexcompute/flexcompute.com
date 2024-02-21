@@ -1,0 +1,209 @@
+<div class="modal fade position-fixed" id="Subscribe" tabindex="-1" role="dialog" data-labelledby="modal-01"
+     data-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-md" role="document" style="width: 400px;">
+        <div class="modal-content">
+            <div class="container-fluid boxed p-0 position-relative">
+                <div id="subscribe-modal-header" class="subscribe-modal-header modal-header p-10 d-flex justify-content-between align-items-center">
+                    <h3 class="mb-0 font-size-16" id="subscribe-modal-title">Subscribe</h3>
+                </div>
+                <button type="button" class="close position-absolute" data-dismiss="modal" aria-label="Close" id="modal-close-btn" style="top: 8px !important;">
+                    <span data-hidden="true">&times;</span>
+                </button>
+                <div class="position-relative subscribe-modal-body" id="subscribe-modal-body">
+                    <div class="row no-gutters">
+                        <div class="col-lg-12">
+                            <div class="p-20 d-flex">
+                                <div class="align-self-center" style="width: 100%;">
+                                    <div class="newsletter-wrapper form-group-shadow" id="form-group-shadow">
+                                        <div id="subscribe-form">
+                                            <form
+                                                action="https://1sadflexcompute.us14.list-manage.com/subscribe/post?u=4fb72f7d323950bae34717b3f&amp;id=62958770b2"
+                                                method="post"
+                                                id="mc-embedded-subscribe-form"
+                                                name="mcEmbeddedSubscribeForm"
+                                                class="validate fields-white"
+                                                target="hideIframe"
+                                            >
+                                                <div id="mc_embed_signup_scroll" class="input-group d-block">
+                                                    <div>
+                                                        <label for="mce-EMAIL" class="mb-0 font-size-14">Email Address</label>
+                                                        <input
+                                                            style="width: 100%;"
+                                                            type="email"
+                                                            value=""
+                                                            name="EMAIL"
+                                                            class="required form-control reset-input"
+                                                            id="mce-EMAIL"
+                                                            required
+                                                            data-error="email is required"
+                                                        >
+                                                    </div>
+                                                    <div class="space15"></div>
+                                                    <input value="Subscribe" type="submit"
+                                                           name="subscribe" id="mc-embedded-subscribe"
+                                                           class="btn btn-sm m-0 btn-primary border-radius-4 float-right">
+                                                    <div id="mce-responses" class="clear">
+                                                        <div class="response" id="mce-error-response"
+                                                             style="display:none"></div>
+                                                        <div class="response" id="mce-success-response"
+                                                             style="display:none"></div>
+                                                    </div>
+                                                    <!-- real people should not fill this in and expect good things - do not remove this or risk form bot signups-->
+                                                    <div style="position: absolute; left: -5000px;" data-hidden="true">
+                                                        <input type="text" name="b_4fb72f7d323950bae34717b3f_62958770b2"
+                                                               tabindex="-1" value=""></div>
+                                                    <div class="clearfix"></div>
+                                                </div>
+                                            </form>
+                                        </div>
+                                        <div id="subscribe-success" class="text-center">
+                                            <img width="24" height="24" src="/assets/images/congratulations.png" alt="Thanks for subscribing">
+                                            <div class="space5"></div>
+                                            <p class="color-dark-3 font-size-18">Thanks for subscribing</p>
+                                            <button
+                                                type="button"
+                                                class="btn btn-sm m-0 btn-primary border-radius-4"
+                                                data-dismiss="modal"
+                                                aria-label="Close"
+                                                style="width: 80px"
+                                                id="subscribe-success-close-btn"
+                                            >
+                                                OK
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <!-- /.newsletter-wrapper -->
+                                </div>
+                                <!-- /div -->
+                            </div>
+                            <!-- /.box -->
+                        </div>
+                        <!--/column -->
+                    </div>
+                    <!--/div -->
+                </div>
+                <!--/.image-block-wrapper -->
+            </div>
+            <!--/.boxed -->
+        </div>
+        <!--/.modal-content -->
+    </div>
+    <!--/.modal-dialog -->
+    <iframe id="myIframe" name="hideIframe" style="display:none;"></iframe>
+</div>
+
+<script>
+    (function () {
+
+        const subscribeBtn = document.getElementById("mc-embedded-subscribe")
+        const closeBtn = document.getElementById("modal-close-btn")
+        const subscribeSuccessCloseBtn = document.getElementById("subscribe-success-close-btn")
+        const inputEle = document.getElementById("mce-EMAIL");
+        const subscribeSuccessElement = document.getElementById('subscribe-success');
+        const formElement = document.getElementById("subscribe-form");
+        const modalHeaderElement = document.getElementById("subscribe-modal-header");
+        const modalBodyElement = document.getElementById("subscribe-modal-body");
+        subscribeSuccessElement.style.display = 'block'
+        let titleElement = null
+        if (modalHeaderElement) {
+            titleElement = modalHeaderElement.children[0]
+        }
+
+        if (subscribeSuccessElement) {
+            subscribeSuccessElement.style.display = 'none'
+        }
+
+        const hideForm = () => {
+            if (formElement){
+                formElement.style.display = "none"
+            }
+            if (subscribeSuccessElement){
+                subscribeSuccessElement.style.display = 'block'
+            }
+            if (titleElement) {
+                titleElement.style.display = 'none'
+            }
+            if (modalHeaderElement){
+                modalHeaderElement.style.border = 'none'
+                modalHeaderElement.classList.remove('d-flex')
+                modalHeaderElement.classList.add('d-none')
+            }
+            if (closeBtn){
+                closeBtn.classList.remove('d-block')
+                closeBtn.classList.add('d-none')
+            }
+        }
+
+        const showForm = () =>{
+            inputEle.value = ""
+            if (formElement){
+                formElement.style.display = "block"
+            }
+            if (subscribeSuccessElement){
+                subscribeSuccessElement.style.display = 'none'
+            }
+            if (titleElement) {
+                titleElement.style.display = 'block'
+            }
+            if (modalHeaderElement) {
+                modalHeaderElement.style.display = 'block'
+                modalHeaderElement.classList.add('d-flex')
+                modalHeaderElement.classList.remove('d-none')
+            }
+            if (closeBtn){
+                closeBtn.classList.remove('d-none')
+                closeBtn.classList.add('d-block')
+            }
+        }
+
+        subscribeBtn.addEventListener('click', function (e) {
+            e.stopPropagation()
+            e.cancelBubble = true
+            const reg = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+            if (reg.test(inputEle.value)) {
+                hideForm()
+            }
+        })
+
+        // const openModalBtn = document.getElementById("global-subscribe-btn");
+        if (closeBtn){
+            closeBtn.addEventListener('click',e =>{
+                setTimeout(()=>{
+                    showForm()
+                },1000)
+            })
+        }
+        if (subscribeSuccessCloseBtn){
+            subscribeSuccessCloseBtn.addEventListener('click',e =>{
+                setTimeout(()=>{
+                    showForm()
+                },1000)
+            })
+        }
+
+        const formDom = document.getElementById("mc_embed_signup_scroll");
+        const html = document.createElement('input');
+        html.id = "mce-MLIST"
+        html.type = "hidden"
+        html.name = "MLIST"
+        const modalTitle = document.getElementById("subscribe-modal-title");
+        const pathName = window.location.pathname
+        if (pathName.indexOf("fdtd101") > -1 || pathName.indexOf('tidy3d/learning-center')>-1) {
+            html.value = 'EM'
+            formDom.prepend(html)
+            if (pathName.includes("publications")){
+                modalTitle.innerHTML = "Subscribe to Newsletter"
+            }else {
+                modalTitle.innerHTML = "Subscribe to Receive Updates"
+            }
+        } else if (pathName.indexOf("aircraft-cfd101")>-1 || pathName.indexOf("cfd-essentials")>-1){
+            html.value = 'CFD'
+            formDom.prepend(html)
+            modalTitle.innerHTML = "Subscribe to Receive Updates"
+        } else {
+            html.value = "CFD,EM"
+            formDom.prepend(html)
+            modalTitle.innerHTML = "Subscribe to Newsletter"
+        }
+    })()
+</script>

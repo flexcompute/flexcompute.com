@@ -1,0 +1,27 @@
+{% if include.loop_example_menus.enable %}
+{% assign loopMenuExample = include.loop_example_menus %}
+<div class="title submenu hover-expand" data-lecture-name="{{loopMenuExample.title | slugify}}" data-item-value="{{loopMenuExample.title}}" onmouseenter="learnCenterMenu.onSubMenuMouseEnter(event)" onmouseleave="learnCenterMenu.onSubMenuMouseLeave(event)">
+  <div class="d-flex align-items-center" style="column-gap: 10px">
+    <span class="number-circle d-inline-flex font-weight-600 justify-content-center align-items-center color-dark" style="flex-shrink: 0">{{include.loop_menu_index}}</span>
+    {% assign firstExample = loopMenuExample.menus | first %}
+    {% if firstExample.enable %}
+    {% assign startId = '_menu_link_btn' | split: ',' %}
+    {% assign startBtnId = idItem | split:',' | concat: startId | join:'' | downcase %}
+    <a id="{{startBtnId}}" href="/tidy3d/examples/{{firstExample.path}}" class="line-height-18 submenu-title" style="flex: 1">{{loopMenuExample.title}}</a>
+    {% else %}
+    <span class="line-height-18 submenu-title" style="flex: 1">{{loopMenuExample.title}}</span>
+    {% endif %}
+  </div>
+
+  <div class="quick-links color-dark-gray-9">
+    {% for menu in loopMenuExample.menus%}
+    {% assign exampleName = menu.name | slugify | prepend: "_" | split: ',' %}
+    {% assign exampleId = idItem | split:',' | concat: exampleName | join:'' | downcase %}
+    <div data-tutorial-name="{{menu.name | slugify}}" class="quick-links-item hover-expand d-flex justify-content-start line-height-20 pr-10 mb-8" style="column-gap: 5px">
+      <span>&bull;</span>
+      <a id="{{exampleId}}" class="color-dark-gray-9" title="{{menu.name}}" style="flex: 1" href="/tidy3d/examples/{{menu.path}}">{{menu.name}}</a>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}

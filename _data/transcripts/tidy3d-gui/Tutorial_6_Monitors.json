@@ -1,0 +1,106 @@
+{
+  "title": "Tidy3D GUI: Tutorial 6",
+  "pages": [
+    {
+      "id": "",
+      "title": "",
+      "transcript": "This tutorial will demonstrate how to set up various monitors to calculate and visualize data from FDTD simulations."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "Here, we have an FDTD model of a focusing grating coupler built on a silicon-on-insulator platform."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "This device is used to vertically couple light into and out of photonic integrated circuits using optical fibers."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "We will focus on the in-coupling condition, where a GaussianBeam source can simulate light injection from an optical fiber."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "To calculate the coupling efficiency, which measures the amount of injected power coupled to a specific waveguide mode, we can include a \"ModeMonitor\" in the simulation."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "The \"ModeMonitor\" records the frequency-domain fields at this specific plane positioned at the end of the output waveguide. It allows us to calculate the inner product between these fields and the target waveguide propagating modes, which are normalized to obtain the modal power."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "Typically, you can set the wavelength range from the source; previously adjusted between 1.52 and 1.58 micrometers. You can also define the number of frequency points to record, which determines the monitor's spectral resolution."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "The target modes are the next item to configure in the mode monitor. In this example, we are only interested in the fundamental transverse electric (TE) propagating mode. However, you can include multiple waveguide modes as needed. Like the configuration of mode sources, you can click on \"Open ModeSolver\" to perform a mode analysis and ensure you track the desired modes."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "Below the BOX layer, we have a \"FluxMonitor\" to calculate the power losses into the silicon substrate. The \"FluxMonitor\" integrates the flux recorded in the frequency domain over the specified surface defined by the center and size parameters."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "The monitor's spectral range is defined as before in the mode monitor. The \"normal_dir\" parameter is set to negative to quantify the power in the minus z-direction."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "Another \"FluxMonitor\" is placed above the cladding layer to calculate the power reflected at the grating surface. Its setup is similar, but its position and the \"normal_dir\" parameter are positive in this case."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "To visualize the field distribution along the xy plane that intersects the simulation domain through the grating lines, a \"FieldMonitor\" is included in the FDTD model."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "In the \"Edit Monitor\" panel, you can select the field components to be recorded. In this example, we have chosen to record all components, but to reduce memory requirements, they are recorded only at the center wavelength. Another helpful feature to minimize memory usage is downsampling, which allows you to define a coarser grid. Lastly, when the \"collocate\" parameter is set to True, the fields are calculated at the center of each grid cell."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "Another \"FieldMonitor\" bisects the simulation domain along the center xz plane to visualize the downwards/upwards propagating fields."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "The final monitor included in the model is a \"FieldTimeMonitor\", which is configured to record the time-domain field \"Ey\" at a single point located at the center of the output waveguide. In addition to the parameters in the \"FieldMonitor\", this monitor also has the \"start\", \"stop\", and \"interval\" parameters, which determine the initial and final monitoring times and the number of time steps between monitor recordings."
+    },
+    {
+      "id": "",
+      "title": "",
+      "paragraphs": [
+        {
+          "title": "",
+          "transcript": "Once the monitors are set up, you can run the simulation and analyze the results by clicking on the \"Go To Post Run Results\" command. The first graph displays the spectral amplitude of the forward propagating mode normalized by the source power. The amplitude is almost null because most of the power is coupled into the minus x-direction. By selecting the backward direction and changing the \"Value to Plot\" to \"Decibels\", you can observe a coupling efficiency of -2.07 dB at the center wavelength. You can also choose the \"Effective index\" option in the \"Select Data\" menu to visualize the waveguide's dispersion curve."
+        },
+        {
+          "title": "",
+          "transcript": "You can select other monitors included in the simulation by choosing their names from the \"Monitor Name\" list. When selecting the \"flux_sub\" monitor, you'll see that 26.5% of the total flux is lost into the silicon substrate at the center wavelength. The reflected flux at the same wavelength is approximately 10%, as shown in \"flux_ref\"."
+        },
+        {
+          "title": "",
+          "transcript": "By selecting the \"field_xy\" monitor, you can visualize the absolute value of the electric field focused on the output waveguide. Other field components, such as the \"Ey\" field, can also be displayed. To observe the fields propagated from the Gaussian source into the output waveguide and the silicon substrate, select the \"field_xz\" monitor. You can utilize plot commands like \"Use equal axis aspect ratio\", \"Overlay with structure\", and \"Color Scale\" to enhance the image visualization."
+        },
+        {
+          "title": "",
+          "transcript": "Lastly, the time-domain electric field component \"Ey\" is available in the \"field_t\" monitor. You can use the \"Zoom\" commands to examine specific details of the signal."
+        },
+        {
+          "title": "",
+          "transcript": "This concludes the tutorial on FDTD monitors. Other types of monitors, such as field projection monitors, are also available and will be covered in next tutorials."
+        }
+      ]
+    }
+  ]
+}

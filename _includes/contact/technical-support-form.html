@@ -1,0 +1,294 @@
+{% if include.action %}
+{% assign url_size = page.url | size %}
+{% assign page_id = page.url | slice: 1, url_size | split: '/' | join: '-' | downcase %}
+<form action="{{include.action}}"
+      class="fields-white" name="form" method="post" onSubmit='javascript:document.charset="UTF-8"; return zf_ValidateAndSubmit();'
+      accept-charset='UTF-8' enctype='multipart/form-data' id='{%if include.form_id%}{{include.form_id}}{%else%}__pg_{{page_id}}_technical-support-form{%endif%}'>
+  <div id="technical-support-form">
+    <input type="hidden" name="zf_referrer_name" value="">
+    <!-- To Track referrals , place the referrer name within the " " in the above hidden input field -->
+    <input type="hidden" name="zf_redirect_url" value="{{site.url}}{{include.redirect}}">
+    <!-- To redirect to a specific page after record submission , place the respective url within the " " in the above hidden input field -->
+    <input type="hidden" name="zc_gad" value="">
+    <div class="messages"></div>
+    <div class="controls">
+      <div class="form-row form-group-shadow" id="form-group-shadow">
+        {% for forms_data in page.form_area.list %}
+        {% case forms_data.field_tag %}
+        {% when "input" %}
+        <div class="{% if forms_data.class%}{{forms_data.class}}{%else%}col-md-12{%endif%}">
+          <div class="form-group mb-0">
+            <label class="zf-labelName mb-0" for="{{forms_data.field_name}}">
+              {%if forms_data.label%}
+              {{forms_data.label}}
+              {% if forms_data.required %}
+              <em class="zf-important">*</em>
+              {%endif%}
+              {%endif%}
+            </label>
+            {%if forms_data.field_type == 'image'%}
+            <div class="upload-container">
+              <span class="error-tips" id="{{forms_data.field_name}}-tips"></span>
+              <div class="upload">
+                <input
+                        id="{{forms_data.field_name}}"
+                        type="file"
+                        accept="{{forms_data.field_accept}}"
+                        name="{{forms_data.field_name}}"
+                        class="form-control reset-input"
+                        {% if forms_data.required %}
+                        required="{{forms_data.required}}"
+                        {% endif %}
+                        {% if forms_data.required %}
+                        multiple="{{forms_data.field_multiple}}"
+                        {% endif %}
+                        {% if forms_data.checktype %}
+                        checktype="{{forms_data.checktype}}"
+                        {% endif %}
+                        {% if forms_data.fieldType %}
+                        fieldType="{{forms_data.fieldType}}"
+                        {% endif %}
+                        {% if forms_data.change %}
+                        onchange="{{forms_data.change}}"
+                        {% endif %}
+                        data-error="{{forms_data.error_message}}"
+                >
+                <div class="image-upload">
+                  <span>Choose File(s)</span>
+                  <i class="icofont-cloud-upload font-size-24"></i>
+                </div>
+              </div>
+              <div class="image-preview" id="{{forms_data.field_name}}-preview"></div>
+            </div>
+            {%else%}
+            <input
+                    id="{{forms_data.field_name}}"
+                    type="{{forms_data.field_type}}"
+                    name="{{forms_data.field_name}}"
+                    maxlength="{{forms_data.maxlength}}"
+                    class="form-control reset-input"
+                    placeholder="{{forms_data.placeholder}}"
+                    {% if forms_data.required %}
+                    required="{{forms_data.required}}"
+                    {% endif %}
+                    {% if forms_data.checktype %}
+                    checktype="{{forms_data.checktype}}"
+                    {% endif %}
+                    {% if forms_data.fieldType %}
+                    fieldType="{{forms_data.fieldType}}"
+                    {% endif %}
+                    data-error="{{forms_data.error_message}}"
+            >
+            {%endif%}
+            {%if forms_data.description%}<span class="font-size-14 color-dark-4 line-height-1 d-inline-block"><i>{{forms_data.description}}</i></span>{%endif%}
+            <div class="help-block with-errors"></div>
+          </div>
+        </div>
+        {% when "select" %}
+        <div class="col-md-12">
+          <div class="form-group mb-0">
+            <label class="zf-labelName mb-0" for="{{forms_data.field_name}}">
+              {%if forms_data.label%}{{forms_data.label}}{%endif%}
+              {% if forms_data.required %}
+              <em class="zf-important">*</em>
+              {%endif%}
+            </label>
+            <select
+                    {% if forms_data.required %}
+                    required="{{forms_data.required}}"
+                    {% endif %}
+                    data-error="{{forms_data.error_message}}"
+                    class="form-control reset-input options_style js-select"
+                    id="{{forms_data.field_name}}"
+                    name="{{forms_data.field_name}}">
+              <option disabled selected value="" style="display: none"> </option>
+              {% include form/select_options.html extra_data_type=forms_data.source %}
+            </select>
+            {%if forms_data.description%}<span class="font-size-14 color-dark-4 line-height-1 d-inline-block"><i>{{forms_data.description}}</i></span>{%endif%}
+            <div class="help-block with-errors"></div>
+          </div>
+        </div>
+        {% when "textarea" %}
+        <div class="col-md-12">
+          <div class="form-group mb-0">
+            <label class="zf-labelName mb-0" for="{{forms_data.field_name}}">
+              {%if forms_data.label%}{{forms_data.label}}{%endif%}
+              {% if forms_data.required %}
+              <em class="zf-important">*</em>
+              {%endif%}
+            </label>
+            <textarea
+                    id="{{forms_data.field_name}}"
+                    name="{{forms_data.field_name}}"
+                    class="form-control reset-input"
+                    placeholder="{{forms_data.placeholder}}"
+                    maxlength="{{forms_data.maxlength}}"
+                    rows="4"
+                    data-error="{{forms_data.error_message}}"></textarea>
+            {%if forms_data.description%}<span class="font-size-14 color-dark-4 d-inline-block"><i>{{forms_data.description}}</i></span>{%endif%}
+            <div class="help-block with-errors"></div>
+          </div>
+        </div>
+        {% else %}
+        <div></div>
+        {% endcase %}
+        {% endfor %}
+      </div>
+      <div class="form-row align-items-center justify-content-between">
+        <div class="col-12 col-lg-6">
+          <div class="form-row">
+            <div class="col-md-12">
+              <div class="g-recaptcha"
+                   data-sitekey="{{site.data.general_settings.google_reCAPTCHA.key}}"
+                   data-callback="callback"
+                   data-expired-callback="expiredCallback"
+              ></div>
+            </div>
+          </div>
+
+        </div>
+        <div class="col-12 col-lg-6">
+          <div class="form-row">
+            <div class="col-md-12">
+              <p class="text-right color-primary"><strong>*</strong> These fields are
+                required.</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+      <div class="space20"></div>
+      <div class="form-row pl-10 pr-10">
+        <button class="btn btn-s font-size-14 mb-0 btn-dashed-primary" type='submit'
+                id="__pg_tidy3d-customer-technical-support_btn_submit"
+                disabled
+                style="width:173px;height: 40px; padding-top: 8px; padding-bottom: 8px;">
+          Submit
+        </button>
+      </div>
+    </div>
+  </div>
+</form>
+{% endif %}
+<script>
+  var zf_DateRegex = new RegExp("^(([0][1-9])|([1-2][0-9])|([3][0-1]))[-](Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec|JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)[-](?:(?:19|20)[0-9]{2})$");
+  var zf_MandArray = ["SingleLine", "MultiLine", "Name_First", "Name_Last", "Email"];
+  var zf_FieldArray = ["SingleLine", "MultiLine", "SingleLine1", "Name_First", "Name_Last", "Email", "ImageUpload"];
+  var isSalesIQIntegrationEnabled = false;
+  var salesIQFieldsArray = [];
+  const MAX_UPLOAD = 2
+  const EACH_IMAGE_SIZE = 10
+  const submitBtn = document.getElementById("__pg_tidy3d-customer-technical-support_btn_submit");
+  function callback(response) {
+    if (response) {
+      submitBtn.disabled = false
+    }
+  }
+
+  let files = []
+
+  function updateImageValue(field) {
+    const preview = document.querySelector(`#${field}-preview`);
+    document.forms.form[field].files = new FileListItems(files);
+    if (files.length > 0){
+      preview.style.display = 'block'
+    }else {
+      preview.style.display = 'none'
+    }
+  }
+
+  function FileListItems (files) {
+    var b = new ClipboardEvent("").clipboardData || new DataTransfer()
+    for (var i = 0, len = files.length; i<len; i++) b.items.add(files[i])
+    return b.files
+  }
+
+  function returnFileSize(number) {
+    if (number < 1024) {
+      return `${number} bytes`;
+    } else if (number >= 1024 && number < 1048576) {
+      return `${(number / 1024).toFixed(1)} KB`;
+    } else if (number >= 1048576) {
+      return `${(number / 1048576).toFixed(1)} MB`;
+    }
+  }
+
+  function imagePreview(file, field, index){
+    const div = document.createElement('div');
+    const src = URL.createObjectURL(file);
+    div.setAttribute('class','item col-lg-12');
+    div.innerHTML = `
+    <div class="image-content">
+      <img src="${src}" alt="">
+      <div class="info color-dark-4">
+        <span class="d-inline-block text-truncate">${file.name}</span>
+        <span class="d-inline-block text-truncate">${returnFileSize(file.size)}</span>
+      </div>
+    </div>
+    <span class="preview-close color-dark-4" onclick="removeFile('${field}', ${index})">x</span>
+    `
+    return div
+  }
+
+  function removeFile(field, index) {
+    const preview = document.querySelector(`#${field}-preview`);
+    files.splice(index, 1)
+    // update preview
+    preview.innerHTML = ''
+    for (let i = 0; i < files.length; i++) {
+      const previewImage = imagePreview(files[i], field, i)
+      preview.append(previewImage)
+    }
+    updateImageValue(field)
+  }
+
+  function updateImageDisplay(field, event){
+    const tips = document.querySelector(`#${field}-tips`);
+    if (files.length >= MAX_UPLOAD) {
+      tips.innerHTML = `You may upload up to ${MAX_UPLOAD} images.`
+      event.stopPropagation();
+      event.preventDefault();
+      return
+    }
+    const preview = document.querySelector(`#${field}-preview`);
+    const currentFiles = document.forms.form[field];
+    for (let i = 0; i < currentFiles.files.length; i++) {
+      const currentFile = currentFiles.files[i]
+      const size = currentFile.size / 1024 / 1024
+      if (size <= EACH_IMAGE_SIZE && files.length < MAX_UPLOAD) {
+        tips.innerHTML = ''
+        files.push(currentFile)
+        const index = files.findIndex(item=>item === currentFile)
+        const previewImage = imagePreview(currentFile, field, index)
+        preview.append(previewImage)
+      } else if (size > EACH_IMAGE_SIZE) {
+        tips.innerHTML = `The size of image should be no greater than ${EACH_IMAGE_SIZE} MB.`
+      }
+    }
+    updateImageValue(field)
+  }
+
+  (function (){
+    function getURLOptions(){
+      const urlParams = location.search.substring(1).split("&");
+      const urlOption = {}
+      urlParams.forEach(e=>{
+        const [key,value] = e.split("=");
+        urlOption[key] = value
+      })
+      return urlOption
+    }
+    function initialDownloadParma(){
+      const urlOption = getURLOptions();
+      if (urlOption && urlOption.site === 'kb'){
+        $('<input type="hidden" name="Dropdown" value="kb site">').appendTo('#technical-support-form');
+      }else {
+        $('<input type="hidden" name="Dropdown" value="marketing site">').appendTo('#technical-support-form');
+      }
+    }
+    document.addEventListener('DOMContentLoaded', async () => {
+      initialDownloadParma()
+    })
+  })()
+</script>
+

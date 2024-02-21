@@ -1,0 +1,42 @@
+---
+layout: default
+title: "Aircraft Design Using High Fidelity CFD | Flexcompute"
+description: "This course will walk you through the basics of setting up and running CFD simulations for airplane design"
+tags:
+- CFD Simulation for Airplane
+- Aircraft design
+- parameteric modeling
+- airplane automated meshing
+- ultrafast CFD
+- Engineering Sketch Pad (ESP)
+author: Qiqi Wang
+custom_font: font2
+banner_section:
+  enable: true
+  bg: "/assets/images/cfd101/cfd101_bg.png"
+  title: 'Introduction To Aircraft Design Using High Fidelity CFD: From Geometry To Mesh And Flow Solution'
+  page_title: 'Introduction To Aircraft Design Using High Fidelity CFD: From Geometry To Mesh And Flow Solution'
+  description: "In this series of videos, we will start from scratch and build an airplane model using parametric geometry modeling. This parametric model makes it easy to optimize the aerodynamic performance of the airplane using high-fidelity CFD. We will use Engineering Sketch Pad (ESP) to build the geometry and then show you how to build a high-quality mesh. Lastly, we will use the Flow360 CFD solver to obtain the drag and lift coefficients."
+---
+<div class="content-wrapper">
+  {% include header.html extra_class="absolute transparent" logo_class="logo fc-logo" container_class="container" %}
+  {% if page.banner_section.enable %}
+  <div class="wrapper pt-60">
+    <div class="wrapper">
+      <div class="container text-left pb-20 pt-60 fdtd-banner image-wrapper bg-image" data-image-src="{{ page.banner_section.bg }}">
+        <div class="row">
+          <div class="col-md-7">
+            <h1 class="page-title text-capitalize color-dark">{{page.banner_section.page_title}}</h1>
+            <p class="text-left font-size-16 color-dark-3" style="line-height: 26px;">{{page.banner_section.description}}</p>
+            {% include subscribe_btn.html extra_id="__pg_aircraft-cfd101_btn_subscribe-to-receive-update" %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  {% include lecture/vertical_tabs.html data=site.data.lecture.cfd.lecture_section tHeader_class="true" extra_id_prefix="__pg_aircraft-cfd101" %}
+
+  {% include footer_2.html %}
+</div>

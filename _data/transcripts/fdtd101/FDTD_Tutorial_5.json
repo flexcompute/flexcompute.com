@@ -1,0 +1,50 @@
+{
+  "title": "FDTD 101: Lecture 5",
+  "pages": [
+    {
+      "id": "intro-to-fdtd",
+      "title": "",
+      "transcript": "Today we will continue our tutorial. I'm Shanhui Fan from Flexcompute."
+    },
+    {
+      "id": "",
+      "title": "How to model dispersive materials in FDTD ?",
+      "transcript": "We would talk about the modeling of dispersive material in FDTD method. Material dispersion is quite common, and this shows up when the dielectric permittivity or the dielectric function is a function of frequency. This shows up when the material responds differently to light at different colors or different frequencies. One common example of a dispersive material is metal in the optical frequency range. For example,  the permittivity of gold can be very well described by the Drude model. The real part of the permittivity varies from being positive to negative in the wavelength range across the visible frequency spectrum. Dispersion of materials gives rise to interesting new physics that does not occur in non-dispersive materials."
+    },
+    {
+      "id": "",
+      "title": "Dispersion of gold gives rise to plasmonic polariton.",
+      "transcript": "For example, in the case of gold this Drude model response gives rise to a strong plasmonic response. As a simple illustration of it, we can do a numerical experiment where we put a dipole source in the immediate vicinity of the interface between gold and vacuum. And we look at the field distribution on the slice as indicated by the gray plant here. When we choose a wavelength of 450 nanometer, you can see that the field radiates into vacuum because the gold essentially behaves like a mirror and that's perhaps what you might expect from your everyday experience of metal. However, if you lower the frequency or increase the wavelength a little bit to 550 nanometer. Now in this case, in addition to the radiation into vacuum. The dipole source here also excites a surface mode at the gold air interface. This surface mode is commonly referred to as the surface plasmon polariton and there's a very large literature about its physics and device application. I'm not going to review the physics associated with plasmonics. In fact, the study of these kinds of waves has given rise to the field of plasmonics."
+    },
+    {
+      "id": "",
+      "title": "What is the relationship between E field and D field in dispersive materials?",
+      "transcript": "Up to this point in all the previous tutorials when we model materials,  we assume the material to be dispersionless. For these materials, when you go from the electric field E at a particular time to the displacement field D, which contains the dipole moment of the material at the same time. What you do is that you simply multiply the electric field by the dielectric primitivity. In the time domain, the displacement field reacts instantaneously to the applied electric field. On the other hand, the dispersion of physics is somewhat different. I've shown you a descriptive description of the permittivity as a function of frequency. And this is a frequency domain description. Since we are doing the simulation in the time domain in the FDTD method, it would be useful to consider the corresponding time domain physics. There the multiplication of two functions in the frequency domain translates into a convolution operation in time domain. The displacement field is related to the electric field as a function of time convolved with a kernel. Dispersive material has a memory. Its displacement field depends not just on the electric field at current time, but also depends on the electric fields in the past. In the time domain modeling of a dispersive material, one needs to be able to account for this memory effect."
+    },
+    {
+      "id": "",
+      "title": "How to use complex conjugate pole residue methods to simulate dispersion in FDTD?",
+      "transcript": "One of the popular methods is the complex conjugate pole residue pair method. In this method, you take the frequency permittivity and express them in this functional form consisting of a sum of poles. In these cases, for example, a_m is the pole that describes some sort of resonant frequencies of the material. As an example, for the Drude model that we have previously used to describe gold, you can use two pairs in this conjugate pole method to describe the Drude model. Next we will go a step deeper and look at the algorithm once you have described the permittivity in terms of these pole residuel pairs."
+    },
+    {
+      "id": "",
+      "title": "How to construct FDTD algorithms to describe the dispersion model?",
+      "transcript": "For each of these poles,  you define an auxiliary current to satisfy a differential equation that corresponds to this particular pole. This differential equation relates the auxiliary current to the applied electric field. Once you define all these auxiliary currents, you can then sum all their contributions together to describe the total dielectric response of the material. As you can see from this discussion, the computational cost here increases with the number of poles. In the example for a Drude model for metal, the Drude model naturally decomposes into these kinds of pole residue pairs and then one can use the algorithm as outlined here to describe it."
+    },
+    {
+      "id": "",
+      "title": "Simulate the transmission through a dispersive silicon slab in FDTD",
+      "transcript": "In many practical situations you were typically given a tabulated data of the permittivity as a function of frequency or wavelengths. For example, you may be interested in modeling the behavior of a silicon slab in the visible and near infrared wavelength range. And in this case, you can go to standard references and they would tell you how the refractive index varies as a functional wavelength and these are not given as a functional form, but rather they are given in tabulated data. In this case, you need to use the pole residue pairs method to fit these tabulated data."
+    },
+    {
+      "id": "",
+      "title": "How to construct the dispersion model for silicon material in FDTD?",
+      "transcript": "For silicon, if you are interested in modeling the behavior in the wavelength range spanning from 400 nanometer to 1.2 micron, which is a wavelength range approximately above the silicon band gap and so where the silicon is absorbing. Now in this case, as it turned out, only two poles are sufficient to give a very good modeling. So in Tidy3D you can find an utility that allows you to do fitting and here the dots here are the data taken from standard reference determined experimentally. And the solid line here is the fit. As we mentioned, this fit is important. And in fact, it's necessary in order to use the FDTD method to describe dispersive materials. Using a relatively small number of poles, it is possible to provide a fairly accurate description of most material dispersion over a fairly wide range of frequencies."
+    },
+    {
+      "id": "",
+      "title": "Comparing FDTD results with those from transfer matrix method for a dispersive silicon slab.",
+      "transcript": "Once you have the capability to describe the dispersive material, it is possible to perform this broadband computation for dispersive structure in a single simulation. Here is an illustration where we compute the transmission spectrum of light normally incident upon a silicon slap over the wavelength range from 400 nanometer to 1.2 micron. We compare the result with a transfer matrix modeling, which is a frequency domain method. You can see the two agree very well. So to briefly summarize, I hope to give you an impression of how dispersive material is being modeled in the FDTD simulation."
+    }
+  ]
+}

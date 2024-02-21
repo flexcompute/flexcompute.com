@@ -1,0 +1,113 @@
+<div onclick="handleChangeLogClickForMore('tidy3d-web-client-change-logs')">
+  <div id="tidy3d-web-client-change-logs" class="change-logs-section">
+    <div class="change-logs">
+      {% assign tidy3d_web_client = site.data.release_notes.tidy3d.web_client %}
+      {% if tidy3d_web_client.releases %}
+      <!-- {% assign changeLogs = tidy3d_web_client.releases | sort: "version" | reverse %} -->
+      {% assign changeLogs = tidy3d_web_client.releases %}
+      <h2 class="text-left color-dark font-weight-700">Tidy3D Web Client</h2>
+      <div class="change-logs-list">
+        {% for log in changeLogs %}
+        <section class="change-logs-item">
+          <div class="circle"></div>
+          <div class="change-log text-left">
+            <div class="change-version d-flex align-items-center">
+              <h4 class="title mb-0">
+                {% assign blockTitle = 'tidy3d,web,client,releases' | split:"," | join:"-" | split: "," %}
+                {% assign domainTitle = "_,pg,newsroom" | split: "," | join:"_" | split: "," %}
+                {% assign versionTitle = log.version | downcase | split: "##" %}
+                {% assign versionTitleId = domainTitle | concat: blockTitle | concat: versionTitle | join: "_" | downcase  %}
+                {% if log.link and log.link != '' %}
+                <a id="{{versionTitleId}}_link" href="{{log.link}}" class="color-primary-hover stop-propagation">{{log.version}}</a>
+                {% else %}
+                <a id="{{versionTitleId}}_link" href="javascript:void(0)" class="color-primary-hover stop-propagation">{{log.version}}</a>
+                {% endif %}
+              </h4>
+              {% if log.date %}
+              <span class="font-size-20 line-height-24 color-dark-5 mb-0 pl-5"> ({{ log.date | date: "%m/%d/%Y" }})</span>
+              {% endif %}
+            </div>
+            {% assign isContainLink = log.link | size %}
+            {% assign first_feature_item = log.new_features | first | size %}
+            {% assign first_resolved_item = log.resolved_issues | first | size %}
+            {% assign first_improvements_item = log.improvements | first | size %}
+            {% if forloop.first or isContainLink == 0 and first_feature_item > 0 or first_resolved_item > 0 %}
+            <div class="space20"></div>
+            <div class="change-log-content">
+              {% if log.description %}
+              <p class="font-size-18 line-height-32 color-dark-3 mb-0">{{log.description}}</p>
+              {% endif %}
+              <!--  Begin New Feature -->
+              {% if log.new_features %}
+              {% if first_feature_item > 0 %}
+              <section>
+                <h5 class="font-size-18 line-height-32 mb-0 color-dark-3 font-weight-400">New features</h5>
+                {% for text in log.new_features %}
+                <div class="release-list-item d-flex align-items-start justify-content-start" style="column-gap: 10px">
+                  <span class="line-height-32"></span>
+                  <p class="font-size-18 line-height-32 color-dark-5 mb-0">{{text}}</p>
+                </div>
+                {% endfor %}
+                <!-- / end for  log.new_feature  -->
+              </section>
+              {% endif %}
+              <!-- / end forloop if -->
+              {% endif %}
+              <!-- / end if  log.new_feature  -->
+
+              <!-- Begin Improvements -->
+              {% if log.improvements %}
+              {% if first_improvements_item > 0 %}
+              <section>
+                <h5 class="font-size-18 line-height-32 mb-0 color-dark-3 font-weight-400">Improvements</h5>
+                {% for text in log.improvements %}
+                <div class="release-list-item d-flex align-items-start justify-content-start" style="column-gap: 10px">
+                  <span class="line-height-32"></span>
+                  <p class="font-size-18 line-height-32 color-dark-5 mb-0">{{text}}</p>
+                </div>
+                {% endfor %}
+                <!-- / end for  log.improvements  -->
+              </section>
+              {% endif %}
+              <!-- / end forloop if -->
+              {% endif %}
+              <!-- / end if  log.improvements  -->
+
+              <!--  Begin Resolved issues -->
+              {% if log.resolved_issues %}
+              {% if first_resolved_item > 0 %}
+              <section>
+                <h5 class="font-size-18 line-height-32 mb-0 color-dark-3 font-weight-400">Resolved issues</h5>
+                {% for text in log.resolved_issues %}
+                <div class="release-list-item d-flex align-items-start justify-content-start" style="column-gap: 10px">
+                  <span class="line-height-32"></span>
+                  <p class="font-size-18 line-height-32 color-dark-5 mb-0">{{text}}</p>
+                </div>
+                {% endfor %}
+                <!-- / end for  log.resolved_issues  -->
+              </section>
+              {% endif %}
+              <!-- / end forloop if -->
+              {% endif %}
+              <!-- / end if  log.resolved_issues  -->
+            </div>
+            {% endif %}
+          </div>
+        </section>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+  {% if tidy3d_web_client.more_section.enable %}
+  {% assign moreSection = tidy3d_web_client.more_section %}
+  <div class="click-for-more">
+    <div class="mask" id="tidy3d-web-client-change-logs-mask"></div>
+    {% if moreSection.link and moreSection.link != '' %}
+    {% assign moreTitle = moreSection.more_text | split: " " | join: "-" | split: "," %}
+    {% assign moreClickId = domainTitle | concat: blockTitle | concat: moreTitle | join: "_" | downcase %}
+    <a id="{{moreClickId}}_link" href="{{moreSection.link}}" class="color-primary-hover stop-propagation">{{moreSection.more_text}}</a>
+    {% endif %}
+  </div>
+  {% endif %}
+</div>

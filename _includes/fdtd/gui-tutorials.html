@@ -1,0 +1,29 @@
+{% assign tutorials = site['tidy3d-gui'] | sort: "course_number" %}
+<div class="fdtd-gui-tutorials-container d-flex flex-wrap justify-content-between row-gap-32 pt-10 pb-10" style="overflow: hidden">
+  {% for item in tutorials %}
+  {% assign radius = '1rem' %}
+  {% assign btn-class = 'btn-dashed-default' %}
+  {% if forloop.first %}
+  {% assign radius = '1.5rem' %}
+  {% assign btn-class = 'btn-dashed-primary' %}
+  {% endif %}
+  {% assign idItem = '__pg_fdtd_' | append: item.lecture_title | slugify  %}
+  {% assign startId = '_btn' | split: ',' %}
+  {% assign btnId = idItem | split:',' | concat: startId | join:'' | downcase %}
+  {% if forloop.last %}
+    <a
+      id="{{btnId}}"
+      href="{{item.permalink}}"
+      class="btn {{btn-class}} font-size-16 m-0 with-dash flex-btn" style="border-radius: 1rem; width: 205px;">
+      {% include learning-center/fdtd101/lecture-title.html lecture_title=item.lecture_title %}
+    </a>
+  {%else%}
+    <a
+      id="{{btnId}}"
+      href="{{item.permalink}}"
+      class="btn {{btn-class}} font-size-16 m-0 with-dash flex-btn" style="padding: 16px; border-radius: {{radius}};">
+      {% include learning-center/fdtd101/lecture-title.html lecture_title=item.lecture_title %}
+    </a>
+  {%endif%}
+  {% endfor %}
+</div>

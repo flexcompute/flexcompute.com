@@ -1,0 +1,954 @@
+---
+layout: default
+title: "Python-Driven FDTD Software: Tidy3D | Flexcompute"
+description: Tidy3D is a GPU-accelerated and Python-based FDTD simulation tool for modeling photonic devices, optical materials, light-matter interactions, and nanophotonics. This integrated approach allows large-scale, ultra-fast, scalable, and accurate full-wave simulations.
+tags:
+- fdtd
+- fdtd software
+- fdtd solver
+- fdtd simulation
+- fdtd simulation software
+- fdtd simulation tool
+- fdtd solver technology
+- python fdtd
+- python fdtd solver
+- electromagnetic simulation
+- electromagnetic simulation tool
+- cloud-based solver
+- simulation solver
+- photonic simulation
+- photonic integrated circuits simulation
+- full wave simulation
+- GPU FDTD
+- ASIC FDTD
+- computational electrodynamics
+- Electromagnetic
+- Tidy3D
+author: Flexcompute
+custom_font: font2
+custom_css:
+  - unit-css
+  - tidy3d-solver
+custom_js:
+  - tabs.min
+  - tidy3d-solver.min
+redirect_from:
+  - /tidy3d/
+  - /tidy3d/solver/lightning-fast/
+  - /tidy3d/lightning-fast/
+  - /tidy3d/solver/fdtd-at-scale/
+  - /tidy3d/fdtd-at-scale/
+  - /tidy3d/solver/python-driven/
+  - /tidy3d/python-driven/
+image:
+  path: "/assets/images/product/tidy3D/electromagnetic-field-xl.png"
+  alt: "Python-Driven FDTD Software: Tidy3D - Flexcompute"
+
+hero_section:
+  enable: true
+  title: Next-gen Electromagnetic Simulation Tool
+  sub_title: "Cloud-based, hardware-accelerated FDTD through the browser or python API"
+  logo: "/assets/images/product/tidy3D/tidy3d-logo.svg"
+  image: "/assets/images/product/tidy3D/electromagnetic-field-xl.png"
+  image_width: 3243
+  image_height: 1351
+  sign_up_btn:
+    enable: true
+    id: __pg_tidy3d-solver_hero-section_sign-up_btn
+  links_group:
+  - button_text: Tidy3D Documentation
+    click_id: __pg_tidy3d_link_manual
+    button_url: https://docs.flexcompute.com/tidy3d
+    target: _blank
+  - button_text: Publications
+    click_id: __pg_tidy3d_link_publications
+    button_url: "/tidy3d/learning-center/publications/"
+  - button_text: FDTD 101
+    click_id: __pg_tidy3d_link_fdtd101
+    button_url: "/tidy3d/learning-center/"
+  - button_text: Whitepaper
+    click_id: __pg_tidy3d_link_download-whitepaper
+    button_url: "/download-whitepaper/"
+  partners:
+    enabled: true
+    title: "Proud to be a partner of leading foundries to simulate existing and develop new PDKs"
+    list:
+      - name: imec
+        enabled: true
+        logo: "/assets/images/partners/imec.png"
+        width: 112
+        height: 36
+        alt: "Imec R&D, nano electronics and digital technologies"
+      - name: tower
+        enabled: true
+        width: 62
+        height: 36
+        logo: "/assets/images/partners/Tower-logo-CMYK.jpg"
+        alt: "Tower Semiconductor"
+
+advantage_section:
+  enable: true
+  title: Advantages of Tidy3D
+  sub_title: "Tidy3D is an electromagnetic simulation tool built on a breakthrough in computing architecture, providing scalable, accurate simulations at unprecedented speeds."
+  tabs_body: tidy3d-solver/advantages-tab-body.html
+  tabs:
+    - tab: Ultra Fast
+      enable: true
+      description: "10-500x faster than workstations"
+      video: 'https://player.vimeo.com/video/867626704?autoplay=1&background=1&loop=1'
+      video_id: "__pg_tidy3d-solver_video_10-500x-faster-than-workstations"
+      loading: eager
+    - tab: Large Scale
+      enable: ture
+      description: "100-1000x larger problem size than workstations"
+      image: '/assets/images/product/tidy3D/solver/billions-of-unknowns.jpeg'
+    - tab: "High Throughput"
+      enable: true
+      description: "Tens to hundreds of concurrent jobs without additional licenses or computers"
+      image: /assets/images/product/tidy3D/High-Throughput.png
+    - tab: "Clean Interface (Python & GUI)"
+      enable: true
+      description: "Supports both Python and Web clients. User-friendly and easily learned from scratch."
+      mac_layout:
+        front:
+          image: /assets/images/product/tidy3D/solver/divice-Macbook-Air.png
+          video: https://player.vimeo.com/video/840514226?autoplay=1&background=1&loop=1
+          video_id: "__pg_tidy3d-solver_video_python-interface"
+          loading: eager
+        back:
+          image: /assets/images/product/tidy3D/solver/Dark-screen.png
+          video: https://player.vimeo.com/video/867626684?autoplay=1&background=1&loop=1
+          video_id: "__pg_tidy3d-solver_video_gui"
+          loading: eager
+    - tab: "First-class Support"
+      enable: true
+      image: /assets/images/product/tidy3D/first-class-support.jpeg
+      description: "Delve into the extensive library of learning materials. Supported by our world-class solver developers and engineers."
+
+speed_benchmark_section:
+  enable: true
+  title: Speed Benchmark
+  image: '/assets/images/product/tidy3D/solver/benchmark.png'
+  left_top:
+    image: '/assets/images/product/tidy3D/solver/benchmark/1x2_MM1.png'
+    alt: '1X2 MMI; 6M grid points 58k of time steps'
+    link: "/tidy3d/examples/notebooks/StripToSlotConverters/"
+    click_id: "__pg_tidy3d-solver_speed-benchmark_1x2-MMI_card"
+    duration: 40<sub>s</sub>
+  left_bottom:
+    image: '/assets/images/product/tidy3D/solver/benchmark/8-channel-multiplexer.png'
+    alt: '8-channel multiplexer; 120M grid points 98k of time steps'
+    link: "/tidy3d/examples/notebooks/8ChannelDemultiplexer/"
+    click_id: "__pg_tidy3d-solver_speed-benchmark_8-channel-multiplexer_card"
+    duration: 3<sub>min</sub> 40<sub>s</sub>
+  right_top:
+    image: '/assets/images/product/tidy3D/solver/benchmark/cascaded-mzi-filter.png'
+    alt: 'Cascaded MZI filter; 1.3B grid points 556k of time steps'
+    duration: 57<sub>min</sub>
+  right_bottom:
+    image: '/assets/images/product/tidy3D/solver/benchmark/full-size-metalens.png'
+    alt: 'Full size metalens; 20B grid points 26.4k of time steps'
+    link: "/tidy3d/examples/notebooks/Metalens/"
+    click_id: "__pg_tidy3d-solver_speed-benchmark_full-size-metalens_card"
+    duration: 59<sub>min</sub>
+
+features_section:
+  enable: true
+  title: Feature Highlight
+  list:
+    - title: Feature Rich, Finely Engineered
+      description: "Tidy3D includes a diverse set of advanced features for electromagnetic simulations implemented using the latest innovations in numerical algorithms."
+      image: "/assets/images/product/tidy3D/Feature-Rich-Finely-Engineered.png"
+      image_width: 307
+      image_height: 230
+      link: /python-fdtd/
+      link_id: "__pg_tidy3d-solver_features-highlight_feature-rich-finely-engineered_card_link"
+      target: "_self"
+      enable: true
+    - title: Powerful and Flexible Inverse Design
+      description: "Tidy3D leverages automatic differentiation to perform adjoint optimization of photonic devices. With two simulations per iteration, one can quickly and easily evolve a device towards optimal performance using inverse design."
+      image: "/assets/images/product/tidy3D/lightning-fast/Powerful-and-Flexible-Inverse-Design.gif"
+      enable: true
+      link: /tidy3d/learning-center/inverse-design/
+      link_id: "__pg_tidy3d-solver_features-highlight_powerful-and-flexible-inverse-design_card_link"
+      target: "_self"
+    - title: Award Winning Python Interface
+      description: "The Tidy3D front end is open source and leverages many of the most popular open source python tools for defining and postprocessing simulations."
+      image: "/assets/images/product/tidy3D/lightning-fast/Award-Winning-Python-Interface.png"
+      image_width: 1200
+      image_height: 738
+      enable: true
+      link: https://github.com/flexcompute/tidy3d
+      link_id: "__pg_tidy3d-solver_features-highlight_award-winning-python-interface_card_link"
+      target: "_blank"
+
+
+case_study_section:
+  enable: true
+  title: Case Study
+  cases:
+    - title: Simulating entire photonic integrated  circuits without compromise
+      description: Photonic integrated circuits (PICs) can span a huge area on chip, making them hard to simulate without breaking into individual components. With Tidy3D, we are able to reliably handle entire PICs in minutes. As an example, we demonstrate the simulation of an entire 8-channel de-multiplexer based on asymmetric directional couplers.
+      image: /assets/images/product/tidy3D/solver/large-pic-example.png
+      image_width: 1824
+      image_height: 732
+      btn:
+        text: Large PIC example
+        id: "__pg_tidy3d-solver_case-study_large-pic-example_btn"
+        target: "_self"
+        link: "/tidy3d/examples/notebooks/8ChannelDemultiplexer/"
+    - title: Large Area Metalens
+      description: "We recently simulated a large scale metalens. The device had a diameter of 100 wavelengths and required 2.7B grid cells.<br>This problem was too large to solve with convenential FDTD solvers, even using distributed computing. With Tidy3D, we simulated the whole device in less than 300 seconds."
+      image: "/assets/images/product/tidy3D/electromagnetic-field-xl.png"
+      image_width: 3243
+      image_height: 1351
+      btn:
+        text: Large Scale Metalens Paper
+        id: "__pg_tidy3d-solver_case-study_large-area-metalens_btn"
+        target: "_blank"
+        link: /assets/images/product/tidy3D/solver/pdf/150502_1_online.pdf
+example_library_section:
+  enable: true
+  title: Example Library
+  title_link: "/tidy3d/learning-center/example-library"
+  title_link_id: "__pg_tidy3d-solver_example-library_title_link_"
+  tabs_body: tidy3d-solver/example-library-tab-body.html
+  tabs:
+    - tab: Photonic Integrated Circuit
+      enable: true
+      examples:
+        - title: "Focusing apodized grating coupler"
+          image: "/assets/images/product/tidy3D/solver/example-library/Focusing-apodized-grating-coupler.png"
+          path: "/tidy3d/examples/notebooks/FocusedApodGC/"
+        - title: "THz integrated demultiplexer"
+          image: "/assets/images/product/tidy3D/solver/example-library/THz-integrated-demultiplexer.png"
+          path: "/tidy3d/examples/notebooks/THzDemultiplexerFilter/"
+        - title: "8-Channel mode and polarization de-multiplexer"
+          image: "/assets/images/product/tidy3D/solver/example-library/8-Channel-mode-and-polarization-de-multiplexer.png"
+          path: "/tidy3d/examples/notebooks/8ChannelDemultiplexer/"
+        - title: "Compact polarization splitter-rotator"
+          image: "/assets/images/product/tidy3D/solver/example-library/Compact-polarization-splitter-rotator.png"
+          path: "/tidy3d/examples/notebooks/PolarizationSplitterRotator/"
+    - tab: Metamaterials
+      enable: true
+      examples:
+        - title: "Broadband polarizer assisted by anisotropic metamaterial"
+          image: "/assets/images/product/tidy3D/solver/example-library/Broadband-polarizer-assisted-by-anisotropic-metamaterial.png"
+          path: "/tidy3d/examples/notebooks/SWGBroadbandPolarizer/"
+        - title: "Dielectric metasurface absorber"
+          image: "/assets/images/product/tidy3D/solver/example-library/Dielectric-metasurface-absorber.png"
+          path: "/tidy3d/examples/notebooks/DielectricMetasurfaceAbsorber/"
+        - title: "Hyperbolic polaritons in nanostructured hBN"
+          image: "/assets/images/product/tidy3D/solver/example-library/Hyperbolic-polaritons-in-nanostructured-hBN.png"
+          path: "/tidy3d/examples/notebooks/NanostructuredBoronNitride/"
+        - title: "Gradient metasurface reflector"
+          image: "/assets/images/product/tidy3D/solver/example-library/Gradient-metasurface-reflector.png"
+          path: "/tidy3d/examples/notebooks/GradientMetasurfaceReflector/"
+    - tab: Scattering & Radiation
+      enable: true
+      examples:
+        - title: "Plasmonic Yagi-Uda nanoantenna"
+          image: "/assets/images/product/tidy3D/solver/example-library/Plasmonic-Yagi-Uda-nanoantenna.png"
+          path: "/tidy3d/examples/notebooks/PlasmonicYagiUdaNanoantenna/"
+        - title: "Field projection for a zone plate"
+          image: "/assets/images/product/tidy3D/solver/example-library/Field-projection-for-a-zone-plate.png"
+          path: "/tidy3d/examples/notebooks/ZonePlateFieldProjection/"
+        - title: "Scattering of a plasmonic nanoparticle"
+          image: "/assets/images/product/tidy3D/solver/example-library/Scattering-of-a-plasmonic-nanoparticle.png"
+          path: "/tidy3d/examples/notebooks/PlasmonicNanoparticle/"
+        - title: "Scattering cross-section calculation of a dielectric sphere"
+          image: "/assets/images/product/tidy3D/solver/example-library/Scattering-cross-section-calculation-of-a-dielectric-sphere.png"
+          path: "/tidy3d/examples/notebooks/Near2FarSphereRCS/"
+    - tab: Nanophotonics
+      enable: true
+      examples:
+        - title: "3D optical Luneburg lens"
+          image: "/assets/images/product/tidy3D/solver/example-library/3D-optical-Luneburg-lens.png"
+          path: "/tidy3d/examples/notebooks/OpticalLuneburgLens/"
+        - title: "Photonic crystal waveguide polarization filter"
+          image: "/assets/images/product/tidy3D/solver/example-library/Photonic-crystal-waveguide-polarization-filter.png"
+          path: "/tidy3d/examples/notebooks/PhotonicCrystalWaveguidePolarizationFilter/"
+        - title: "Atomically thin waveguides based on MoS<sub>2</sub> monolayers"
+          image: "/assets/images/product/tidy3D/solver/example-library/Spherical-Fresnel-lens.png"
+          path: "/tidy3d/examples/notebooks/MoS2Waveguide/"
+        - title: "Unidirectional SPP from non-Hermitian metagratings"
+          image: "/assets/images/product/tidy3D/solver/example-library/Unidirectional-SPP-from-non-Hermitian-metagratings.png"
+          path: "/tidy3d/examples/notebooks/NonHermitianMetagratings/"
+application_areas_section:
+  enable: true
+  title: Application Areas
+  list:
+    - title: Metasurface
+      enable: true
+      image: "/assets/images/product/tidy3D/solver/Metasurface.png"
+      link: /tidy3d/learning-center/example-library/?category=metamaterials-gratings-and-other-periodic-structures
+      link_id: "__pg_tidy3d-solver_applications-areas_metasurface_card_link"
+      target: "_self"
+    - title: Photonic Integrated Circuits
+      enable: true
+      image: "/assets/images/product/tidy3D/solver/Photonic-Integrated-Circuits.png"
+      link: /tidy3d/learning-center/example-library/?category=photonic-integrated-circuit-components
+      link_id: "__pg_tidy3d-solver_applications-areas_photonic-integrated-circuits_card_link"
+      target: "_self"
+    - title: LIDAR/RADAR
+      enable: true
+      image: "/assets/images/product/tidy3D/solver/LIDAR-RADAR.png"
+      link: "/blog/2023/05/07/tidy3d-lumotive-lidar"
+      link_id: "__pg_tidy3d-solver_applications-areas_LIDAR-RADAR_card_link"
+      target: "_self"
+    - title: Sensors
+      enable: true
+      image: "/assets/images/product/tidy3D/solver/Sensors.png"
+    - title: Display
+      enable: true
+      image: "/assets/images/product/tidy3D/solver/Display.png"
+    - title: Cameras
+      enable: true
+      image: "/assets/images/product/tidy3D/solver/Cameras.png"
+      link: '/tidy3d/examples/notebooks/CMOSRGBSensor/'
+      link_id: "__pg_tidy3d-solver_applications-areas_cameras_card_link"
+      target: "_self"
+
+customer_section:
+  enable: true
+  title: Customer Success
+  video_list:
+    - video_id: "689102029"
+      enable: ture
+      video_element_id: __pg_tidy3d-solver_customer-success-story_ayar-labs_link
+      description: "Tidy3D allows Ayar Labs to substantially shorten the design cycle of photonic circuits. Excellent agreement between simulation and actual device performance gives the R&D team the confidence to iterate their design entirely on the computer, which substantially improves product performance and reduces the time to market."
+      logo: "/assets/images/clients/Ayarlabs-color.png"
+  story_list:
+    - logo: "/assets/images/clients/university-badge/yale-university.png"
+      description: "“It’s amazing how fast the Flexcompute numerical solver runs,” she said. “Some simulations that we expect would take days to do, it can do in just 30 minutes. This allows us to simulate many different random configurations, different system sizes, and different structural parameters to see whether we can get three-dimensional localization of light.”"
+      link: "https://physics.yale.edu/news/hui-cao-trapped-waves-researchers-resolve-longstanding-debate"
+      link_id: __pg_tidy3d-solver_customer-success-story_yale-university_link
+      target: "_blank"
+    - logo: "/assets/images/clients/minified/lumotive.png"
+      description: "Lumotive is a technology startup based in Redmond, Washington. It is a leading developer of optical semiconductors which are changing the rules for LiDAR across a wide range of 3D sensing applications. Their proprietary Light Control Metasurface (LCM™) solid-state beam steering chips are manufactured."
+      link: "/blog/2023/05/07/tidy3d-lumotive-lidar"
+      link_id: __pg_tidy3d-solver_customer-success-story_lumotive_link
+      target: "_self"
+    - logo: "/assets/images/clients/minified/memq.png"
+      description: "Leading a project to optimize photonic device design, Dr. Sean Sullivan, CTO at memQ Inc., was hampered by slow photonic simulation solutions, which slowed the chip design, fabrication, and testing cycle time. As a startup developing new quantum photonic hardware for long-distance distributed quantum information."
+      link: "/blog/2023/05/03/memQ-Journey-with-Tidy3D"
+      link_id: __pg_tidy3d-solver_customer-success-story_memq_link
+      target: "_self"
+    - logo: "/assets/images/clients/minified/fonex.png"
+      description: "“Tidy3D is a user-friendly tool which speeds up our simulation process by orders of magnitude compared to a typical local computer. In addition, its support team is highly responsive and helpful.”"
+      link:
+      link_id: __pg_tidy3d-solver_customer-success-story_fonex_link
+      target: "_blank"
+    - logo: "/assets/images/clients/minified/ams-osram.png"
+      description: "I really appreciate your (and your colleague’s) responsiveness helping out customers! It really makes a difference using your code and being able to run high-quality simulations."
+      link:
+      link_id: __pg_tidy3d-solver_customer-success-story_ams-osram_link
+      target: "_blank"
+
+trusted_section:
+  enable: true
+  title: Trusted By Leading Research Institutions
+  universities:
+    - logo: "/assets/images/clients/university/California-Santa-Barbara.png"
+      text: "California-Santa-Barbara"
+      width: 67
+      height: 28
+      enable: true
+    - logo: "/assets/images/clients/university/Washington.png"
+      enable: true
+      width: 63
+      height: 30
+      text: "Washington"
+    - logo: "/assets/images/clients/university/Arizona.png"
+      text: "Arizona"
+      width: 113
+      height: 27
+      enable: true
+    - logo: "/assets/images/clients/university/Rochester.png"
+      text: "Rochester"
+      width: 132
+      height: 41
+      enable: true
+    - logo: "/assets/images/clients/university/MIT.png"
+      text: "MIT"
+      width: 67
+      height: 31
+      enable: true
+    - logo: "/assets/images/clients/university/Pennsylvania.png"
+      text: "Pennsylvania"
+      width: 138
+      height: 53
+      enable: true
+    - logo: "/assets/images/clients/university/Brown.png"
+      text: "Brown"
+      width: 66
+      height: 38
+      enable: true
+    - logo: "/assets/images/clients/university-badge/Stony-brook-university.png"
+      text: "Stony brook university"
+      width: 49
+      height: 41
+      enable: true
+    - logo: "/assets/images/clients/university/Harvard.png"
+      text: "Harvard University"
+      width: 106
+      height: 19
+      enable: true
+    - logo: "/assets/images/clients/university/Wisconsin-Madison.png"
+      text: "Wisconsin-Madison"
+      width: 86
+      height: 30
+      enable: true
+    - logo: "/assets/images/clients/university/texas.png"
+      text: "The University of Texas at Austin"
+      width: 100
+      height: 28
+      enable: true
+    - logo: "/assets/images/clients/university/kaust.png"
+      text: "kaust"
+      width: 90
+      height: 37
+      enable: true
+    - logo: "/assets/images/clients/university/seoul-national-university.png"
+      text: "seoul national university"
+      width: 80
+      height: 31
+      enable: true
+    - logo: "/assets/images/clients/university/Rengent-university.png"
+      text: "Rengent University"
+      width: 110
+      height: 25
+      enable: true
+    - logo: "/assets/images/clients/university/Maryland.png"
+      width: 130
+      height: 22
+      text: "Maryland"
+      enable: true
+    - logo: "/assets/images/clients/university/Rensselaer-Institude-of-Technology.png"
+      text: "Rensselaer Institude of Technology"
+      enable: true
+      width: 130
+      height: 21
+    - logo: "/assets/images/clients/university/Johns-Hopkins.png"
+      text: "Johns Hopkins"
+      width: 120
+      height: 38
+      enable: true
+    - logo: "/assets/images/clients/university/Columbia.png"
+      text: "Columbia"
+      width: 170
+      height: 24
+      enable: true
+    - logo: "/assets/images/clients/university/Science-and-Technology.png"
+      text: "Science and Technology"
+      width: 90
+      height: 31
+      enable: false
+    - logo: "/assets/images/clients/university/Princeton.png"
+      text: "Princeton"
+      width: 95
+      height: 31
+      enable: true
+    - logo: "/assets/images/clients/university/Stanford.png"
+      text: "Stanford"
+      width: 103
+      height: 31
+      enable: true
+    - logo: "/assets/images/clients/university/Chicago.png"
+      text: "Chicago"
+      width: 112
+      height: 38
+      enable: true
+    - logo: "/assets/images/clients/university/yale-university.png"
+      text: "Yale University"
+      width: 130
+      height: 60
+      enable: true
+    - logo: "/assets/images/clients/university/Northwestern.png"
+      text: "Northwestern"
+      width: 131
+      height: 31
+      enable: true
+    - logo: "/assets/images/clients/university/California-Institute-of-Technology.png"
+      text: "California-Institute-of-Technology"
+      width: 144
+      height: 35
+      enable: true
+    - logo: "/assets/images/clients/university/Cornell.png"
+      text: "Cornell University"
+      width: 97
+      height: 31
+      enable: true
+    - logo: "/assets/images/clients/university/California-Berkeley.png"
+      text: "California-Berkeley"
+      width: 98
+      height: 31
+      enable: true
+    - logo: "/assets/images/clients/university/Hong-Kong.png"
+      text: "Hong-Kong"
+      enable: false
+    - logo: "/assets/images/clients/university/Academy-of-Sciences.png"
+      text: "Academy-of-Sciences"
+      enable: false
+  journals:
+    enable: true
+    title: In the news
+    list:
+      - logo: '/assets/images/journal/optica.png'
+        enable: true
+        link: "https://www.optica-opn.org/home/newsroom/2023/june/simulation_captures_elusive_localization_of_light/"
+        click_id: __pg_tidy3d-solver_in-the-news_optica-formerly-osa_btn_
+        text: optica formerly OSA
+      - logo: '/assets/images/journal/ACS.png'
+        enable: true
+        link: "https://pubs.acs.org/doi/epdf/10.1021/acsphotonics.3c00126"
+        click_id: __pg_tidy3d-solver_in-the-news_acs-publications_btn_
+        text: "ACS Publications"
+      - logo: '/assets/images/journal/AIP.png'
+        enable: true
+        link: "https://pubs.aip.org/aip/apl/article/119/15/150502/40471/A-perspective-on-the-pathway-toward-full-wave"
+        click_id: __pg_tidy3d-solver_in-the-news_aip-publishing_btn_
+        text: 'AIP Publishing'
+      - logo: '/assets/images/journal/LASER.png'
+        enable: true
+        link: https://www.laserfocusworld.com/software-accessories/article/14298792/breaking-time-barriers-millimeterscale-photonic-simulations-in-minutes
+        click_id: __pg_tidy3d-solver_in-the-news_laser-focus-world_btn_
+        text: LASER FOCUS WORLD
+      - logo: '/assets/images/journal/nature-photonics.png'
+        enable: true
+        link: "https://www.nature.com/articles/s41566-022-01086-9"
+        click_id: __pg_tidy3d-solver_in-the-news_nature-photonics_btn_
+        text: nature photonics
+      - logo: '/assets/images/journal/nature-physics.png'
+        enable: true
+        link: "https://www.nature.com/articles/s41567-023-02091-7"
+        click_id: __pg_tidy3d-solver_in-the-news_nature-physics_btn_
+        text: nature physics
+
+tidy3d_team_section:
+  enable: true
+  title: From the Tidy3D team
+  description: "Leveraging advanced hardware for a breakthrough in simulation experience."
+  teams:
+    - name: Shanhui Fan
+      position: "Co-founder, Flexcompute"
+      enable: true
+      video_id: "689102171"
+      video_element_id: __pg_tidy3d-solver_from-the-tidy3d-team_video_shanhui-fan
+    - name: Momchil Minkov
+      position: "Director of Tidy3D Solver"
+      enable: true
+      video_id: "689101917"
+      video_element_id: __pg_tidy3d-solver_from-the-tidy3d-team_video_momchil-minkov
+
+---
+{% include header.html extra_class="absolute transparent" logo_class="logo fc-logo" container_class="container" %}
+<!-- Hero Section -->
+{% if page.hero_section.enable %}
+{% assign hero_section = page.hero_section %}
+<section class="wrapper bg-opacity-default">
+  <div class="container position-relative inner pt-100 pb-0 text-center">
+    {% if hero_section.image %}
+    <div class="main-image-wrapper position-absolute" style="z-index: 0">
+      {%include webp-tag.html src=hero_section.image width=hero_section.image_width height=hero_section.image_height alt=hero_section.title class="aspect-ratio"%}
+      <div class="mask position-absolute"></div>
+    </div>
+    {%endif%}
+    <div class="content position-relative" style="z-index: 1">
+      {% if hero_section.logo %}
+      <object type="image/svg+xml" data="{{hero_section.logo}}" title="{{hero_section.title}}" style="height: 80px">
+        <param name="src" value="{{hero_section.logo}}" >
+      </object>
+      {% endif %}
+      {% if hero_section.title %}
+      <h1 class="font-weight-bold color-dark font-size-48 mb-16 line-height-60">{{hero_section.title}}</h1>
+      {% endif %}
+      {% if hero_section.sub_title %}
+      <p class="color-dark mb-32 font-size-18 line-height-28">{{hero_section.sub_title}}</p>
+      {% endif %}
+      {% if hero_section.sign_up_btn.enable %}
+      <a id="{{hero_section.sign_up_btn.id}}" class="btn text-transform-unset btn-fc-primary m-0 font-weight-600 font-size-16" target="_blank" href="{{site.tidy3d.sign_up}}">
+        Free Sign Up
+      </a>
+      {% endif %}
+      <div class="space200"></div>
+      <div class="space20"></div>
+      <div class="main-links d-flex justify-content-between position-relative" style="z-index: 2">
+        {% for list in hero_section.links_group %}
+        {% if list.button_url %}
+        <a id="{{list.click_id}}" class="color-primary-hover d-inline-block" href="{{list.button_url}}" target="{{list.target}}">
+          {{list.button_text}}
+        </a>
+        {% endif %}
+        {% endfor %}
+      </div>
+      {% if hero_section.partners.enabled %}
+      {% assign partner = hero_section.partners %}
+      <div class="space30"></div>
+      <div>
+        <div class="d-flex justify-content-center align-items-center column-gap-24">
+          {% for partnerItem in partner.list %}
+          {%if partnerItem.enabled %}
+          <img width="{{partnerItem.width}}" height="{{partnerItem.height}}" src="{{partnerItem.logo}}" alt="{{partnerItem.alt}}">
+          {%endif%}
+          {% endfor %}
+        </div>
+        {%if partner.title%}
+        <div class="space20"></div>
+        <p class="font-size-14" style="color: #7A7977">{{partner.title}}</p>
+        {%endif%}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- Advantages of Tidy3D -->
+{% if page.advantage_section.enable %}
+{% assign advantage_section = page.advantage_section %}
+<div class="space80"></div>
+<section class="wrapper bg-opacity-default">
+  <div class="container text-center">
+    <div class="row">
+      <div class="col-12 col-md-10 offset-0 offset-md-1">
+        {% if advantage_section.title %}
+        <h2 class="font-weight-bold color-dark font-size-32 mb-16" style="line-height: 40px">{{advantage_section.title}}</h2>
+        {% endif %}
+        {% if advantage_section.sub_title %}
+        <p class="color-dark mb-32 pl-32 pr-32 font-size-18 line-height-22">{{advantage_section.sub_title}}</p>
+        {% endif %}
+      </div>
+    </div>
+    {% include tabs.html tabs=advantage_section.tabs tab_body=advantage_section.tabs_body autoplay="true" autoplay_time=6 %}
+  </div>
+</section>
+{% endif %}
+
+<!-- Speed Benchmark -->
+{% if page.speed_benchmark_section.enable %}
+{% assign speed_benchmark = page.speed_benchmark_section %}
+<div class="space40"></div>
+<section class="wrapper bg-ghost-white pt-48 pb-48">
+  <div class="container text-center">
+    {% if speed_benchmark.title %}
+    <h2 class="font-weight-bold color-dark font-size-32 mb-32">{{speed_benchmark.title}}</h2>
+    {% endif %}
+    {% if speed_benchmark.description %}
+    <p class="color-dark-3 font-size-18 line-height-22">{{speed_benchmark.description}}</p>
+    {% endif %}
+    <div class="row speed-benchmark">
+      <div class="col-12 col-md-2 pl-0 pr-0 row" style="margin: 0 auto">
+        <div onmouseenter="Tidy3dSolver.triggerImageHighlight(event)" onmouseleave="Tidy3dSolver.cancelImageHighlight(event)" class="col-6 col-md-12 example-thumbnail text-center" data-trigger-item="left-top">
+          {% if speed_benchmark.left_top %}
+            {% if speed_benchmark.left_top.link %}
+            <a id="{{speed_benchmark.left_top.click_id}}" href="{{speed_benchmark.left_top.link}}">
+              {%include webp-tag.html src=speed_benchmark.left_top.image class="aspect-ratio" width=372 height=374 alt=speed_benchmark.left_top.alt%}
+  <!--            <img width="372" height="374" class="aspect-ratio" src="{{speed_benchmark.left_top.image}}" alt="{{speed_benchmark.left_top.alt}}">-->
+            </a>
+            {% else %}
+            {%include webp-tag.html src=speed_benchmark.left_top.image class="aspect-ratio" width=372 height=374 alt=speed_benchmark.left_top.alt%}
+            {% endif %}
+          {% endif %}
+        </div>
+        <div onmouseenter="Tidy3dSolver.triggerImageHighlight(event)" onmouseleave="Tidy3dSolver.cancelImageHighlight(event)" class="col-6 col-md-12 example-thumbnail text-center" data-trigger-item="left-bottom">
+          {% if speed_benchmark.left_bottom %}
+            {%if speed_benchmark.left_bottom.link%}
+            <a id="{{speed_benchmark.left_bottom.click_id}}" href="{{speed_benchmark.left_bottom.link}}">
+              {%include webp-tag.html src=speed_benchmark.left_bottom.image class="aspect-ratio" width=372 height=374 alt=speed_benchmark.left_bottom.alt%}
+  <!--            <img width="372" height="374" class="aspect-ratio" src="{{speed_benchmark.left_bottom.image}}" alt="{{speed_benchmark.left_bottom.alt}}">-->
+            </a>
+            {% else %}
+            {%include webp-tag.html src=speed_benchmark.left_bottom.image class="aspect-ratio" width=372 height=374 alt=speed_benchmark.left_bottom.alt%}
+            {% endif %}
+          {% endif %}
+        </div>
+      </div>
+      <div class="col-12 col-md-8 speed-benchmark-image-wrapper">
+        {%include webp-tag.html src=speed_benchmark.image class="aspect-ratio" width=1862 height=1028 alt=speed_benchmark.alt style="border-radius: 20px"%}
+<!--        <img width="1862" height="1028" style="border-radius: 20px" class="aspect-ratio" src="{{speed_benchmark.image}}" alt="{{speed_benchmark.alt}}">-->
+        <div onmouseenter="Tidy3dSolver.triggerCardHighlight(event)" onmouseleave="Tidy3dSolver.cancelCardHighlight(event)" data-card-trigger="left-top" class="dashed"></div>
+        <div onmouseenter="Tidy3dSolver.triggerCardHighlight(event)" onmouseleave="Tidy3dSolver.cancelCardHighlight(event)" data-card-trigger="left-bottom" class="dashed"></div>
+        <div onmouseenter="Tidy3dSolver.triggerCardHighlight(event)" onmouseleave="Tidy3dSolver.cancelCardHighlight(event)" data-card-trigger="right-top" class="dashed"></div>
+        <div onmouseenter="Tidy3dSolver.triggerCardHighlight(event)" onmouseleave="Tidy3dSolver.cancelCardHighlight(event)" data-card-trigger="right-bottom" class="dashed"></div>
+      </div>
+      <div class="col-12 col-md-2 pl-0 pr-0 row" style="margin: 0 auto">
+        <div onmouseenter="Tidy3dSolver.triggerImageHighlight(event)" onmouseleave="Tidy3dSolver.cancelImageHighlight(event)" class="col-6 col-md-12 example-thumbnail text-center" data-trigger-item="right-top">
+          {% if speed_benchmark.right_top %}
+          {% if speed_benchmark.right_top.link %}
+          <a id="{{speed_benchmark.right_top.click_id}}" href="{{speed_benchmark.right_top.link}}">
+            {%include webp-tag.html src=speed_benchmark.right_top.image class="aspect-ratio" width=372 height=374 alt=speed_benchmark.right_top.alt%}
+<!--            <img width="372" height="374" class="aspect-ratio" src="{{speed_benchmark.right_top.image}}" alt="{{speed_benchmark.right_top.alt}}">-->
+          </a>
+          {% else %}
+          {%include webp-tag.html src=speed_benchmark.right_top.image class="aspect-ratio" width=372 height=374 alt=speed_benchmark.right_top.alt%}
+          {% endif %}
+          {% endif %}
+        </div>
+        <div onmouseenter="Tidy3dSolver.triggerImageHighlight(event)" onmouseleave="Tidy3dSolver.cancelImageHighlight(event)" class="col-6 col-md-12 example-thumbnail text-center align-items-end" data-trigger-item="right-bottom">
+          {% if speed_benchmark.right_bottom %}
+          {% if speed_benchmark.right_bottom.link %}
+          <a id="{{speed_benchmark.right_bottom.click_id}}" href="{{speed_benchmark.right_bottom.link}}">
+            {%include webp-tag.html src=speed_benchmark.right_bottom.image class="aspect-ratio" width=372 height=374 alt=speed_benchmark.right_bottom.alt%}
+<!--            <img width="372" height="374" class="aspect-ratio" src="{{speed_benchmark.right_bottom.image}}" alt="{{speed_benchmark.right_bottom.alt}}">-->
+          </a>
+          {% else %}
+          {%include webp-tag.html src=speed_benchmark.right_bottom.image class="aspect-ratio" width=372 height=374 alt=speed_benchmark.right_bottom.alt%}
+          {% endif %}
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{%endif%}
+
+<!-- Features -->
+{% if page.features_section.enable %}
+{% assign features_section = page.features_section %}
+<section class="wrapper bg-opacity-default pt-48 pb-48">
+  <div class="container text-center">
+    {% if features_section.title %}
+    <h2 class="font-weight-bold color-dark font-size-32 mb-32">{{features_section.title}}</h2>
+    {% endif %}
+    {% if features_section.list %}
+    <div class="row omit-first-border">
+      {% for featured in features_section.list %}
+      {% if featured.enable %}
+      <div class="col-12 col-md-4 text-left pl-32 pr-32">
+        {% if featured.link %}
+        <a id="{{featured.link_id}}" href="{{featured.link}}" target="{{featured.target}}">
+          <div style="width: 307px; height: 230px; margin: 0 auto">
+            {%include webp-tag.html src=featured.image class="aspect-ratio" width=featured.image_width height=featured.image_height alt=featured.title%}
+<!--            <img width="{{featured.image_width}}" height="{{featured.image_height}}" class="aspect-ratio" src="{{featured.image}}" alt="{{featured.title}}">-->
+          </div>
+          <h3 class="color-dark font-size-20 mb-16 line-height-24">{{featured.title}}</h3>
+          <p class="color-dark-5 line-height-24">{{featured.description}}</p>
+        </a>
+        {%else%}
+        <div style="width: 307px; height: 230px">
+          {%include webp-tag.html src=featured.image class="aspect-ratio" width=featured.image_width height=featured.image_height alt=featured.title%}
+<!--          <img width="{{featured.image_width}}" height="{{featured.image_height}}" class="aspect-ratio" src="{{featured.image}}" alt="{{featured.title}}">-->
+        </div>
+        <h3 class="color-dark font-size-20 mb-16 line-height-24">{{featured.title}}</h3>
+        <p class="color-dark-5 font-size-18 line-height-24">{{featured.description}}</p>
+        {%endif%}
+      </div>
+      {% endif %}
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+</section>
+{% endif %}
+
+<!-- Case Study -->
+{% if page.case_study_section.enable %}
+{% assign case_study = page.case_study_section %}
+<section class="wrapper bg-opacity-default pt-48">
+  <div class="container text-center">
+    {% if case_study.title %}
+    <h2 class="font-weight-bold color-dark font-size-32 mb-32">{{case_study.title}}</h2>
+    {% endif %}
+    {% if case_study.cases %}
+    <div class="row text-left text-md-center">
+      {% for case in case_study.cases %}
+      <div class="col-12 mb-0">
+        <h3 class="color-dark font-size-20 mb-24 line-height-24">{{case.title}}</h3>
+        <p class="color-dark-5 font-size-18 line-height-24">{{case.description}}</p>
+        {% if case.btn.link %}
+        <a id="{{case.btn.id}}" class="btn text-transform-unset btn-fc-primary mb-8 font-weight-500 font-size-16" href="{{case.btn.link}}" target="{{case.btn.target}}">{{case.btn.text}}</a>
+        {% else %}
+        <span class="btn text-transform-unset btn-fc-primary mb-8 font-weight-500 font-size-16">{{case.btn.text}}</span>
+        {% endif %}
+        {%include webp-tag.html src=case.image class="aspect-ratio reduce-image-size" width=case.image_width height=case.image_height alt=case.title%}
+<!--        <img width="{{case.image_width}}" height="{{case.image_height}}" class="aspect-ratio" src="{{case.image}}" alt="{{case.title}}">-->
+      </div>
+      {%unless forloop.last %}
+      <hr style="width: 100%">
+      {%endunless%}
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+</section>
+{% endif %}
+
+<!-- Example Library -->
+{% if page.example_library_section.enable %}
+<div class="space70"></div>
+{% assign example_library = page.example_library_section %}
+<section class="wrapper bg-opacity-default pb-32">
+  <div class="container text-center">
+    {% if example_library.title %}
+    {% if example_library.title_link %}
+    <a id="{{example_library.title_link_id}}" href="{{example_library.title_link}}"><h2 class="font-weight-bold color-dark font-size-32 mb-32">{{example_library.title}}</h2></a>
+    {%else%}
+    <h2 class="font-weight-bold color-dark font-size-32 mb-32">{{example_library.title}}</h2>
+    {%endif%}
+    {% endif %}
+    {% include tabs.html tabs=example_library.tabs tab_body=example_library.tabs_body %}
+  </div>
+</section>
+{% endif %}
+
+<!-- Application Areas -->
+{% if page.application_areas_section.enable %}
+{% assign application = page.application_areas_section %}
+<section class="wrapper bg-ghost-white pt-48 pb-48">
+  <div class="container text-center">
+    {% if application.title %}
+    <h2 class="font-weight-bold color-dark font-size-32 mb-32">{{application.title}}</h2>
+    {% endif %}
+    {% if application.list %}
+    <div class="row row-gap-16 justify-content-center align-items-center application-areas-wrapper">
+      {% for item in application.list %}
+      {% if item.enable %}
+      <div class="col-10 col-sm-6 col-md-4 text-center mb-0 item">
+        {%if item.link%}
+        <a id="{{item.link_id}}" href="{{item.link}}" target="{{item.target}}">
+          {%include webp-tag.html src=item.image class="aspect-ratio" width=732 height=412 alt=item.title%}
+<!--          <img width="732" height="412" class="aspect-ratio" src="{{item.image}}" alt="{{item.title}}">-->
+          <p class="color-black-1 d-inline-block font-size-16 line-height-20 mt-16 mb-16">{{item.title}}</p>
+        </a>
+        {%else%}
+        {%include webp-tag.html src=item.image class="aspect-ratio" width=732 height=412 alt=item.title%}
+<!--        <img width="732" height="412" class="aspect-ratio" src="{{item.image}}" alt="{{item.title}}">-->
+        <p class="color-black-1 d-inline-block font-size-16 line-height-20 mt-16 mb-16">{{item.title}}</p>
+        {%endif%}
+      </div>
+      {%endif%}
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+</section>
+{% endif %}
+
+<!-- Customer Success Story -->
+{% if page.customer_section.enable %}
+{% assign customer = page.customer_section %}
+<section class="wrapper bg-opacity-default pt-48 pb-48">
+  <div class="container text-center">
+    {% if customer.title %}
+    <h2 class="font-weight-bold color-dark font-size-32 mb-32">{{customer.title}}</h2>
+    {% endif %}
+    {% if customer.video_list %}
+    <div class="row text-left mb-32">
+      {% for video_item in customer.video_list %}
+      {% if video_item.enable %}
+      <div class="col-12 col-md-6">
+        {% if video_item.title %}
+        <h3 class="font-weight-bold color-dark font-size-20 mb-24 line-height-24">{{video_item.title}}</h3>
+        <div class="space30"></div>
+        {% endif %}
+        {% if video_item.logo %}
+        {%include webp-tag.html src=video_item.logo class="aspect-ratio" width=120 height=31 alt=video_item.title style="width: 40%;"%}
+<!--        <img width="120" height="31" class="aspect-ratio" style="width: 40%;" src="{{ video_item.logo }}" alt="{{ video_item.title }}" >-->
+        <div class="space20"></div>
+        {% endif %}
+        {% if video_item.description %}
+        <p class="color-dark-5 font-size-18 line-height-24">{{video_item.description}}</p>
+        {% endif %}
+      </div>
+      <div class="col-12 col-md-6">
+        <lite-vimeo id="{{video_item.video_element_id}}" videoid="{{ video_item.video_id }}"></lite-vimeo>
+      </div>
+      {% endif %}
+      {% endfor %}
+    </div>
+    {% endif %}
+    {% if customer.story_list %}
+    <div class="space30"></div>
+    {% include tidy3d-solver/slides.html slides=customer.story_list %}
+    {% endif %}
+  </div>
+</section>
+{% endif %}
+
+<!-- Accuracy Trusted By Leading Institutions -->
+{% if page.trusted_section.enable %}
+{% assign trusted = page.trusted_section %}
+<section class="wrapper bg-ghost-white pt-48 pb-48">
+  <div class="container text-center">
+    {% if trusted.title %}
+    <h2 class="font-weight-bold color-dark font-size-32 mb-32">{{trusted.title}}</h2>
+    {% endif %}
+    {% if trusted.universities %}
+    <div class="university-box d-flex justify-content-around flex-wrap column-gap-16 row-gap-32">
+      {% for university in trusted.universities %}
+      {% if university.enable %}
+      {%include webp-tag.html src=university.logo width=university.width height=university.height alt=university.text style="height: 46px; object-fit: scale-down"%}
+<!--      <img width="{{university.width}}" height="{{university.height}}" style="height: 46px; object-fit: scale-down" src="{{university.logo}}" alt="{{university.text}}">-->
+      {%endif%}
+      {%endfor%}
+    </div>
+    </div>
+    {% endif %}
+  </div>
+</section>
+<section class="wrapper bg-opacity-default pt-48 pb-48">
+  <div class="container">
+    {% if trusted.journals.enable %}
+    <div class="d-block d-md-flex align-items-center column-gap-24 journals-container">
+      {% if trusted.journals.title %}
+      <h3 class="font-weight-bold font-size-20 mb-24 color-dark line-height-24">{{trusted.journals.title}}</h3>
+      {%endif%}
+      {% if trusted.journals.list %}
+      <div class="row" style="width: 100%; margin: 0">
+        {% for journal in trusted.journals.list %}
+        {% if journal.enable %}
+        <div class="col-6 col-sm-4 col-md-2">
+          {%if journal.link%}
+          <a id="{{jouranl.click_id}}" href="{{journal.link}}" target="_blank">
+            {%include webp-tag.html src=journal.logo width=87 height=87 alt=journal.text style="height: 87px; object-fit: scale-down"%}
+<!--            <img width="87" height="87" style="height: 87px; object-fit: scale-down" src="{{journal.logo}}" alt="{{journal.text}}">-->
+          </a>
+          {%else%}
+          {%include webp-tag.html image=journal.logo width=87 height=87 alt=journal.text style="height: 87px; object-fit: scale-down"%}
+<!--          <img style="height: 87px; object-fit: scale-down" width="87" height="87" src="{{journal.logo}}" alt="{{journal.text}}">-->
+          {%endif%}
+        </div>
+        {% endif %}
+        {% endfor %}
+      </div>
+      {%endif%}
+    </div>
+    {% endif %}
+  </div>
+</section>
+{% endif %}
+
+<!-- From the Tidy3D team -->
+{% if page.tidy3d_team_section.enable %}
+{% assign tidy3d_team = page.tidy3d_team_section %}
+<section class="wrapper bg-ghost-white pt-48 pb-48">
+  <div class="container text-center">
+    {% if tidy3d_team.title %}
+    <h2 class="font-weight-bold color-dark font-size-32 mb-32">{{tidy3d_team.title}}</h2>
+    {% endif %}
+    {% if tidy3d_team.description %}
+    <p class="color-dark-3 font-size-18 line-height-24 mb-32">{{tidy3d_team.description}}</p>
+    {% endif %}
+    {% if tidy3d_team.teams %}
+    <div class="row justify-content-center">
+      {% for team in tidy3d_team.teams %}
+      {% if team.enable %}
+      <div class="col-12 col-md-5 text-left">
+        <div class="mb-20 hover-scale-video">
+          <lite-vimeo id="{{team.video_element_id}}" videoid="{{ team.video_id }}"></lite-vimeo>
+        </div>
+        <div class="info pr-15 pb-15">
+          <h4 class="mb-0 color-black-1 font-size-18">{{team.name}}</h4>
+          <span class="mb-0 color-dark-5 line-height-18">{{team.position}}</span>
+        </div>
+      </div>
+      {% endif %}
+      {% endfor %}
+    </div>
+    {%endif%}
+  </div>
+</section>
+{%endif%}
+
+{% include footer_2.html %}

@@ -1,0 +1,71 @@
+---
+layout: default
+
+custom_font: font2
+---
+<div class="content-wrapper">
+  {% include header.html extra_class="absolute transparent" logo_class="logo fc-logo" container_class="container" %}
+  <div class="wrapper">
+    <div class="container inner pt-155 pb-50">
+      <div class="careers-container row justify-content-between align-items-start">
+        <div class="careers-des">
+          <div class="row justify-content-end ml-0">
+            <div class="col-md-12 box bg-white mb-30 career-details pl-15 pt-0 pr-0">
+              {% if page.position_title %}
+              <h1 class="font-size-30 color-dark font-weight-bold mb-0">{{ page.position_title }}</h1>
+              {% endif %}
+              <div class="d-flex font-size-12 color-dark-gray justify-content-start">
+            <span class="author">
+              {%if page.country %}
+              {{item.country}}&nbsp;
+              {%else%}
+              <i class="icofont-location-pin"></i>
+              {%endif%}
+              {{page.country}}&nbsp;{{page.site | upcase}}
+            </span>
+              </div>
+              <div class="space20"></div>
+
+              {% if page.position_description %}
+              <p class="font-size-19 color-dark-gray mb-0" style="line-height: 24px;">{{ page.position_description }}</p>
+              <div class="space40"></div>
+              {% endif %}
+              <div class="color-dark-gray font-size-19">
+                {{page.content}}
+              </div>
+            </div>
+            {%assign email_link_id = page.position_title | slugify | prepend: "__pg_positions_" | append: "_email_link_hr" %}
+            {% include sent_email.html email=page.apply_email extra_apply_id=page.linkedin_click_id extra_id=email_link_id extra_linkedin-apply=page.linkedin_apply extra_description=page.join_description %}
+          </div>
+        </div>
+        {% if site.positions %}
+        <div class="careers-positions">
+          <h2 class="mb-0 font-size-30 color-dark pr-60">Open Positions</h2>
+          <div class="space20"></div>
+          <div class="d-flex justify-content-between flex-column" style="row-gap: 16px">
+            {% for item in site.positions %}
+            {% if item.enable %}
+            {% assign itemPosition = item.position_title | upcase | slugify %}
+            <a href="{{ item.url }}" id="__pg_careers_link_{{itemPosition}}">
+              <div class="feature-box p-15 d-flex flex-column justify-content-center" style="min-height: 70px; height: 70px">
+                <span class="author color-dark-3 line-height-17 font-size-12">
+                {%if item.country %}
+                {{item.country}}&nbsp;
+                {%else%}
+                <i class="icofont-location-pin"></i>
+                {%endif%}
+                {{item.site | upcase}}</span>
+                <span class="font-weight-600 color-dark-3">{{ item.position_title }}</span>
+              </div>
+            </a>
+            {% endif %}
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  <div class="space80"></div>
+  {% include footer_2.html %}
+</div>

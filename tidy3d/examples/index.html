@@ -1,0 +1,64 @@
+---
+layout: default
+custom_font: font2
+title: "Learning FDTD through Examples | Flexcompute"
+author: Tom Chen
+page_section:
+  enable: true
+  title: Learning FDTD through Examples
+---
+{% include header.html extra_class="absolute transparent" logo_class="logo fc-logo" container_class="container" %}
+<div class="wrapper bg-opacity-default">
+  <div class="container inner pt-90">
+    {% if site.data.notebooks.example.title %}
+    <h1 class="mb-0">{{site.data.notebooks.example.title}}</h1>
+    <div class="space30"></div>
+    {% else %}
+    {% if page.page_section.enable %}
+    <h1 class="mb-0">{{page.page_section.title}}</h1>
+    <div class="space30"></div>
+    {%endif%}
+    {%endif%}
+    <div>
+      {% for menu in site.data.notebooks.example.example_menus %}
+      {% assign firstLevelSection = menu %}
+      <div class="space30"></div>
+      <h2 class="color-primary">{{firstLevelSection.title}}</h2>
+      {% if firstLevelSection.menus %}
+      {% assign secondarySection = firstLevelSection.menus %}
+      {% assign checkTypeMenu = secondarySection[0] %}
+      {% if checkTypeMenu.path %}
+      <div class="pl-10">
+        <ul class="list-unstyled">
+          {% for secondary in secondarySection %}
+          <li class="font-size-18 line-height-28 align-items-start d-flex" style="column-gap: 8px">
+            <span class="line-height-28">&bull;</span>
+            <a class="color-dark color-primary-hover" href="{{secondary.path}}">{{secondary.name}}</a>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% else %}
+      {% for secondary in secondarySection %}
+      {% if secondary.enable %} <!-- start h3 if -->
+      <h3 class="color-primary">{{secondary.title}}</h3>
+      <div class="pl-10">
+        <ul class="list-unstyled">
+          {% for menu in secondary.menus%}
+          <li class="font-size-18 line-height-28 align-items-start d-flex" style="column-gap: 8px">
+            <span class="line-height-28">&bull;</span>
+            <a class="color-dark color-primary-hover" href="{{menu.path}}">{{menu.name}}</a>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endif %} <!-- start h3 if -->
+      {% endfor %}
+      {% endif %}
+      {% endif %}
+      {% endfor %}
+    </div>
+  </div>
+</div>
+<div class="space80"></div>
+{% include footer_2.html %}

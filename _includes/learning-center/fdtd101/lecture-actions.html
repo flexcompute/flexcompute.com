@@ -1,0 +1,46 @@
+{% assign item = include.item %}
+{% assign font_color = "color-primary" %}
+{% if include.font_color %}
+{% assign font_color = include.font_color %}
+{% endif %}
+
+<div class="d-flex justify-content-start align-items-center font-size-16 color-black-1 flex-wrap" style="column-gap: 20px; row-gap: 10px" onclick="stopPropagation(event)">
+  {% if item.public_links %}
+  <div class="public-links">
+    {% assign numOfPublicLinks = item.public_links.size %}
+    <span class="{{font_color}}">Visit public projects: </span>
+    {% for numOfLink in (1..numOfPublicLinks) %}
+    {% assign linkIndex = numOfLink | minus: 1 %}
+    {% assign linkItem = item.public_links[linkIndex] %}
+    <a target="_blank" data-trigger="hover" data-placement="top" title="{{linkItem.text}}" id="{{linkItem.click_id}}" class="color-primary-hover has-tooltip underline {{font_color}}" href="{{linkItem.url}}">{{numOfLink}}</a>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {% if item.download_links %}
+  {% assign numOfLinks = item.download_links.size %}
+  <span class="download-ipynb">
+    {% if numOfLinks > 0 %}
+    {% if numOfLinks == 1 %}
+    {% for link in item.download_links %}
+        <span style="cursor: pointer" id="{{link.click_id}}" class="color-primary-hover underline {{font_color}}" onclick="handleDownload('{{link.url}}')">Download .ipynb</span>
+      {% endfor %}
+    {% endif %}
+    {% if numOfLinks > 1 %}
+    <span class="{{font_color}}">Download .ipynb files: </span>
+    {% for link in item.download_links %}
+        <span style="cursor: pointer" id="{{link.click_id}}" class="color-primary-hover underline {{font_color}}" onclick="handleDownload('{{link.url}}')">{{link.text}}</span>
+    {% endfor %}
+    {% endif %}
+    {% endif %}
+  </span>
+  {% endif %}
+
+  {% if item.pdf_url %}
+  <span class="view-presentation-slides">
+    <a class="color-primary-hover underline {{font_color}}" href="{{item.permalink}}#presentation-slides">
+      View Presentation Slides
+    </a>
+  </span>
+  {% endif %}
+</div>

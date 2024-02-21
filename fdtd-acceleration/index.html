@@ -1,0 +1,191 @@
+---
+layout: default
+author: Shanhui Fan
+custom_font: font2
+title: "FDTD Acceleration for Electromagnetic Modeling | Flexcompute"
+description: "GPU FDTD accelerated by hardware"
+tags:
+- accelerated fdtd
+- python accelerated fdtd
+- ultra fast fdtd
+- FDTD acceleration
+- FDTD algorithm
+- Maxwell’s equations
+- electromagnetic engineering simulation
+- nonuniform meshing
+- finite-difference time-domainm
+- finite-difference time-domain method
+- FDTD method
+- optics simuliation
+- photonics device simulation
+- quantum computing simulation
+- wireless technologies simulation
+- GPU acceleration
+- accelerting GPUs
+- GPUs computing
+hero_section:
+  enable: true
+  title: Hardware Acceleration for FDTD Simulations
+  enable_demo: true
+  get-demo_click_id: "__pg_fdtd-acceleration-outline_btn_get-a-demo"
+  contact_click_id: '__pg_fdtd-acceleration-outline-at-scale_btn_contact-us'
+  enable_contact: true
+featured_section:
+  enable: true
+  featured_list:
+    - title: Why are simulations important?
+      enable: true
+      paragraphs:
+        - text: "Computer simulations are an essential tool in the development, design, and engineering of devices in emerging industries such as optics, photonics, quantum computing, and wireless technologies. Simulations give an engineer the power to model the workings of the device without needing to invest time, money, and energy into the fabrication, testing, and measurement of the physical device. This, in turn, enables rapid iteration on design ideas, fine tuning of device parameters, and validation of devices before they are fabricated and used in production."
+        - text: "The simulation of electromagnetic phenomena is usually achieved using the finite- difference time-domain (FDTD) method, which gives a detailed picture of the internal workings of the device by solving the fundamental equations that describe classical electrodynamics. This generality and wide applicability means that FDTD simulations are one of the most important tools for any photonic device engineer who needs to quickly and accurately model their devices."
+          image: "/assets/images/fdtd-acceleration-outline/why-are-simulations-important.png"
+    - title: "What are the challenges with FDTD simulation?"
+      enable: true
+      paragraphs:
+        - text: "The main challenge with FDTD simulations is that the full and accurate modeling of a device generally requires an extremely large amount of computing power due to the sheer number of spatial and temporal unknowns present. As a result, the time required to complete a simulation may be significant, and the physical size of the device being modeled is practically limited."
+        - text: "Much effort is therefore put into circumventing these issues. One such widely used approach is to break the device up into smaller components, which may be modeled individually before the results are “stitched” together to approximate the full system. While this gives an approximation to the overall working of the device, it neglects the coupling between components, which introduces significant error."
+        - text: "Another common approach is to apply an approximation to the device that results in a simulation with less demanding computational requirements. For example, one might approximate a three-dimensional photonic integrated circuit by a two-dimensional representation using an effective medium theory. Again, this approach may give a decent picture of the workings of the device, but also suffers from significant error introduced by the approximation."
+          image: "/assets/images/fdtd-acceleration-outline/electromagnetic-field.png"
+          image_class: ""
+    - title: "Accelerating FDTD"
+      enable: true
+      description: "Rather than introducing approximations to the device and its modeling, an alternative approach is to examine the nuts and bolts of the simulation technology itself to improve the performance of the computation being performed. A few approaches to accelerating FDTD in this way include:"
+      paragraphs:
+        - text: "The FDTD algorithm solves Maxwell’s equations in their most basic and general form. However, there are several techniques that may be used to augment the algorithm to improve its performance. For example, applying a subpixel averaging of physical structures in the system enables higher accuracy modeling at lower resolution. Additionally, nonuniform meshing allows one to more efficiently discretize the space to place higher resolution where it is needed. Incorporating these techniques, among others, into the FDTD solver can have a significant effect on speeding up the simulation and reducing the number of unknowns needed to solve."
+          title: 'Algorithm design.'
+          image: "/assets/images/fdtd-acceleration-outline/algorithm-design.png"
+        - text: "As simulations grow in size, the computation must be split over an increasing number of individual processors. While the number of available processors will put an upper limit on the achievable simulation size, a main bottleneck to accomplishing faster simulation speed quickly becomes the transfer of information between processors. A major challenge in accelerating FDTD simulations is how to engineer not only the computing hardware architecture, but also the strategy for splitting the simulation between processors in a way that minimizes this information transfer bottleneck."
+          title: 'Parallelism'
+          image: "/assets/images/fdtd-acceleration-outline/parallelism.png"
+    - title: "How does Flexcompute approach FDTD acceleration?"
+      enable: true
+      paragraphs:
+        - text: "As we can see, there are many fine details that go into making FDTD simulations as efficient, scalable, and fast as possible. At Flexcompute, our approach to FDTD simulation is to consider each aspect of the simulation both individually and as a combined system with the overall goal of optimizing performance. Our FDTD implementation is optimized for parallel processing to maximize processing speed and minimize the information transfer between workers. Each simulation is analyzed to determine the paralellization strategy that mostefficiently utilizes our large pool of compute resources. Finally, our solver implements the most state of the art algorithms for accomplishing the highest accuracy FDTD simulations with the minimum compute requirements."
+          text_row_class: 'col-lg-6 pr-0'
+          other_row_class: 'offset-lg-1 col-lg-5'
+          item_class: 'paragraph-block'
+          image: "/assets/images/fdtd-acceleration-outline/img.png"
+          image_class: ""
+        - text: "The resulting solver (Tidy3D) is demonstrably over 100x faster than equivalent CPU-based FDTD solvers. This enables simulations to finish within minutes whereas they formerly would take days to complete. The effect on our customers’ product development pipeline is revolutionary, as they are able to iterate on designs within days instead of months and simulate devices that were previously too large to even handle using their previous tools."
+    - title: "Expedite the design of photonic integrated circuit"
+      title_class: 'text-left'
+      enable: true
+      class: 'col-lg-6'
+      description: "Speed validation by a customer shows that their simulation of a large photonic integrated circuit completes in just over 3 minutes compared to previous simulations taking 27 hours on a 96-core instance running conventional FDTD."
+      small_description: "* Speed-up varies case by case. The advantage of Tidy3D is more prominent on larger simulations."
+      btn_text: 'Get a Demo'
+      btn_click_id: '__pg_fdtd-acceleration-outline_expedite-the-design-of-photonic-integrated-circuit_btn_get-a-demo'
+      btn_link: '/contact/'
+      image: '/assets/images/product/tidy3D/lightning-fast/03.png'
+    - title: "Learn More"
+      enable: true
+      description: "If you are looking for a turn-key solution to reduce your research, design, and prototyping activities by orders of magnitude, reach out to schedule a demo of Tidy3D today."
+      btn_list:
+        - btn_text: "Contact Us"
+          btn_click_id: '__pg_fdtd-acceleration-outline_contact-us_btn'
+          btn_link: "/contact/"
+          btn_class: "btn-primary"
+        - btn_text: "Sign Up"
+          btn_click_id: '__pg_fdtd-acceleration-outline_sign-up_btn'
+          btn_link: "https://tidy3d.simulation.cloud"
+          btn_class: "btn-dashed-primary"
+---
+
+{% include header.html extra_class="absolute transparent" logo_class="logo fc-logo" container_class="container" %}
+<div class="wrapper bg-opacity-default">
+  {% include tidy3d_hero_section.html %}
+  {% if page.featured_section.enable %}
+  {% assign featured = page.featured_section %}
+  <div class="container inner pt-0 pb-0">
+    {% if featured.featured_list %}
+    {% for item in featured.featured_list %}
+    {% if item.enable %}
+    <section>
+      <div class="row">
+        <div class="col-12 {{item.class}}">
+          {% if item.image %}
+          <img width="580" height="550" class="aspect-ratio" src="{{ item.image }}" alt="{{item.title}}">
+          {% endif %}
+        </div>
+        <div class="col-12 {{item.class}}">
+          {% if item.title %}
+          <h2 class="font-size-30 mb-0 color-dark-3 line-height-36 {%if item.title_class%}{{item.title_class}}{% else %}text-center{%endif%}">{{item.title}}</h2>
+          <div class="space10"></div>
+          {% endif %}
+          {% if item.description %}
+          <div class="space20"></div>
+          <p class="font-size-19 line-height-32 color-dark-5 mb-0 font-weight-500">{{item.description}}</p>
+          {% endif %}
+          {% if item.btn_link %}
+          <div class="space30"></div>
+          <a id="{%if item.btn_click_id%}{{item.btn_click_id}}{%endif%}" href="{{item.btn_link}}" {%if item.btn_link_download %} download {% endif %} {%if item.btn_link_target == '_blank' %} target="_blank" {% endif %} class="btn btn-dashed-primary font-size-16 mb-5" style="padding-top: 16px">
+          {{item.btn_text}}
+          </a>
+          {%endif%}
+          {% if item.small_description %}
+          <div class="space20"></div>
+          <p class="font-size-14 color-dark-5 mb-0 {%if item.small_description_class%}{{item.small_description_class}}{%endif%}">
+            {{item.small_description}}</p>
+          {%endif%}
+          {% if item.btn_list %}
+          <div class="space30"></div>
+          <div class="product-action d-flex flex-md-row flex-column justify-content-center" style="width: 100%">
+            {%for btnItem in item.btn_list%}
+            <a id="{{btnItem.btn_click_id}}" href="{{btnItem.btn_link}}"
+               class="btn {{btnItem.btn_class}} font-size-16 mb-5">
+              {{btnItem.btn_text}}
+            </a>
+            {% endfor %}
+          </div>
+          {% endif %}
+          {% if item.paragraphs %}
+          {% for paragraph in item.paragraphs %}
+          <div class="paragraph">
+            {% if paragraph.title %}
+            <div class="space20"></div>
+            <h3 class="font-size-19 line-height-32 color-primary mb-0 paragraph-title">
+              <span class="dot line-height-32"></span>
+              {{paragraph.title}}
+            </h3>
+            {% endif %}
+            <div class="row {{paragraph.item_class}}">
+              <div class="{{paragraph.text_row_class}} col-12">
+                {% if paragraph.text %}
+                <div class="space20"></div>
+                <p class="font-size-19 line-height-32 color-dark-5 mb-0 font-weight-500 {% if paragraph.title%}{%else%} paragraph-text {% endif %}">
+                  {% if paragraph.title %}
+                  {% else %}
+                  <span class="dot line-height-32"></span>
+                  {% endif %}
+                  {{paragraph.text}}
+                </p>
+                {% endif %}
+              </div>
+              <div class="{{paragraph.other_row_class}} col-12">
+                {% if paragraph.image %}
+                <div class="space20"></div>
+                <div class="{%if paragraph.image_class%}{{paragraph.image_class}}{%else%}image-card{%endif%}">
+                  {% assign imgAlt = item.title %}
+                  {% if paragraph.title %}
+                  {% assign imgAlt = paragraph.title %}
+                  {% endif %}
+                  <img width="759" height="399" class="aspect-ratio" alt="{{imgAlt}}" src="{{paragraph.image}}" >
+                </div>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+          {% endif %}
+        </div>
+      </div>
+      <div class="space120"></div>
+    </section>
+    {% endif %}
+    {% endfor %}
+    {% endif %}
+  </div>
+  {% endif %}
+</div>
+<div class="space80"></div>
+{% include footer_2.html %}

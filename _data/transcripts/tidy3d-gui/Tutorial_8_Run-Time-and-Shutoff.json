@@ -1,0 +1,52 @@
+{
+  "title": "Tidy3D GUI: Tutorial 8",
+  "pages": [
+    {
+      "id": "",
+      "title": "",
+      "transcript": "When setting up FDTD simulations, a common question is how long to run them in physical time. A simple answer to this question would be \"As long as necessary for all the electromagnetic fields within the simulation domain to decay to negligible values\". This condition usually ensures that the results obtained from frequency-domain monitors are reliable, as they can accurately represent the continuous-wave response of the system when the fields recorded at the beginning and end of the time stepping are zero or very close to zero."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "When dealing with light propagation in a NON-RESONANT device, such as this straight waveguide, a good initial guess would be the largest domain dimension multiplied by the mode group index, divided by the speed of light in a vacuum, plus the source time. This ensures that the pulse has enough time to travel throughout the largest simulation domain dimension and then decay to a negligible value."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "The group index of the fundamental transverse electric guided mode in this 500 nm wide and 220 nm thick silicon waveguide in the air is 4.37."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "To reproduce this tutorial, create a similar waveguide with a length of 30 microns, set up a mode source to inject the transverse electric mode, and adjust its bandwidth between 1.5 and 1.6 microns. You can refer to other tutorials to accomplish this task. Then, click the \"Plot\" button to visualize the source time dependence, where you will see that the source signal takes about 0.25 ps to decay."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "This results in a run time of approximately 0.7 ps. Now, let's analyze the effects of the \"Run Time\" parameter on the FDTD results."
+    },
+    {
+      "id": "",
+      "title": "",
+      "paragraphs": [
+        {
+          "title": "",
+          "transcript": "In addition to the mode monitor, add a \"FieldTimeMonitor\" at the center of the simulation domain, with dimensions of 30 microns in the x-direction and 1 micron in the y-direction. Be cautious when setting up this monitor, as it can accumulate large amount of data. Leave only the \"Ey\" component selected under \"fields\", then adjust the \"interval\" parameter to 100, and increase the \"interval_space\" to 2 in the x- and y-directions to downsample the data in time and space."
+        },{
+          "title": "",
+          "transcript": "First, turn off the early termination detection feature for illustration purposes only by setting the \"Shutoff Condition\" to 0. Then, adjust the \"Run Time\" to 0.7 ps, as calculated previously. Before running the simulation, click on \"Estimate FlexCredit\" to view  the estimated cost and size of the simulation. Then run the simulation and go to the post-run results. You'll observe that the mode monitor amplitude deviates from 1 only by 10 to the power of minus 4, which is mostly a numerical artifact with no impact on result analysis. Select the \"field_time\" monitor and cycle the \"Time\" parameter between 0 to 0.7 ps to view snapshots of the Gaussian pulse along the waveguide. You'll see that the pulse was completely absorbed by the PML before the end of the simulation, as it should have been."
+        },{
+          "title": "",
+          "transcript": "Now, click “Edit” to create a new version and adjust the \"Run Time\" parameter to 0.6 ps to observe what happens when the pulse does not have enough time to propagate. Run the simulation and go to the post-run results as before. The mode amplitude now deviates from 1 by almost 10 to the power of minus 1, which can potentially lead to false conclusions. Observing the data in the \"field_time\" monitor, you'll clearly see that the pulse has not entirely left the simulation domain at the end of the simulation, a condition to be avoided."
+        },{
+          "title": "",
+          "transcript": "Lastly, create a new version and restore the \"Shutoff Condition\" to 10 to the power of minus 5, which is usually sufficient for most simulations. Now, you can increase the run time slightly, for example, to 1 ps, and then run the simulation again. This time, the fields in the simulation domain decay below 10 to the power of minus 5 before 1 ps, triggering the shutoff condition, and thus stopping the simulation. The results show that the mode amplitude is similar to the first case, and the fields have vanished at the end of the simulation."
+        },{
+          "title": "",
+          "transcript": "This last strategy is preferred to avoid running simulations longer than necessary, and it should be used whenever possible. However, in some cases, such as when high-quality factor resonances are present, waiting for the fields to decay to a negligible value can be impractical. It would be best if you took special care to manage the simulation run time in such cases. For more information, refer to Lecture 3 of FDTD 101."
+        }
+      ]
+    }
+  ]
+}

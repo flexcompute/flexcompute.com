@@ -1,0 +1,68 @@
+---
+layout: default
+title: "Intro to Finite-Difference Time-Domain (FDTD) | Flexcompute"
+description: "Master electromagnetic simulations with the FDTD method in our beginner's course."
+tags:
+- FDTD
+- FDTD introduction
+- FDTD training
+- FDTD tutorial
+- FDTD lecture
+- FDTD python API
+- Finite-difference time-domain
+- Tidy3D
+- EM simulation training
+- Introduction Electromagnetics
+- Maxwell's equations
+- Understanding the FDTD Method
+- Introduction to the FDTD Method
+author: Shanhui Fan
+custom_font: font2
+banner_section:
+  enable: true
+  bg: "/assets/images/fdtd101/bg.png"
+  page_title: 'Introduction to Finite-Difference Time-Domain Method'
+  description: 'This course is an introduction to the Finite-Difference Time-Domain
+    (FDTD) Method for Electromagnetics. We will walk you through the basics of setting
+    up and running electromagnetic simulations using the finite-difference time-domain
+    (FDTD) method. Through this course, you will gain a knowledge of the fundamental
+    concepts behind electromagnetic simulation as well as many advanced topics worth
+    considering when you set up your simulations. <br> <br> The course will use Flexcompute''s
+    Tidy3D solver for its examples and the scripts used in the slides are publicly
+    accessible from this website. A basic knowledge of electromagnetics and programming
+    is recommended to get the most use out of this course. '
+---
+<div class="content-wrapper">
+  {% include header.html extra_class="absolute transparent" logo_class="logo fc-logo" container_class="container" %}
+  {% if page.banner_section.enable %}
+  <div class="wrapper pt-60">
+    <div class="wrapper">
+      <div class="container text-left pb-20 pt-60 fdtd-banner image-wrapper bg-image" data-image-src="{{ page.banner_section.bg }}">
+        <div class="row">
+          <div class="col-md-7">
+            <h1 class="page-title text-capitalize color-dark">{{page.banner_section.page_title}}</h1>
+            <p class="text-left font-size-16 color-dark-3" style="line-height: 26px;">{{page.banner_section.description}}</p>
+          </div>
+          <div class="col-md-8">
+            {% include sign-up-tidy3d-button/default.html extra_id="__pg_fdtd101_sign-up-tidy3d_btn" %}
+            {% include subscribe_btn_dashed.html extra_id="__pg_fdtd101_btn_subscribe-to-receive-update" %}
+          </div>
+          <!-- <div class="space20"></div>
+          <form class="fields-white col-md-8 mx-auto">
+            <div class="form-group fdtd-search">
+              <input type="text" class="form-control" id="field" placeholder="Searche the lectures">
+              <span class="search-icon mx-auto">
+                <i class="jam jam-search font-size-25 color-white"></i>
+              </span>
+            </div>
+          </form> -->
+        </div>
+    </div>
+    </div>
+  </div>
+  {% endif %}
+
+  {% include lecture/vertical_tabs.html data=site.data.lecture.fdtd.lecture_section tHeader_class="true" extra_id_prefix="__pg_fdtd101" %}
+
+  {% include footer_2.html %}
+</div>

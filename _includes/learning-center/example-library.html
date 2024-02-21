@@ -1,0 +1,34 @@
+<div class="row mr-0 ml-0">
+  <div class="col-12 offset-0 col-lg-11 offset-lg-1 pl-0">
+    <h1 class="color-dark-3 font-size-32 line-height-50">Example Library</h1>
+    <div class="search-control">
+      <input
+          style="width: 100%;"
+          type="text"
+          value=""
+          class="reset-input-box"
+          id="__pg_tidy3d-learning-center_search-for-example_input"
+          placeholder="Search for example"
+          oninput="$searchExamples.searchExamplesByInput(event)"
+      >
+      <div class="space20"></div>
+      <div id="__pg_tidy3d-learning-center_example-library-tags_" class="custom-radio-group" onclick="$searchExamples.selectCategory(event)">
+            {% include learning-center/example-library/tags-from-notebook.html %}
+      </div>
+    </div>
+    <div class="space50"></div>
+    <div id="__pg_tidy3d-learning-center_example-library-search-results_" class="result example-library-results row" style="row-gap: 50px">
+    {% include learning-center/example-library/examples-from-notebook.html %}
+    </div>
+    <div id="not-matched" class="no-result row pl-15 d-none">
+      <p>No matching results found.</p>
+    </div>
+  </div>
+</div>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const enableGetCategoryByURL = {{page.enable_selected_category_by_url}}
+    $searchExamples.selectTagByURL(enableGetCategoryByURL)
+  })
+
+</script>

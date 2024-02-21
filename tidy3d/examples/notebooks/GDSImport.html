@@ -1,0 +1,788 @@
+---
+author: Tom Chen
+custom_css:
+- learning-center/fdtd101
+- learning-center/menu
+- learning-center/home
+custom_font: font2
+description: This notebook demonstrates how to import geometries from a gds file to
+  Tidy3D for FDTD simulations.
+layout: learning-center/example-library
+menu_config:
+  collapsed: true
+  selected: Tidy3D Python
+metadata:
+  category: Structures
+  enable_more_examples: false
+  more_examples:
+  - name: Defining common integrated photonic components
+    path: notebooks/PICComponents/
+  - name: Defining common photonic crystal structures
+    path: notebooks/PhotonicCrystalsComponents/
+  - name: Defining complex geometries using trimesh
+    path: notebooks/CreatingGeometryUsingTrimesh/
+  pagination:
+    next:
+      name: Importing STL files
+      path: notebooks/STLImport/
+    previous:
+      name: Applying time modulation to materials
+      path: notebooks/TimeModulationTutorial/
+  type: python-tutorial
+page_title: Importing GDS files
+source_link: https:/docs.flexcompute.com/projects/tidy3d/en/latest/_sources/notebooks/GDSImport.ipynb
+tags:
+- gds
+- import
+- Tidy3D
+- FDTD
+title: GDS File Import in Tidy3D | Flexcompute
+---
+
+
+<html lang="en">
+<head><meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="/assets/tidy3d/examples/css/example-notebook.css" rel="stylesheet"/>
+
+
+
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS_CHTML-full,Safe"> </script>
+
+<script type="text/x-mathjax-config">
+    init_mathjax = function() {
+        if (window.MathJax) {
+        // MathJax loaded
+            MathJax.Hub.Config({
+                TeX: {
+                    equationNumbers: {
+                    autoNumber: "AMS",
+                    useLabelIds: true
+                    }
+                },
+                tex2jax: {
+                    inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+                    displayMath: [ ['$$','$$'], ["\\[","\\]"] ],
+                    processEscapes: true,
+                    processEnvironments: true
+                },
+                displayAlign: 'center',
+                CommonHTML: {
+                    linebreaks: {
+                    automatic: true
+                    }
+                }
+            });
+
+            MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
+        }
+    }
+    init_mathjax();
+    </script>
+<script type="module">
+  document.addEventListener("DOMContentLoaded", async () => {
+    const diagrams = document.querySelectorAll(".jp-Mermaid > pre.mermaid");
+    // do not load mermaidjs if not needed
+    if (!diagrams.length) {
+      return;
+    }
+    const mermaid = (await import("https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.7.0/mermaid.esm.min.mjs")).default;
+    const parser = new DOMParser();
+
+    mermaid.initialize({
+      maxTextSize: 100000,
+      maxEdges: 100000,
+      startOnLoad: false,
+      fontFamily: window
+        .getComputedStyle(document.body)
+        .getPropertyValue("--jp-ui-font-family"),
+      theme: document.querySelector("body[data-jp-theme-light='true']")
+        ? "default"
+        : "dark",
+    });
+
+    let _nextMermaidId = 0;
+
+    function makeMermaidImage(svg) {
+      const img = document.createElement("img");
+      const doc = parser.parseFromString(svg, "image/svg+xml");
+      const svgEl = doc.querySelector("svg");
+      const { maxWidth } = svgEl?.style || {};
+      const firstTitle = doc.querySelector("title");
+      const firstDesc = doc.querySelector("desc");
+
+      img.setAttribute("src", `data:image/svg+xml,${encodeURIComponent(svg)}`);
+      if (maxWidth) {
+        img.width = parseInt(maxWidth);
+      }
+      if (firstTitle) {
+        img.setAttribute("alt", firstTitle.textContent);
+      }
+      if (firstDesc) {
+        const caption = document.createElement("figcaption");
+        caption.className = "sr-only";
+        caption.textContent = firstDesc.textContent;
+        return [img, caption];
+      }
+      return [img];
+    }
+
+    async function makeMermaidError(text) {
+      let errorMessage = "";
+      try {
+        await mermaid.parse(text);
+      } catch (err) {
+        errorMessage = `${err}`;
+      }
+
+      const result = document.createElement("details");
+      result.className = 'jp-RenderedMermaid-Details';
+      const summary = document.createElement("summary");
+      summary.className = 'jp-RenderedMermaid-Summary';
+      const pre = document.createElement("pre");
+      const code = document.createElement("code");
+      code.innerText = text;
+      pre.appendChild(code);
+      summary.appendChild(pre);
+      result.appendChild(summary);
+
+      const warning = document.createElement("pre");
+      warning.innerText = errorMessage;
+      result.appendChild(warning);
+      return [result];
+    }
+
+    async function renderOneMarmaid(src) {
+      const id = `jp-mermaid-${_nextMermaidId++}`;
+      const parent = src.parentNode;
+      let raw = src.textContent.trim();
+      const el = document.createElement("div");
+      el.style.visibility = "hidden";
+      document.body.appendChild(el);
+      let results = null;
+      let output = null;
+      try {
+        let { svg } = await mermaid.render(id, raw, el);
+        svg = cleanMermaidSvg(svg);
+        results = makeMermaidImage(svg);
+        output = document.createElement("figure");
+        results.map(output.appendChild, output);
+      } catch (err) {
+        parent.classList.add("jp-mod-warning");
+        results = await makeMermaidError(raw);
+        output = results[0];
+      } finally {
+        el.remove();
+      }
+      parent.classList.add("jp-RenderedMermaid");
+      parent.appendChild(output);
+    }
+
+
+    /**
+     * Post-process to ensure mermaid diagrams contain only valid SVG and XHTML.
+     */
+    function cleanMermaidSvg(svg) {
+      return svg.replace(RE_VOID_ELEMENT, replaceVoidElement);
+    }
+
+
+    /**
+     * A regular expression for all void elements, which may include attributes and
+     * a slash.
+     *
+     * @see https://developer.mozilla.org/en-US/docs/Glossary/Void_element
+     *
+     * Of these, only `<br>` is generated by Mermaid in place of `\n`,
+     * but _any_ "malformed" tag will break the SVG rendering entirely.
+     */
+    const RE_VOID_ELEMENT =
+      /<\s*(area|base|br|col|embed|hr|img|input|link|meta|param|source|track|wbr)\s*([^>]*?)\s*>/gi;
+
+    /**
+     * Ensure a void element is closed with a slash, preserving any attributes.
+     */
+    function replaceVoidElement(match, tag, rest) {
+      rest = rest.trim();
+      if (!rest.endsWith('/')) {
+        rest = `${rest} /`;
+      }
+      return `<${tag} ${rest}>`;
+    }
+
+    void Promise.all([...diagrams].map(renderOneMarmaid));
+  });
+</script>
+
+</head>
+<body class="jp-Notebook" data-jp-theme-light="true" data-jp-theme-name="JupyterLab Light">
+<main>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p><img alt="Schematic of the directional coupler" src="/assets/tidy3d/examples/image/splitter.png" width="400"/></p>
+<p>In <code>Tidy3D</code>, complex structures can be defined or imported from GDSII files via the third-party <a href="https://heitzmann.github.io/gdstk/" target="_blank">gdstk</a> package. In this tutorial, we will first illustrate how to use the package to define a structure, then we will save this to file, and then we will read that file and import the structures in a simulation.</p>
+<p>Note that this tutorial requires gdstk, so grab it with <code>pip install gdstk</code> before running the tutorial or uncomment the cell line below.</p>
+<p>We also provide a conprehensive list of other tutorials such as <a href="https://www.flexcompute.com/tidy3d/examples/notebooks/BoundaryConditions/" target="_blank">how to define boundary conditions</a>, <a href="https://www.flexcompute.com/tidy3d/examples/notebooks/SMatrix/" target="_blank">how to compute the S-matrix of a device</a>, <a href="https://www.flexcompute.com/tidy3d/examples/notebooks/WebAPI/" target="_blank">how to interact with tidy3d's web API</a>, and <a href="https://www.flexcompute.com/tidy3d/examples/notebooks/SelfIntersectingPolyslab/" target="_blank">how to define self-intersecting polygons</a>.</p>
+<p>If you are new to the finite-difference time-domain (FDTD) method, we highly recommend going through our <a href="https://www.flexcompute.com/tidy3d/learning-center/" target="_blank">FDTD101</a> tutorials.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[1]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># standard python imports</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">gdstk</span>
+<span class="kn">import</span> <span class="nn">os</span>
+
+<span class="c1"># tidy3d import</span>
+<span class="kn">import</span> <span class="nn">tidy3d</span> <span class="k">as</span> <span class="nn">td</span>
+<span class="kn">from</span> <span class="nn">tidy3d</span> <span class="kn">import</span> <span class="n">web</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="Creating-a-beam-splitter-with-gdstk">Creating a beam splitter with gdstk<a class="anchor-link" href="#Creating-a-beam-splitter-with-gdstk">¶</a></h2><p>First, we will construct an integrated beam splitter as in the title image in this notebook using <code>gdstk</code>. If you are only interested in importing an already existing GDSII file, just jump ahead to the next section.</p>
+<p>We first define some structural parameters. We consider the sidewall of the device to be slanted, deviating from the vertical sidewall by <code>sidewall_angle</code>. <code>sidewall_angle &gt; 0</code> corresponds to a typical fabrication scenario where the base of the device is larger than the top.</p>
+<p>We define the device by constructing the cross section of the device. The cross section can be supplied at the <code>top</code>, <code>bottom</code>, or the <code>middle</code> of the device, specified by the parameter <code>reference_plane</code>. Here we choose to define the cross section on the base. On the base, the two arms of the device start at a distance <code>wg_spacing_in</code> apart, then come together at a coupling distance <code>wg_spacing_coup</code> for a certain length <code>coup_length</code>, and then split again into separate ports. In the coupling region, the field overlap results in energy exchange between the two waveguides. Here, we will only see how to define, export, and import such a device using <code>gdstk</code>. When importing the device, we can optionally dilate or erode its cross section via <code>dilation</code>. In a later example we will simulate the device and study the frequency dependence of the transmission into each of the ports.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[2]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1">### Lengths in micrometers</span>
+
+<span class="c1"># Waveguide width</span>
+<span class="n">wg_width</span> <span class="o">=</span> <span class="mf">0.45</span>
+
+<span class="c1"># Waveguide separation in the beginning/end</span>
+<span class="n">wg_spacing_in</span> <span class="o">=</span> <span class="mi">8</span>
+
+<span class="c1"># Length of the coupling region</span>
+<span class="n">coup_length</span> <span class="o">=</span> <span class="mi">10</span>
+
+<span class="c1"># Angle of the sidewall deviating from the vertical ones, positive values for the base larger than the top</span>
+<span class="n">sidewall_angle</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">6</span>
+
+<span class="c1"># Reference plane where the cross section of the device is defined</span>
+<span class="n">reference_plane</span> <span class="o">=</span> <span class="s2">"bottom"</span>
+
+<span class="c1"># Length of the bend region</span>
+<span class="n">bend_length</span> <span class="o">=</span> <span class="mi">16</span>
+
+<span class="c1"># Waveguide separation in the coupling region</span>
+<span class="n">wg_spacing_coup</span> <span class="o">=</span> <span class="mf">0.10</span>
+
+<span class="c1"># Total device length along propagation direction</span>
+<span class="n">device_length</span> <span class="o">=</span> <span class="mi">100</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h3 id="Generating-Geometry">Generating Geometry<a class="anchor-link" href="#Generating-Geometry">¶</a></h3><p>To create the device, we will use the <code>RobustPath</code> class to define two parallel waveguide with a variable distance between them.  First, we define a helper fuction that will give the shape of the waveguides in the S-bends that bring them together and then apart.  The distance between them (described by the <code>offset</code> parameter in <code>RobustPath</code>) will follow a hyperbolic tangent function, so we create a helper function that simple produces a normalized version of <em>tanh</em> in the unit interval.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[3]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">tanh_interp</span><span class="p">(</span><span class="n">max_arg</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Interpolator for tanh with adjustable extension"""</span>
+    <span class="n">scale</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">tanh</span><span class="p">(</span><span class="n">max_arg</span><span class="p">)</span>
+    <span class="k">return</span> <span class="k">lambda</span> <span class="n">u</span><span class="p">:</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">scale</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">tanh</span><span class="p">(</span><span class="n">max_arg</span> <span class="o">*</span> <span class="p">(</span><span class="n">u</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)))</span>
+
+
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
+<span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">101</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">max_arg</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">]:</span>
+    <span class="n">s_bend</span> <span class="o">=</span> <span class="n">tanh_interp</span><span class="p">(</span><span class="n">max_arg</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">s_bend</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">"tanh_interp(</span><span class="si">{</span><span class="n">max_arg</span><span class="si">}</span><span class="s2">)"</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">"Tanh S-Bend"</span><span class="p">)</span>
+<span class="n">_</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedImage jp-OutputArea-output" tabindex="0">
+<img alt="No description has been provided for this image" class="" src="/assets/tidy3d/examples/image/GDSImport/GDSImport_2.png"/>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>We use <code>tanh_interp(3)</code> for our waveguides and put the whole geometry creation steps in convenience function. The <a href="https://heitzmann.github.io/gdstk/geometry/gdstk.RobustPath.html" target="_blank">documentation for RobustPath</a> has more details on the use of that class.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[4]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">make_coupler</span><span class="p">(</span>
+    <span class="n">length</span><span class="p">,</span>
+    <span class="n">wg_spacing_in</span><span class="p">,</span>
+    <span class="n">wg_width</span><span class="p">,</span>
+    <span class="n">wg_spacing_coup</span><span class="p">,</span>
+    <span class="n">coup_length</span><span class="p">,</span>
+    <span class="n">bend_length</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Make an integrated coupler using the gdstk RobustPath object."""</span>
+    <span class="c1"># bend interpolator</span>
+    <span class="n">interp</span> <span class="o">=</span> <span class="n">tanh_interp</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+    <span class="n">delta</span> <span class="o">=</span> <span class="n">wg_width</span> <span class="o">+</span> <span class="n">wg_spacing_coup</span> <span class="o">-</span> <span class="n">wg_spacing_in</span>
+    <span class="n">offset</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">u</span><span class="p">:</span> <span class="n">wg_spacing_in</span> <span class="o">+</span> <span class="n">interp</span><span class="p">(</span><span class="n">u</span><span class="p">)</span> <span class="o">*</span> <span class="n">delta</span>
+
+    <span class="n">coup</span> <span class="o">=</span> <span class="n">gdstk</span><span class="o">.</span><span class="n">RobustPath</span><span class="p">(</span>
+        <span class="p">(</span><span class="o">-</span><span class="mf">0.5</span> <span class="o">*</span> <span class="n">length</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+        <span class="p">(</span><span class="n">wg_width</span><span class="p">,</span> <span class="n">wg_width</span><span class="p">),</span>
+        <span class="n">wg_spacing_in</span><span class="p">,</span>
+        <span class="n">simple_path</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">layer</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">datatype</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+    <span class="p">)</span>
+    <span class="n">coup</span><span class="o">.</span><span class="n">segment</span><span class="p">((</span><span class="o">-</span><span class="mf">0.5</span> <span class="o">*</span> <span class="n">coup_length</span> <span class="o">-</span> <span class="n">bend_length</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+    <span class="n">coup</span><span class="o">.</span><span class="n">segment</span><span class="p">(</span>
+        <span class="p">(</span><span class="o">-</span><span class="mf">0.5</span> <span class="o">*</span> <span class="n">coup_length</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+        <span class="n">offset</span><span class="o">=</span><span class="p">[</span><span class="k">lambda</span> <span class="n">u</span><span class="p">:</span> <span class="o">-</span><span class="mf">0.5</span> <span class="o">*</span> <span class="n">offset</span><span class="p">(</span><span class="n">u</span><span class="p">),</span> <span class="k">lambda</span> <span class="n">u</span><span class="p">:</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">offset</span><span class="p">(</span><span class="n">u</span><span class="p">)],</span>
+    <span class="p">)</span>
+    <span class="n">coup</span><span class="o">.</span><span class="n">segment</span><span class="p">((</span><span class="mf">0.5</span> <span class="o">*</span> <span class="n">coup_length</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+    <span class="n">coup</span><span class="o">.</span><span class="n">segment</span><span class="p">(</span>
+        <span class="p">(</span><span class="mf">0.5</span> <span class="o">*</span> <span class="n">coup_length</span> <span class="o">+</span> <span class="n">bend_length</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+        <span class="n">offset</span><span class="o">=</span><span class="p">[</span><span class="k">lambda</span> <span class="n">u</span><span class="p">:</span> <span class="o">-</span><span class="mf">0.5</span> <span class="o">*</span> <span class="n">offset</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">u</span><span class="p">),</span> <span class="k">lambda</span> <span class="n">u</span><span class="p">:</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">offset</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">u</span><span class="p">)],</span>
+    <span class="p">)</span>
+    <span class="n">coup</span><span class="o">.</span><span class="n">segment</span><span class="p">((</span><span class="mf">0.5</span> <span class="o">*</span> <span class="n">length</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">coup</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h3 id="Writing-to-GDS-cells">Writing to GDS cells<a class="anchor-link" href="#Writing-to-GDS-cells">¶</a></h3><p>Next, we construct the splitter and write it to a GDS cell. We add a rectangle for the substrate to layer 0, and in layer 1 we add two paths, one for the upper and one for the lower splitter arms, and set the path width to be the waveguide width defined above.</p>
+<p>We also store the cell in a library that is saved to a file, so that we can demosntrate how to load the geometry straight from a gds file. Alternatively, we could use the created cell directly.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[5]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Create a gds cell to add our structures to</span>
+<span class="n">coup_cell</span> <span class="o">=</span> <span class="n">gdstk</span><span class="o">.</span><span class="n">Cell</span><span class="p">(</span><span class="s2">"COUPLER"</span><span class="p">)</span>
+
+<span class="c1"># make substrate and add to cell</span>
+<span class="n">substrate</span> <span class="o">=</span> <span class="n">gdstk</span><span class="o">.</span><span class="n">rectangle</span><span class="p">(</span>
+    <span class="p">(</span><span class="o">-</span><span class="n">device_length</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="n">wg_spacing_in</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">-</span> <span class="mi">10</span><span class="p">),</span>
+    <span class="p">(</span><span class="n">device_length</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">wg_spacing_in</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">10</span><span class="p">),</span>
+    <span class="n">layer</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">coup_cell</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">substrate</span><span class="p">)</span>
+
+<span class="c1"># make coupler and add to the cell</span>
+<span class="n">coup</span> <span class="o">=</span> <span class="n">make_coupler</span><span class="p">(</span>
+    <span class="n">device_length</span><span class="p">,</span> <span class="n">wg_spacing_in</span><span class="p">,</span> <span class="n">wg_width</span><span class="p">,</span> <span class="n">wg_spacing_coup</span><span class="p">,</span> <span class="n">coup_length</span><span class="p">,</span> <span class="n">bend_length</span>
+<span class="p">)</span>
+
+<span class="n">coup_cell</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">coup</span><span class="p">)</span>
+
+<span class="c1"># Create a library for the cell and save it, just so that we can demosntrate loading</span>
+<span class="c1"># geometry from a gds file</span>
+<span class="n">gds_path</span> <span class="o">=</span> <span class="s2">"misc/coupler.gds"</span>
+
+<span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">gds_path</span><span class="p">):</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">gds_path</span><span class="p">)</span>
+
+<span class="n">lib</span> <span class="o">=</span> <span class="n">gdstk</span><span class="o">.</span><span class="n">Library</span><span class="p">()</span>
+<span class="n">lib</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">coup_cell</span><span class="p">)</span>
+<span class="n">lib</span><span class="o">.</span><span class="n">write_gds</span><span class="p">(</span><span class="n">gds_path</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="Loading-a-GDS-file-into-Tidy3D">Loading a GDS file into Tidy3D<a class="anchor-link" href="#Loading-a-GDS-file-into-Tidy3D">¶</a></h2><p>To load the geometry from a GDSII file, we use gdstk to load the library and select the cell with the geometry we want.
+It is usualy esier to create a dictionary of all the cells in the library to verify that we can find the correct one by name:</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[6]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Load a GDSII library from the file we just created</span>
+<span class="n">lib_loaded</span> <span class="o">=</span> <span class="n">gdstk</span><span class="o">.</span><span class="n">read_gds</span><span class="p">(</span><span class="n">gds_path</span><span class="p">)</span>
+
+<span class="c1"># Create a cell dictionary with all the cells in the file</span>
+<span class="n">all_cells</span> <span class="o">=</span> <span class="p">{</span><span class="n">c</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">lib_loaded</span><span class="o">.</span><span class="n">cells</span><span class="p">}</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">"Cell names: "</span> <span class="o">+</span> <span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">all_cells</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Cell names: COUPLER
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>In this case, we only have the single cell that we created previously, called “COUPLER”, but usually GDSII files hold tens to hundreds of cells, so it is important to find them by name. Getting to the cell we're interested in now is as simple as:</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[7]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">coup_cell_loaded</span> <span class="o">=</span> <span class="n">all_cells</span><span class="p">[</span><span class="s2">"COUPLER"</span><span class="p">]</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">coup_cell_loaded</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Cell 'COUPLER' with 1 polygons, 2 flexpaths, 0 robustpaths, 0 references, and 0 labels
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h3 id="Set-up-Geometries">Set up Geometries<a class="anchor-link" href="#Set-up-Geometries">¶</a></h3><p>Then we can construct tidy3d geometries from the GDS cell we just loaded, along with other information such as the axis, sidewall angle, and bounds of the "slab". When loading GDS cell as the cross section of the device, we can tune <code>reference_plane</code> to set the cross section to lie at <code>bottom</code>, <code>middle</code>, or <code>top</code> of the generated <a href="https://docs.flexcompute.com/projects/tidy3d/en/latest/_autosummary/tidy3d.PolySlab.html" target="_blank">Polyslab</a> with respect to the axis. E.g. if <code>axis=1</code>, <code>bottom</code> refers to the negative side of the y-axis, and <code>top</code> refers to the positive side of the y-axis. Additionally, we can optionally dilate or erode the cross section by setting <code>dilation</code>. A negative <code>dilation</code> corresponds to erosion.</p>
+<p>Note, we have to keep track of the <code>gds_layer</code> and <code>gds_dtype</code> used to defined the GDS cell earlier, so we can load the right components.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[8]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Define waveguide height</span>
+<span class="n">wg_height</span> <span class="o">=</span> <span class="mf">0.22</span>
+<span class="n">dilation</span> <span class="o">=</span> <span class="mf">0.02</span>
+
+<span class="n">substrate_geo</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">Geometry</span><span class="o">.</span><span class="n">from_gds</span><span class="p">(</span>
+    <span class="n">coup_cell_loaded</span><span class="p">,</span>
+    <span class="n">gds_layer</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="n">gds_dtype</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="n">axis</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+    <span class="n">slab_bounds</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mi">430</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+    <span class="n">reference_plane</span><span class="o">=</span><span class="n">reference_plane</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">arms_geo</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">Geometry</span><span class="o">.</span><span class="n">from_gds</span><span class="p">(</span>
+    <span class="n">coup_cell_loaded</span><span class="p">,</span>
+    <span class="n">gds_layer</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">axis</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+    <span class="n">slab_bounds</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">wg_height</span><span class="p">),</span>
+    <span class="n">sidewall_angle</span><span class="o">=</span><span class="n">sidewall_angle</span><span class="p">,</span>
+    <span class="n">dilation</span><span class="o">=</span><span class="n">dilation</span><span class="p">,</span>
+    <span class="n">reference_plane</span><span class="o">=</span><span class="n">reference_plane</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>Let's plot the base and the top of the coupler waveguide arms to make sure it looks ok. The base of the device should be larger than the top due to a positive <code>sidewall_angle</code>.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[9]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">f</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">15</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+<span class="n">arms_geo</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">z</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<span class="n">arms_geo</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">z</span><span class="o">=</span><span class="n">wg_height</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="o">-</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+<span class="n">_</span> <span class="o">=</span> <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="o">-</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedImage jp-OutputArea-output" tabindex="0">
+<img alt="No description has been provided for this image" class="" src="/assets/tidy3d/examples/image/GDSImport/GDSImport_3.png"/>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h3 id="Set-up-Structures">Set up Structures<a class="anchor-link" href="#Set-up-Structures">¶</a></h3><p>To make use of these new geometries, we need to load them into a tidy3d.Simulation as td.Structures with material properties.</p>
+<p>We'll define the substrate and waveguide mediums and then link them up with the Polyslabs.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[10]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Permittivity of waveguide and substrate</span>
+<span class="n">wg_n</span> <span class="o">=</span> <span class="mf">3.48</span>
+<span class="n">sub_n</span> <span class="o">=</span> <span class="mf">1.45</span>
+<span class="n">medium_wg</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">Medium</span><span class="p">(</span><span class="n">permittivity</span><span class="o">=</span><span class="n">wg_n</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">medium_sub</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">Medium</span><span class="p">(</span><span class="n">permittivity</span><span class="o">=</span><span class="n">sub_n</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+
+<span class="c1"># Substrate</span>
+<span class="n">substrate</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">Structure</span><span class="p">(</span>
+    <span class="n">geometry</span><span class="o">=</span><span class="n">substrate_geo</span><span class="p">,</span>  <span class="c1"># td.Box(center=(0, 0, -td.inf/2), size=(td.inf, td.inf, td.inf)),</span>
+    <span class="n">medium</span><span class="o">=</span><span class="n">medium_sub</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># Waveguides (import all datatypes if gds_dtype not specified)</span>
+<span class="n">arms</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">Structure</span><span class="p">(</span><span class="n">geometry</span><span class="o">=</span><span class="n">arms_geo</span><span class="p">,</span> <span class="n">medium</span><span class="o">=</span><span class="n">medium_wg</span><span class="p">)</span>
+
+<span class="n">structures</span> <span class="o">=</span> <span class="p">[</span><span class="n">substrate</span><span class="p">,</span> <span class="n">arms</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h3 id="Set-up-Simulation">Set up Simulation<a class="anchor-link" href="#Set-up-Simulation">¶</a></h3><p>Now let's set up the rest of the Simulation.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[11]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Simulation size along propagation direction</span>
+<span class="n">sim_length</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">bend_length</span> <span class="o">+</span> <span class="n">coup_length</span>
+
+<span class="c1"># Spacing between waveguides and PML</span>
+<span class="n">pml_spacing</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="n">sim_size</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">sim_length</span><span class="p">),</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">wg_spacing_in</span> <span class="o">+</span> <span class="n">wg_width</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">pml_spacing</span><span class="p">),</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">wg_height</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">pml_spacing</span><span class="p">),</span>
+<span class="p">)</span>
+
+<span class="c1"># grid size in each direction</span>
+<span class="n">dl</span> <span class="o">=</span> <span class="mf">0.020</span>
+
+<span class="c1">### Initialize and visualize simulation ###</span>
+<span class="n">sim</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">Simulation</span><span class="p">(</span>
+    <span class="n">size</span><span class="o">=</span><span class="n">sim_size</span><span class="p">,</span>
+    <span class="n">grid_spec</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">GridSpec</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">dl</span><span class="o">=</span><span class="n">dl</span><span class="p">),</span>
+    <span class="n">structures</span><span class="o">=</span><span class="n">structures</span><span class="p">,</span>
+    <span class="n">run_time</span><span class="o">=</span><span class="mf">2e-12</span><span class="p">,</span>
+    <span class="n">boundary_spec</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">BoundarySpec</span><span class="o">.</span><span class="n">all_sides</span><span class="p">(</span><span class="n">boundary</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">PML</span><span class="p">()),</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>Note: <code>Tidy3D</code> is warning us that our Simulation does not contain sources. In this case, since we are using the simulation as a demonstration and are not running any simulations, we may safely ignore this warning throughout this notebook.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h3 id="Plot-Simulation-Geometry">Plot Simulation Geometry<a class="anchor-link" href="#Plot-Simulation-Geometry">¶</a></h3><p>Let's take a look at the simulation all together with the PolySlabs added. Here the angle of the sidewall deviating from the vertical direction is 30 degree.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[12]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="p">(</span><span class="n">ax1</span><span class="p">,</span> <span class="n">ax2</span><span class="p">)</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">17</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+
+<span class="n">sim</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">z</span><span class="o">=</span><span class="n">wg_height</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">edgecolor</span><span class="o">=</span><span class="s2">"k"</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax1</span><span class="p">)</span>
+<span class="n">sim</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">edgecolor</span><span class="o">=</span><span class="s2">"k"</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax2</span><span class="p">)</span>
+
+<span class="n">ax2</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">([</span><span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
+<span class="n">_</span> <span class="o">=</span> <span class="n">ax2</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">([</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedImage jp-OutputArea-output" tabindex="0">
+<img alt="No description has been provided for this image" class="" src="/assets/tidy3d/examples/image/GDSImport/GDSImport_4.png"/>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body>
+</html>

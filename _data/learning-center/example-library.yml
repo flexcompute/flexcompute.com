@@ -1,0 +1,230 @@
+examples:
+  - text: "8-channel mode and polarization (de)multiplexer"
+    enable: true
+    img: "/assets/images/learning-center/example-library/8ChannelDemultiplexer.png"
+    link: "/tidy3d/examples/notebooks/8ChannelDemultiplexer/"
+    tags: [ "Photonic integrated circuit components" ]
+  - text: "Large-area metalens"
+    enable: true
+    img: "/assets/images/learning-center/example-library/MetaLens.png"
+    link: "/tidy3d/examples/notebooks/Metalens/"
+    tags: [
+      "Lenses",
+      "Metamaterials, gratings, and other periodic structures",
+      "Optical scattering and far-field radiation",
+      "Web GUI example",
+    ]
+  - text: "Broadband bi-level polarization splitter-rotator"
+    enable: ture
+    img: "/assets/images/learning-center/example-library/BilevelPSR.png"
+    link: "/tidy3d/examples/notebooks/BilevelPSR/"
+    tags: [ "Photonic integrated circuit components" ]
+  - text: "Broadband directional coupler"
+    enable: true
+    img: "/assets/images/learning-center/example-library/BroadbandDC.png"
+    link: "/tidy3d/examples/notebooks/BroadbandDirectionalCoupler/"
+    tags: [ "Photonic integrated circuit components" ]
+  - text: "3D optical Luneburg lens"
+    enable: ture
+    img: "/assets/images/learning-center/example-library/OpticalLuneburgLens.png"
+    link: "/tidy3d/examples/notebooks/OpticalLuneburgLens/"
+    tags: [ "Lenses" ]
+  - text: "Photonic crystal cavity"
+    enable: true
+    img: "/assets/images/learning-center/example-library/L3Cavity.png"
+    link: "/tidy3d/examples/notebooks/OptimizedL3/"
+    tags: [ "Photonic crystals", "Web GUI example" ]
+  - text: "Graphene metamaterial absorber"
+    enable: true
+    img: "/assets/images/learning-center/example-library/GrapheneMetamaterial.png"
+    link: "/tidy3d/examples/notebooks/GrapheneMetamaterial/"
+    tags: [ "Metamaterials, gratings, and other periodic structures" ]
+  - text: "Edge coupler"
+    enable: true
+    img: "/assets/images/learning-center/example-library/EdgeCoupler.png"
+    link: "/tidy3d/examples/notebooks/EdgeCoupler/"
+    tags: [ "Photonic integrated circuit components", "Web GUI example" ]
+
+  - text: "Grating coupler"
+    enable: true
+    img: "/assets/images/learning-center/example-library/GratingCoupler.png"
+    link: "/tidy3d/examples/notebooks/GratingCoupler/"
+    tags: [ "Photonic integrated circuit components" ]
+
+
+  - text: "90 degree optical hybrid"
+    enable: true
+    img: "/assets/images/learning-center/example-library/OpticalHybrid.png"
+    link: "/tidy3d/examples/notebooks/90OpticalHybrid/"
+    tags: [ "Photonic integrated circuit components" ]
+
+
+  - text: "Waveguide crossing based on cosine tapers"
+    enable: true
+    img: "/assets/images/learning-center/example-library/WaveguideCrossing.png"
+    link: "/tidy3d/examples/notebooks/WaveguideCrossing/"
+    tags: [ "Photonic integrated circuit components" ]
+
+
+  - text: "Waveguide Y junction"
+    img: "/assets/images/learning-center/example-library/YJunction.png"
+    enable: true
+    link: "/tidy3d/examples/notebooks/YJunction/"
+    tags: [ "Photonic integrated circuit components" ]
+
+
+  - text: "Plasmonic Yagi-Uda nanoantenna"
+    img: "/assets/images/learning-center/example-library/PlasmonicYagiUdaAntenna.png"
+    enable: true
+    link: "/tidy3d/examples/notebooks/PlasmonicYagiUdaNanoantenna/"
+    tags: [ "Optical scattering and far-field radiation" ]
+
+
+  - text: "Photonic crystal waveguide polarization filter"
+    img: "/assets/images/learning-center/example-library/PhCPolarizationFilter.png"
+    enable: true
+    link: "/tidy3d/examples/notebooks/PhotonicCrystalWaveguidePolarizationFilter/"
+    tags: [
+      "Photonic integrated circuit components",
+      "Photonic crystals",
+      "Web GUI example",
+    ]
+
+
+  - text: "Gradient metasurface reflector"
+    enable: true
+    img: "/assets/images/learning-center/example-library/GradientMetasurfaceReflector.png"
+    link: "/tidy3d/examples/notebooks/GradientMetasurfaceReflector/"
+    tags: [
+      "Metamaterials, gratings, and other periodic structures",
+      "Web GUI example",
+    ]
+
+
+  - text: "All-dielectric metasurface absorber"
+    enable: true
+    img: "/assets/images/learning-center/example-library/DielectricMetasurfaceAbsorber.png"
+    link: "/tidy3d/examples/notebooks/DielectricMetasurfaceAbsorber/"
+    tags: [ "Metamaterials, gratings, and other periodic structures" ]
+
+
+  - text: "Compact polarization splitter-rotator"
+    enable: true
+    img: "/assets/images/learning-center/example-library/PolarizationSplitterRotator.png"
+    link: "/tidy3d/examples/notebooks/PolarizationSplitterRotator/"
+    tags: [ "Photonic integrated circuit components" ]
+
+
+  - text: "Micro spherical Fresnel lens"
+    enable: true
+    img: "/assets/images/learning-center/example-library/FresnelLens.png"
+    link: "/tidy3d/examples/notebooks/FresnelLens/"
+    tags: [ "Lenses", "Optical scattering and far-field radiation" ]
+
+
+  - text: "THz integrated demultiplexer/filter based on ring resonator"
+    enable: true
+    img: "/assets/images/learning-center/example-library/THzRingFilter.png"
+    link: "/tidy3d/examples/notebooks/THzDemultiplexerFilter/"
+    tags: [ "Photonic integrated circuit components" ]
+
+
+  - text: "MMI 1 x 4 power splitter"
+    enable: true
+    img: "/assets/images/learning-center/example-library/MMI.png"
+    link: "/tidy3d/examples/notebooks/MMI1x4/"
+    tags: [ "Photonic integrated circuit components" ]
+
+
+  - text: "Photonic crystal slab band structure calculation"
+    enable: true
+    img: "/assets/images/learning-center/example-library/BandStructure.png"
+    link: "/tidy3d/examples/notebooks/Bandstructure/"
+    tags: [ "Photonic crystals" ]
+
+
+  - text: "Euler waveguide bend"
+    enable: true
+    img: "/assets/images/learning-center/example-library/WaveguideBend.png"
+    link: "/tidy3d/examples/notebooks/EulerWaveguideBend/"
+    tags: [ "Photonic integrated circuit components" ]
+
+
+  - text: "2D ring resonator"
+    enable: true
+    img: "/assets/images/learning-center/example-library/RingResonator2D.png"
+    link: "/tidy3d/examples/notebooks/RingResonator/"
+    tags: [ "Photonic integrated circuit components" ]
+
+
+  - text: "Field projection for a zone plate"
+    enable: true
+    img: "/assets/images/learning-center/example-library/ZonePlate.png"
+    link: "/tidy3d/examples/notebooks/ZonePlateFieldProjection/"
+    tags: [
+      "Lenses",
+      "Optical scattering and far-field radiation",
+      "Web GUI example",
+    ]
+
+
+  - text: "Bragg grating sections"
+    enable: true
+    img: "/assets/images/learning-center/example-library/BraggWaveguide.png"
+    link: "/tidy3d/examples/notebooks/BraggGratings/"
+    tags: [ "Photonic integrated circuit components" ]
+
+
+  - text: "Multilevel blazed diffraction gratings"
+    enable: true
+    img: "/assets/images/learning-center/example-library/BlazedGratings.png"
+    link: "/tidy3d/examples/notebooks/GratingEfficiency/"
+    tags: [ "Metamaterials, gratings, and other periodic structures" ]
+
+
+  - text: "Broadband polarizer based on anisotropic subwavelength grating metamaterial"
+    enable: true
+    img: "/assets/images/learning-center/example-library/SWGPolarizer.png"
+    link: "/tidy3d/examples/notebooks/SWGBroadbandPolarizer/"
+    tags: [ "Photonic integrated circuit components" ]
+
+
+  - text: "Plastic biosensor grating"
+    enable: true
+    img: "/assets/images/learning-center/example-library/Biosensor.png"
+    link: "/tidy3d/examples/notebooks/BiosensorGrating/"
+    tags: [ "Metamaterials, gratings, and other periodic structures" ]
+
+
+  - text: "Distributed Bragg reflector and cavity"
+    enable: true
+    img: "/assets/images/learning-center/example-library/DBR.png"
+    link: "/tidy3d/examples/notebooks/DistributedBraggReflectorCavity/"
+    tags: [
+      "Metamaterials, gratings, and other periodic structures",
+      "Web GUI example",
+    ]
+
+  - text: "High-Q Fano metasurfaces"
+    enable: true
+    img: "/assets/images/learning-center/example-library/FanoMetasurface.png"
+    link: "/tidy3d/examples/notebooks/HighQGe/"
+    tags: [
+      "Metamaterials, gratings, and other periodic structures",
+      "Web GUI example",
+    ]
+
+
+  - text: "Waveguide size converter"
+    enable: true
+    img: "/assets/images/learning-center/example-library/WaveguideSizeConverter.png"
+    link: "/tidy3d/examples/notebooks/WaveguideSizeConverter/"
+    tags: [ "Photonic integrated circuit components" ]
+
+
+  - text: "Microwave frequency selective surface (FSS)"
+    enable: true
+    img: "/assets/images/learning-center/example-library/FSS.png"
+    link: "/tidy3d/examples/notebooks/MicrowaveFrequencySelectiveSurface/"
+    tags: [ "Metamaterials, gratings, and other periodic structures" ]
+

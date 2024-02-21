@@ -1,0 +1,101 @@
+{
+  "title": "CFD Essentials - Lecture 5",
+  "pages": [
+     {
+      "id": "",
+      "title": "",
+      "transcript": "Hello this is Philippe with the third video about turbulence modeling and simulation."
+    },
+     {
+      "id": "",
+      "title": "",
+      "transcript": "The first two first slides will be a visual introduction to turbulence and its physics and then the basics of turbulence modeling. Today I want to discuss steady turbulence modeling versus turbulence resolving simulations. To provide a little bit of perspective; the basics of turbulence modeling we've been working on for about 100 years. Whereas for turbulence resolving simulations we have been working on them. More like 15 years."
+    },
+     {
+      "id": "",
+      "title": "",
+      "paragraphs": [
+        {
+          "title": "",
+          "transcript": "Okay, so here are the basics of doing turbulence resolving instead of just straight steady turbulence modeling. First of all direct simulation, that you saw a few examples of in previous videos, are completely out of the question based on costs."
+        },
+        {
+          "title": "",
+          "transcript": "Two common reasons for unsteady simulations are:",
+          "list": [
+            {
+              "title": "",
+              "sentence": "The geometry is time dependent; like you can see here with the blade moving."
+            },
+            {
+              "title": "",
+              "sentence": "Steady turbulence modeling is not accurate enough like here in the wake of the body in this NASA picture of an air taxi."
+            }
+          ]
+        },
+        {
+          "title": "",
+          "transcript": "Now where it gets complicated is that industrial CFD often needs different treatments in different regions of the same run. This is all due to high Reynolds numbers and the thin attached boundary layers on the blade or on the body are best simulated with RANS while the regions of massive separation essentially need turbulence resolving 3D unsteady simulations."
+        },
+        {
+          "title": "",
+          "transcript": "I claim that this is the century of Hybrid RANS-LES methods; that is we will be doing it for many decades to come. The principle was established in 1997 with the DES method and with our first three dimensional results in 1999 on a circular cylinder. Many other hybrid methods followed. Often people mostly want to add their own name, but the principle is the same; it is a simulation that's RANS in some regions where RANS is best and LES would be too expensive because the boundary layer is too thin;  and then LES in regions where RANS would get too confused. The principal distinction in  these hybrid methods is between seamless and zonal methods. I prefer seamless when you have this complex flow instead of a zonal method in which the user would pick the X Y and Z regions to use RANS and those to use LES. I don't think that's practical."
+        },
+        {
+          "title": "",
+          "transcript": "Hybrid methods have what I call success stories that I'll show but also some loose ends from a theoretical point of view. We don't have a filter that we're really using, and the other aspect that people struggle with is the  seamless methods. Those methods will switch from RANS to LES on their own but sometimes they hesitate."
+        }
+      ]
+    },
+     {
+      "id": "",
+      "title": "",
+      "transcript": "So this is the flow that really explains why we need unsteady simulations. It's a cylinder at  critical Reynolds number with laminar separation. The experimental CD is about 1.3. You can run a steady state RANS model which will force it to be symmetric and you get an honest solution but the drag coefficient is much too low. Here we ran a 2d simulation and we showed it as if it had been over a length of the cylinder. People said “come on, this flow is unsteady, It has vortex shedding”. You can take the same model to an unsteady RANS simulation and you get vortex shedding, the frequency is good but the amplitude of the lift is too large and the mean drag is also much too large. You can go to 3D URANS with periodic boundary conditions in the third direction and you get simulations that look like this. In this case, we're very lucky with the drag coefficient, but the simulations depend too much on which turbulence model you're using which affects how wide the period is in your simulation. So 3D URANS I don't think has a future.\nSo now we have three cases of DES; the first two use the SA model with different grids. As you go to a finer grid, you can see that the simulation is resolving more towards these smaller vortices, more turbulence and that gives you more accuracy. The part that you're modeling inside the LES is weaker and weaker. Here is the SST model again using DES,it has even a slightly finer turbulence, but it looks quite the same. That's really the strength of the DES is that it doesn't depend too much on the underlying model."
+    },
+     {
+      "id": "",
+      "title": "",
+      "paragraphs":[
+        {
+          "title": "",
+          "transcript": "This I call a success story: NASA did experiments with tandem cylinders, the turbulence of the first one would strike the second one and create a lot of noise. You see the simulation with a very wide domain and the impingement of turbulence. There's really a lot of turbulence in here. Now if you use URANS with different models and compare them with the experiments, none of them give good results and they are also very different depending on the model."
+        },
+        {
+          "title": "",
+          "transcript": "In contrast, with DES,  the accuracy is much better and you notice that this is quite a complex distribution for the root mean square of pressure. It's also very robust; It gives us essentially the same answer with the SA or SST model across different solvers."
+        },
+        {
+          "title": "",
+          "transcript": "This was the result of a large European project that was, I think, very successful."
+        }
+
+      ]
+    },
+     {
+      "id": "",
+      "title": "",
+      "transcript": "Another success story is the NASA wall mounted hump that you can see here. It was created to cause separation. We start with a steady RANS solution in the flow domain and there's separation and reattachment. It's fine, but you'll see that it's not very accurate. Then we have two zonal RANS-IDDES<a id='__pg_cfd-essentials_lecture-05-footnote-1-IDDES' class='color-primary-hover stop-propagation' href='javascript:void(0);' onclick='handleScroll(\"IDDES\")'><sup>[1]</sup></a> methods, with the SST model again, in which we grow the boundary layer with RANS, then we have a synthetic turbulence generator here that creates turbulence and then the rest is essentially large eddy simulation with the wall model provided by DES. This is all work by the Russian team that I worked with for so many years. The second one, we took a big risk and moved the boundary between the two pretty far downstream."
+    },
+     {
+      "id": "",
+      "title": "",
+      "paragraphs": [
+        {
+          "title": "",
+          "transcript": "This is the resulting skin friction on top, pressure coefficient on the bottom. You see that coming in, they all get the same answer, they tend to miss apparently a re-laminarization on the experiment. Then the separation is not very difficult. Here is separation where the skin friction goes negative. But now what's really striking is how the RANS reattaches much too late. You'll see it on the pressure distribution. All the RANS models do that. They miss some kind of an extra generation of turbulence after separation, but the two DES runs are almost identical and very very close to the experiment. This is an old zonal simulation that is not great for engineering but it shows really the very very high power of these turbulence resolving simulations."
+        },
+        {
+          "title": "",
+          "transcript": "This is it. Thank you."
+        }
+      ]
+    }
+  ],
+  "footNotes": [
+    {
+      "referenceNum": "[1]",
+      "id": "IDDES",
+      "note": "IDDES is “Improved DDES”. It contains a complex improvement to the log layer mismatch when doing a wall resolved turbulence simulation. It is not needed for industrial applications for which DDES is best suited."
+    }
+  ]
+}

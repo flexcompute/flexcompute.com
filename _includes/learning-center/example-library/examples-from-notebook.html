@@ -1,0 +1,30 @@
+{% for example in site.data.notebooks.example.example_menus %}
+{% if example.enable_library %}
+{% for secondaryMenu in example.menus  %}
+{% if secondaryMenu.path %}
+<div class="col-12 col-sm-6 col-md-4 text-center item" data-example-title="{{secondaryMenu.title}}" data-example-tags="{{secondaryMenu.title}}">
+  <a id="__pg_tidy3d-learning-center_example-library_{{secondaryMenu.title | downcase | slugify}}_item"
+     href="/tidy3d/examples/{{secondaryMenu.path}}">
+    <img style="height:100px; object-fit: scale-down" class="aspect-ratio" src="{{secondaryMenu.thumbnail.image}}"
+         alt="{{secondaryMenu.thumbnail.description}}">
+    <div class="space20"></div>
+    <span class="d-inline-block title">{{secondaryMenu.title}}</span>
+  </a>
+</div>
+{% endif %}
+{% if secondaryMenu.menus %}
+{% for menu in secondaryMenu.menus %}
+<div class="col-12 col-sm-6 col-md-4 text-center item" data-example-title="{{menu.name}}" data-example-tags="{{secondaryMenu.title}}">
+  <a id="__pg_tidy3d-learning-center_example-library_{{menu.name | downcase | slugify}}_item"
+     href="/tidy3d/examples/{{menu.path}}">
+    <img loading="{% if include.image_loading %}{{include.image_loading}}{%else%} lazy{%endif%}" style="height:100px; object-fit: scale-down" class="aspect-ratio" src="{{menu.thumbnail.image}}"
+         alt="{{menu.name}}">
+    <div class="space20"></div>
+    <span class="d-inline-block title">{{menu.name}}</span>
+  </a>
+</div>
+{% endfor %}
+{% endif %}
+{% endfor %}
+{% endif %}
+{% endfor %}

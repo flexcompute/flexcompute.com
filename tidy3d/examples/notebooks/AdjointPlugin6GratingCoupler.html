@@ -1,0 +1,1600 @@
+---
+author: Tom Chen
+custom_css:
+- learning-center/fdtd101
+- learning-center/menu
+- learning-center/home
+custom_font: font2
+description: This notebook demonstrates the inverse design of a compact 3D grating
+  coupler with permittivity binarization and minimum feature size control.
+layout: learning-center/example-library
+menu_config:
+  collapsed: true
+  selected: Tidy3D Python
+metadata:
+  category: FDTD Adjoint Optimization
+  enable_more_examples: false
+  more_examples:
+  - name: 'Jax, automatic differentiation, and adjoint optimization: basics'
+    path: notebooks/AdjointPlugin1Intro/
+  - name: Inverse design integrated with circuit simulation
+    path: notebooks/AdjointPlugin11CircuitMZI/
+  - name: Adjoint inverse design of a quantum emitter light extractor
+    path: notebooks/AdjointPlugin12LightExtractor/
+  pagination:
+    next:
+      name: Inverse design optimization of a metalens
+      path: notebooks/AdjointPlugin7Metalens/
+    previous:
+      name: Inverse design optimization of a waveguide taper
+      path: notebooks/AdjointPlugin5BoundaryGradients/
+  type: python-tutorial
+page_title: Inverse design optimization of a compact grating coupler
+source_link: https:/docs.flexcompute.com/projects/tidy3d/en/latest/_sources/notebooks/AdjointPlugin6GratingCoupler.ipynb
+tags:
+- inverse design
+- grating coupler
+- photonic integrated circuits
+- design optimization
+- adjoint
+- Tidy3D
+- FDTD
+title: Inverse Design of a Grating Coupler in Tidy3D | Flexcompute
+---
+
+
+<html lang="en">
+<head><meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="/assets/tidy3d/examples/css/example-notebook.css" rel="stylesheet"/><script>
+(function() {
+  function addWidgetsRenderer() {
+    var mimeElement = document.querySelector('script[type="application/vnd.jupyter.widget-view+json"]');
+    var scriptElement = document.createElement('script');
+    
+    var widgetRendererSrc = 'https://unpkg.com/@jupyter-widgets/html-manager@*/dist/embed-amd.js';
+    
+    var widgetState;
+
+    // Fallback for older version:
+    try {
+      widgetState = mimeElement && JSON.parse(mimeElement.innerHTML);
+
+      if (widgetState && (widgetState.version_major < 2 || !widgetState.version_major)) {
+        
+        var widgetRendererSrc = 'https://unpkg.com/@jupyter-js-widgets@*/dist/embed.js';
+        
+      }
+    } catch(e) {}
+
+    scriptElement.src = widgetRendererSrc;
+    document.body.appendChild(scriptElement);
+  }
+
+  document.addEventListener('DOMContentLoaded', addWidgetsRenderer);
+}());
+</script>
+
+
+
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS_CHTML-full,Safe"> </script>
+
+<script type="text/x-mathjax-config">
+    init_mathjax = function() {
+        if (window.MathJax) {
+        // MathJax loaded
+            MathJax.Hub.Config({
+                TeX: {
+                    equationNumbers: {
+                    autoNumber: "AMS",
+                    useLabelIds: true
+                    }
+                },
+                tex2jax: {
+                    inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+                    displayMath: [ ['$$','$$'], ["\\[","\\]"] ],
+                    processEscapes: true,
+                    processEnvironments: true
+                },
+                displayAlign: 'center',
+                CommonHTML: {
+                    linebreaks: {
+                    automatic: true
+                    }
+                }
+            });
+
+            MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
+        }
+    }
+    init_mathjax();
+    </script>
+<script type="module">
+  document.addEventListener("DOMContentLoaded", async () => {
+    const diagrams = document.querySelectorAll(".jp-Mermaid > pre.mermaid");
+    // do not load mermaidjs if not needed
+    if (!diagrams.length) {
+      return;
+    }
+    const mermaid = (await import("https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.7.0/mermaid.esm.min.mjs")).default;
+    const parser = new DOMParser();
+
+    mermaid.initialize({
+      maxTextSize: 100000,
+      maxEdges: 100000,
+      startOnLoad: false,
+      fontFamily: window
+        .getComputedStyle(document.body)
+        .getPropertyValue("--jp-ui-font-family"),
+      theme: document.querySelector("body[data-jp-theme-light='true']")
+        ? "default"
+        : "dark",
+    });
+
+    let _nextMermaidId = 0;
+
+    function makeMermaidImage(svg) {
+      const img = document.createElement("img");
+      const doc = parser.parseFromString(svg, "image/svg+xml");
+      const svgEl = doc.querySelector("svg");
+      const { maxWidth } = svgEl?.style || {};
+      const firstTitle = doc.querySelector("title");
+      const firstDesc = doc.querySelector("desc");
+
+      img.setAttribute("src", `data:image/svg+xml,${encodeURIComponent(svg)}`);
+      if (maxWidth) {
+        img.width = parseInt(maxWidth);
+      }
+      if (firstTitle) {
+        img.setAttribute("alt", firstTitle.textContent);
+      }
+      if (firstDesc) {
+        const caption = document.createElement("figcaption");
+        caption.className = "sr-only";
+        caption.textContent = firstDesc.textContent;
+        return [img, caption];
+      }
+      return [img];
+    }
+
+    async function makeMermaidError(text) {
+      let errorMessage = "";
+      try {
+        await mermaid.parse(text);
+      } catch (err) {
+        errorMessage = `${err}`;
+      }
+
+      const result = document.createElement("details");
+      result.className = 'jp-RenderedMermaid-Details';
+      const summary = document.createElement("summary");
+      summary.className = 'jp-RenderedMermaid-Summary';
+      const pre = document.createElement("pre");
+      const code = document.createElement("code");
+      code.innerText = text;
+      pre.appendChild(code);
+      summary.appendChild(pre);
+      result.appendChild(summary);
+
+      const warning = document.createElement("pre");
+      warning.innerText = errorMessage;
+      result.appendChild(warning);
+      return [result];
+    }
+
+    async function renderOneMarmaid(src) {
+      const id = `jp-mermaid-${_nextMermaidId++}`;
+      const parent = src.parentNode;
+      let raw = src.textContent.trim();
+      const el = document.createElement("div");
+      el.style.visibility = "hidden";
+      document.body.appendChild(el);
+      let results = null;
+      let output = null;
+      try {
+        let { svg } = await mermaid.render(id, raw, el);
+        svg = cleanMermaidSvg(svg);
+        results = makeMermaidImage(svg);
+        output = document.createElement("figure");
+        results.map(output.appendChild, output);
+      } catch (err) {
+        parent.classList.add("jp-mod-warning");
+        results = await makeMermaidError(raw);
+        output = results[0];
+      } finally {
+        el.remove();
+      }
+      parent.classList.add("jp-RenderedMermaid");
+      parent.appendChild(output);
+    }
+
+
+    /**
+     * Post-process to ensure mermaid diagrams contain only valid SVG and XHTML.
+     */
+    function cleanMermaidSvg(svg) {
+      return svg.replace(RE_VOID_ELEMENT, replaceVoidElement);
+    }
+
+
+    /**
+     * A regular expression for all void elements, which may include attributes and
+     * a slash.
+     *
+     * @see https://developer.mozilla.org/en-US/docs/Glossary/Void_element
+     *
+     * Of these, only `<br>` is generated by Mermaid in place of `\n`,
+     * but _any_ "malformed" tag will break the SVG rendering entirely.
+     */
+    const RE_VOID_ELEMENT =
+      /<\s*(area|base|br|col|embed|hr|img|input|link|meta|param|source|track|wbr)\s*([^>]*?)\s*>/gi;
+
+    /**
+     * Ensure a void element is closed with a slash, preserving any attributes.
+     */
+    function replaceVoidElement(match, tag, rest) {
+      rest = rest.trim();
+      if (!rest.endsWith('/')) {
+        rest = `${rest} /`;
+      }
+      return `<${tag} ${rest}>`;
+    }
+
+    void Promise.all([...diagrams].map(renderOneMarmaid));
+  });
+</script>
+
+</head>
+<body class="jp-Notebook" data-jp-theme-light="true" data-jp-theme-name="JupyterLab Light">
+<main>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<blockquote>
+<p>To install the <code>jax</code> module required for this feature, we recommend running <code>pip install "tidy3d[jax]"</code>.</p>
+</blockquote>
+<p><strong>This notebook contains a long optimization. Running the entire notebook will cost about 20 FlexCredits and take several hours.</strong></p>
+<p>The ability to couple light in and out of photonic integrated circuits (PICs) is crucial for developing wafer-scale systems and tests. This need makes designing efficient and compact grating couplers an important task in the PIC development cycle. In this notebook, we will demonstrate how to use <a href="https://develop.d3nzcgsw5oo0x1.amplifyapp.com/tidy3d/examples/notebooks/AdjointPlugin1Intro/">Tidy3D's adjoint plugin</a> to perform the inverse design of a compact 3D grating coupler. We will show how to improve design fabricability by enhancing permittivity binarization and controlling the device's minimum feature size.</p>
+<p>In addition, if you are interested in more conventional designs, we modeled an <a href="https://www.flexcompute.com/tidy3d/examples/notebooks/GratingCoupler/" target="_blank">uniform grating coupler</a> and a <a href="https://www.flexcompute.com/tidy3d/examples/notebooks/FocusedApodGC/" target="_blank">Focusing apodized grating coupler</a> in previous case studies. For more integrated photonic examples, please visit our <a href="https://www.flexcompute.com/tidy3d/examples/" target="_blank">examples page</a>. If you are new to the finite-difference time-domain (FDTD) method, we highly recommend going through our <a href="https://www.flexcompute.com/tidy3d/learning-center/" target="_blank">FDTD101</a> tutorials. FDTD simulations can diverge due to various reasons. If you run into any simulation divergence issues, please follow the steps outlined in our <a href="https://www.flexcompute.com/tidy3d/examples/notebooks/DivergedFDTDSimulation/" target="_blank">troubleshooting guide</a> to resolve it.</p>
+<p>We start by importing our typical python packages, <code>jax</code>, <code>tidy3d</code> and its <code>adjoint</code> plugin.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[1]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Standard python imports.</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">scipy</span> <span class="k">as</span> <span class="nn">sp</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pylab</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">pydantic</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span>
+
+<span class="c1"># Import jax to be able to use automatic differentiation.</span>
+<span class="kn">import</span> <span class="nn">jax.numpy</span> <span class="k">as</span> <span class="nn">jnp</span>
+<span class="kn">import</span> <span class="nn">jax.scipy</span> <span class="k">as</span> <span class="nn">jsp</span>
+<span class="kn">from</span> <span class="nn">jax</span> <span class="kn">import</span> <span class="n">value_and_grad</span>
+
+<span class="c1"># Import regular tidy3d.</span>
+<span class="kn">import</span> <span class="nn">tidy3d</span> <span class="k">as</span> <span class="nn">td</span>
+<span class="kn">import</span> <span class="nn">tidy3d.web</span> <span class="k">as</span> <span class="nn">web</span>
+
+<span class="c1"># Import the components we need from the adjoint plugin.</span>
+<span class="kn">from</span> <span class="nn">tidy3d.plugins.adjoint</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">JaxSimulation</span><span class="p">,</span> 
+    <span class="n">JaxBox</span><span class="p">,</span> 
+    <span class="n">JaxCustomMedium</span><span class="p">,</span> 
+    <span class="n">JaxStructure</span><span class="p">,</span>
+    <span class="n">JaxSimulationData</span><span class="p">,</span>
+    <span class="n">JaxDataArray</span><span class="p">,</span>
+    <span class="n">JaxPermittivityDataset</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">tidy3d.plugins.adjoint.web</span> <span class="kn">import</span> <span class="n">run</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="Grating-Coupler-Inverse-Design-Configuration">Grating Coupler Inverse Design Configuration<a class="anchor-link" href="#Grating-Coupler-Inverse-Design-Configuration">¶</a></h2><p>The grating coupler inverse design begins with a rectangular design region connected to a $Si$ waveguide. Throughout the optimization process, this initial structure evolves to convert a vertically incident Gaussian-like mode from an optical fiber into a guided mode and then funnel it into the $Si$ waveguide.</p>
+<p>We are considering a full-etched grating structure, so a $SiO_{2}$ BOX layer is included. To reduce backreflection, we adjusted the fiber tilt angle to $10^{\circ}$ [<a href="https://doi.org/10.1364/OE.23.022628" target="_blank">1</a>, <a href="https://doi.org/10.3390/mi11070666" target="_blank">2</a>].</p>
+<p>In the following block of code, you can find the parameters that can be modified to configure the grating coupler structure, optimization, and simulation setup. Special care should be devoted to the <code>it_per_step</code> and <code>opt_steps</code> variables bellow.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[2]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Geometric parameters.</span>
+<span class="n">w_thick</span> <span class="o">=</span> <span class="mf">0.22</span>  <span class="c1"># Waveguide thickness (um).</span>
+<span class="n">w_width</span> <span class="o">=</span> <span class="mf">0.5</span>  <span class="c1"># Waveguide width (um).</span>
+<span class="n">w_length</span> <span class="o">=</span> <span class="mf">1.0</span>  <span class="c1"># Waveguide length (um).</span>
+<span class="n">box_thick</span> <span class="o">=</span> <span class="mf">1.6</span>  <span class="c1"># SiO2 BOX thickness (um).</span>
+<span class="n">spot_size</span> <span class="o">=</span> <span class="mf">2.5</span>  <span class="c1"># Spot size of the input Gaussian field regarding a lensed fiber (um).</span>
+<span class="n">fiber_tilt</span> <span class="o">=</span> <span class="mf">10.0</span>  <span class="c1"># Fiber tilt angle (degrees).</span>
+<span class="n">src_offset</span> <span class="o">=</span> <span class="mf">0.05</span>  <span class="c1"># Distance between the source focus and device (um).</span>
+
+<span class="c1"># Material.</span>
+<span class="n">nSi</span> <span class="o">=</span> <span class="mf">3.48</span>  <span class="c1"># Silicon refractive index.</span>
+<span class="n">nSiO2</span> <span class="o">=</span> <span class="mf">1.44</span>  <span class="c1"># Silica refractive index.</span>
+
+<span class="c1"># Design region parameters.</span>
+<span class="n">gc_width</span> <span class="o">=</span> <span class="mf">4.0</span>  <span class="c1"># Grating coupler width (um).</span>
+<span class="n">gc_length</span> <span class="o">=</span> <span class="mf">4.0</span>  <span class="c1"># Grating coupler length (um).</span>
+<span class="n">dr_grid_size</span> <span class="o">=</span> <span class="mf">0.02</span>  <span class="c1"># Grid size within the design region (um).</span>
+
+<span class="c1"># Inverse design set up parameters.</span>
+<span class="c1">#################################################################</span>
+<span class="c1"># Total number of iterations = opt_steps x it_per_step.</span>
+<span class="n">it_per_step</span> <span class="o">=</span> <span class="mi">1</span>  <span class="c1"># Number of iterations per optimization step.</span>
+<span class="n">opt_steps</span> <span class="o">=</span> <span class="mi">75</span> <span class="c1"># Number of optimization steps.</span>
+<span class="c1">#################################################################</span>
+<span class="n">eta</span> <span class="o">=</span> <span class="mf">0.50</span>  <span class="c1"># Threshold value for the projection filter.</span>
+<span class="n">fom_name</span> <span class="o">=</span> <span class="s2">"fom_field"</span>  <span class="c1"># Name of the monitor used to compute the objective function.</span>
+
+<span class="c1"># Simulation wavelength.</span>
+<span class="n">wl</span> <span class="o">=</span> <span class="mf">1.55</span>  <span class="c1"># Central simulation wavelength (um).</span>
+<span class="n">bw</span> <span class="o">=</span> <span class="mf">0.06</span>  <span class="c1"># Simulation bandwidth (um).</span>
+<span class="n">n_wl</span> <span class="o">=</span> <span class="mi">61</span>  <span class="c1"># Number of wavelength points within the bandwidth.</span>
+
+<span class="c1"># feature size</span>
+<span class="n">min_feature_size</span> <span class="o">=</span> <span class="mf">0.080</span>
+<span class="n">filter_radius</span> <span class="o">=</span> <span class="n">min_feature_size</span>
+
+<span class="c1"># projection</span>
+<span class="n">beta_min</span> <span class="o">=</span> <span class="mf">1.0</span>
+<span class="n">beta_max</span> <span class="o">=</span> <span class="mf">30.0</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[3]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">total_iter</span> <span class="o">=</span> <span class="n">opt_steps</span> <span class="o">*</span> <span class="n">it_per_step</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Total iterations = </span><span class="si">{</span><span class="n">total_iter</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Total iterations = 75
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="Inverse-Design-Optimization-Set-Up">Inverse Design Optimization Set Up<a class="anchor-link" href="#Inverse-Design-Optimization-Set-Up">¶</a></h2><p>We will calculate the values of some parameters used throughout the inverse design set up.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[4]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Minimum and maximum values for the permittivities.</span>
+<span class="n">eps_max</span> <span class="o">=</span> <span class="n">nSi</span><span class="o">**</span><span class="mi">2</span>
+<span class="n">eps_min</span> <span class="o">=</span> <span class="mf">1.0</span>
+
+<span class="c1"># Material definitions.</span>
+<span class="n">mat_si</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">Medium</span><span class="p">(</span><span class="n">permittivity</span><span class="o">=</span><span class="n">eps_max</span><span class="p">)</span>  <span class="c1"># Waveguide material.</span>
+<span class="n">mat_sio2</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">Medium</span><span class="p">(</span><span class="n">permittivity</span><span class="o">=</span><span class="n">nSiO2</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>  <span class="c1"># Substrate material.</span>
+
+<span class="c1"># Wavelengths and frequencies.</span>
+<span class="n">wl_max</span> <span class="o">=</span> <span class="n">wl</span> <span class="o">+</span> <span class="n">bw</span> <span class="o">/</span> <span class="mi">2</span>
+<span class="n">wl_min</span> <span class="o">=</span> <span class="n">wl</span> <span class="o">-</span> <span class="n">bw</span> <span class="o">/</span> <span class="mi">2</span>
+<span class="n">wl_range</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">wl_min</span><span class="p">,</span> <span class="n">wl_max</span><span class="p">,</span> <span class="n">n_wl</span><span class="p">)</span>
+<span class="n">freq</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">C_0</span> <span class="o">/</span> <span class="n">wl</span>
+<span class="n">freqs</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">C_0</span> <span class="o">/</span> <span class="n">wl_range</span>
+<span class="n">freqw</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">freqs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">freqs</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+<span class="n">run_time</span> <span class="o">=</span> <span class="mf">5e-12</span>
+
+<span class="c1"># Computational domain size.</span>
+<span class="n">pml_spacing</span> <span class="o">=</span> <span class="mf">0.6</span> <span class="o">*</span> <span class="n">wl</span>
+<span class="n">size_x</span> <span class="o">=</span> <span class="n">pml_spacing</span> <span class="o">+</span> <span class="n">w_length</span> <span class="o">+</span> <span class="n">gc_length</span>
+<span class="n">size_y</span> <span class="o">=</span> <span class="n">gc_width</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">pml_spacing</span>
+<span class="n">size_z</span> <span class="o">=</span> <span class="n">w_thick</span> <span class="o">+</span> <span class="n">box_thick</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">pml_spacing</span>
+<span class="n">center_z</span> <span class="o">=</span> <span class="n">size_z</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">-</span> <span class="n">pml_spacing</span> <span class="o">-</span> <span class="n">w_thick</span> <span class="o">/</span> <span class="mi">2</span>
+<span class="n">eff_inf</span> <span class="o">=</span> <span class="mi">1000</span>
+
+<span class="c1"># Inverse design variables.</span>
+<span class="n">src_pos_z</span> <span class="o">=</span> <span class="n">w_thick</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">src_offset</span>
+<span class="n">mon_pos_x</span> <span class="o">=</span> <span class="o">-</span><span class="n">size_x</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">+</span> <span class="mf">0.25</span> <span class="o">*</span> <span class="n">wl</span>
+<span class="n">mon_w</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="mi">3</span> <span class="o">*</span> <span class="n">w_width</span> <span class="o">/</span> <span class="n">dr_grid_size</span><span class="p">)</span> <span class="o">*</span> <span class="n">dr_grid_size</span>
+<span class="n">mon_h</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="mi">5</span> <span class="o">*</span> <span class="n">w_thick</span> <span class="o">/</span> <span class="n">dr_grid_size</span><span class="p">)</span> <span class="o">*</span> <span class="n">dr_grid_size</span>
+<span class="n">nx</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">gc_length</span> <span class="o">/</span> <span class="n">dr_grid_size</span><span class="p">)</span>
+<span class="n">ny</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">gc_width</span> <span class="o">/</span> <span class="n">dr_grid_size</span> <span class="o">/</span> <span class="mf">2.0</span><span class="p">)</span>
+<span class="n">npar</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">nx</span> <span class="o">*</span> <span class="n">ny</span><span class="p">)</span>
+<span class="n">dr_size_x</span> <span class="o">=</span> <span class="n">nx</span> <span class="o">*</span> <span class="n">dr_grid_size</span>
+<span class="n">dr_size_y</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">ny</span> <span class="o">*</span> <span class="n">dr_grid_size</span>
+<span class="n">dr_center_x</span> <span class="o">=</span> <span class="o">-</span><span class="n">size_x</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">w_length</span> <span class="o">+</span> <span class="n">dr_size_x</span> <span class="o">/</span> <span class="mi">2</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>First, we will introduce the simulation components that do not change during optimization, such as the $Si$ waveguide and $SiO_{2}$ BOX layer. Additionally, we will include a Gaussian source to drive the simulations, and a mode monitor to compute the objective function.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[5]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Input/output waveguide.</span>
+<span class="n">waveguide</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">Structure</span><span class="p">(</span>
+    <span class="n">geometry</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">Box</span><span class="o">.</span><span class="n">from_bounds</span><span class="p">(</span>
+        <span class="n">rmin</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="n">eff_inf</span><span class="p">,</span> <span class="o">-</span><span class="n">w_width</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="n">w_thick</span> <span class="o">/</span> <span class="mi">2</span><span class="p">),</span>
+        <span class="n">rmax</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="n">size_x</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">w_length</span><span class="p">,</span> <span class="n">w_width</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">w_thick</span> <span class="o">/</span> <span class="mi">2</span><span class="p">),</span>
+    <span class="p">),</span>
+    <span class="n">medium</span><span class="o">=</span><span class="n">mat_si</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># SiO2 BOX layer.</span>
+<span class="n">sio2_substrate</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">Structure</span><span class="p">(</span>
+    <span class="n">geometry</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">Box</span><span class="o">.</span><span class="n">from_bounds</span><span class="p">(</span>
+        <span class="n">rmin</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="n">eff_inf</span><span class="p">,</span> <span class="o">-</span><span class="n">eff_inf</span><span class="p">,</span> <span class="o">-</span><span class="n">w_thick</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">-</span> <span class="n">box_thick</span><span class="p">),</span> 
+        <span class="n">rmax</span><span class="o">=</span><span class="p">(</span><span class="n">eff_inf</span><span class="p">,</span> <span class="n">eff_inf</span><span class="p">,</span> <span class="o">-</span><span class="n">w_thick</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="p">),</span>
+    <span class="n">medium</span><span class="o">=</span><span class="n">mat_sio2</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># Si substrate.</span>
+<span class="n">si_substrate</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">Structure</span><span class="p">(</span>
+    <span class="n">geometry</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">Box</span><span class="o">.</span><span class="n">from_bounds</span><span class="p">(</span>
+        <span class="n">rmin</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="n">eff_inf</span><span class="p">,</span> <span class="o">-</span><span class="n">eff_inf</span><span class="p">,</span> <span class="o">-</span><span class="n">eff_inf</span><span class="p">),</span> 
+        <span class="n">rmax</span><span class="o">=</span><span class="p">(</span><span class="n">eff_inf</span><span class="p">,</span> <span class="n">eff_inf</span><span class="p">,</span> <span class="o">-</span><span class="n">w_thick</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">-</span> <span class="n">box_thick</span><span class="p">)</span>
+    <span class="p">),</span>
+    <span class="n">medium</span><span class="o">=</span><span class="n">mat_si</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># Gaussian source focused above the grating coupler.</span>
+<span class="n">gauss_source</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">GaussianBeam</span><span class="p">(</span>
+    <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="n">dr_center_x</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">src_pos_z</span><span class="p">),</span>
+    <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">dr_size_x</span><span class="p">,</span> <span class="n">dr_size_y</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+    <span class="n">source_time</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">GaussianPulse</span><span class="p">(</span><span class="n">freq0</span><span class="o">=</span><span class="n">freq</span><span class="p">,</span> <span class="n">fwidth</span><span class="o">=</span><span class="n">freqw</span><span class="p">),</span>
+    <span class="n">pol_angle</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span>
+    <span class="n">angle_theta</span><span class="o">=</span><span class="n">fiber_tilt</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mf">180.0</span><span class="p">,</span>
+    <span class="n">direction</span><span class="o">=</span><span class="s2">"-"</span><span class="p">,</span>
+    <span class="n">num_freqs</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span>
+    <span class="n">waist_radius</span><span class="o">=</span><span class="n">spot_size</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># Monitor where we will compute the objective function from.</span>
+<span class="n">mode_spec</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">ModeSpec</span><span class="p">(</span><span class="n">num_modes</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">target_neff</span><span class="o">=</span><span class="n">nSi</span><span class="p">)</span>
+<span class="n">fom_monitor</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">ModeMonitor</span><span class="p">(</span>
+    <span class="n">center</span><span class="o">=</span><span class="p">[</span><span class="n">mon_pos_x</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+    <span class="n">size</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">mon_w</span><span class="p">,</span> <span class="n">mon_h</span><span class="p">],</span>
+    <span class="n">freqs</span><span class="o">=</span><span class="p">[</span><span class="n">freq</span><span class="p">],</span>
+    <span class="n">mode_spec</span><span class="o">=</span><span class="n">mode_spec</span><span class="p">,</span>
+    <span class="n">name</span><span class="o">=</span><span class="n">fom_name</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>Now, we will define a random vector of initial design parameters or load a previously designed structure.</p>
+<blockquote>
+<p>Note: if a previous optimization file is found, the optimizer will pick up where that left off instead.</p>
+</blockquote>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[6]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">init_par</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">npar</span><span class="p">))</span>
+<span class="n">init_par</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">ndimage</span><span class="o">.</span><span class="n">gaussian_filter</span><span class="p">(</span><span class="n">init_par</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">init_par</span> <span class="o">=</span> <span class="n">init_par</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">nx</span><span class="p">,</span> <span class="n">ny</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h3 id="Fabrication-Constraints">Fabrication Constraints<a class="anchor-link" href="#Fabrication-Constraints">¶</a></h3><p>We will use <code>jax</code> to build functions that improve device fabricability. A classical conic density filter, which is popular in topology optimization problems, is used to enforce a minimum feature size specified by the <code>filter_radius</code> variable. Next, a hyperbolic tangent projection function is applied to eliminate grayscale and obtain a binarized permittivity pattern. The <code>beta</code> parameter controls the sharpness of the transition in the projection function, and for better results, this parameter should be gradually increased throughout the optimization process. Finally, the design parameters are transformed into permittivity values. For a detailed review of these methods, refer to [<a href="https://doi.org/10.1007/s00419-015-1106-4" target="_blank">3</a>].</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[7]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">tidy3d.plugins.adjoint.utils.filter</span> <span class="kn">import</span> <span class="n">ConicFilter</span><span class="p">,</span> <span class="n">BinaryProjector</span>
+
+<span class="n">conic_filter</span> <span class="o">=</span> <span class="n">ConicFilter</span><span class="p">(</span><span class="n">radius</span><span class="o">=</span><span class="n">filter_radius</span><span class="p">,</span> <span class="n">design_region_dl</span><span class="o">=</span><span class="n">dr_grid_size</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">tanh_projection</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">eta</span><span class="o">=</span><span class="mf">0.5</span><span class="p">):</span>
+    <span class="n">tanhbn</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">tanh</span><span class="p">(</span><span class="n">beta</span> <span class="o">*</span> <span class="n">eta</span><span class="p">)</span>
+    <span class="n">num</span> <span class="o">=</span> <span class="n">tanhbn</span> <span class="o">+</span> <span class="n">jnp</span><span class="o">.</span><span class="n">tanh</span><span class="p">(</span><span class="n">beta</span> <span class="o">*</span> <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">eta</span><span class="p">))</span>
+    <span class="n">den</span> <span class="o">=</span> <span class="n">tanhbn</span> <span class="o">+</span> <span class="n">jnp</span><span class="o">.</span><span class="n">tanh</span><span class="p">(</span><span class="n">beta</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">eta</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">num</span> <span class="o">/</span> <span class="n">den</span>    
+
+<span class="k">def</span> <span class="nf">filter_project</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">eta</span><span class="o">=</span><span class="mf">0.5</span><span class="p">):</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">conic_filter</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">tanh_projection</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="n">beta</span><span class="p">,</span> <span class="n">eta</span><span class="o">=</span><span class="n">eta</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">pre_process</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">beta</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Get the permittivity values (1, eps_wg) array as a funciton of the parameters (0,1)"""</span>
+    <span class="n">params1</span> <span class="o">=</span> <span class="n">filter_project</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="n">beta</span><span class="p">)</span>
+    <span class="n">params2</span> <span class="o">=</span> <span class="n">filter_project</span><span class="p">(</span><span class="n">params1</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="n">beta</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">params2</span>
+
+<span class="k">def</span> <span class="nf">get_eps_values</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">beta</span><span class="p">):</span>
+    <span class="n">params</span> <span class="o">=</span> <span class="n">pre_process</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="n">beta</span><span class="p">)</span>
+    <span class="n">eps_values</span> <span class="o">=</span> <span class="n">eps_min</span> <span class="o">+</span> <span class="p">(</span><span class="n">eps_max</span> <span class="o">-</span> <span class="n">eps_min</span><span class="p">)</span> <span class="o">*</span> <span class="n">params</span>
+    <span class="k">return</span> <span class="n">eps_values</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[8]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">get_eps</span><span class="p">(</span><span class="n">design_param</span><span class="p">,</span> <span class="n">beta</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.00</span><span class="p">,</span> <span class="n">binarize</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Returns the permittivities after applying a conic density filter on design parameters</span>
+<span class="sd">    to enforce fabrication constraints, followed by a binarization projection function</span>
+<span class="sd">    which reduces grayscale.</span>
+<span class="sd">    Parameters:</span>
+<span class="sd">        design_param: np.ndarray</span>
+<span class="sd">            Vector of design parameters.</span>
+<span class="sd">        beta: float = 1.0</span>
+<span class="sd">            Sharpness parameter for the projection filter.</span>
+<span class="sd">        binarize: bool = False</span>
+<span class="sd">            Enforce binarization.</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        eps: np.ndarray</span>
+<span class="sd">            Permittivity vector.</span>
+<span class="sd">    """</span>
+
+    <span class="c1"># Calculates the permittivities from the transformed design parameters.</span>
+    <span class="n">eps</span> <span class="o">=</span> <span class="n">get_eps_values</span><span class="p">(</span><span class="n">design_param</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="n">beta</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">binarize</span><span class="p">:</span>
+        <span class="n">eps</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">eps</span> <span class="o">&lt;</span> <span class="p">(</span><span class="n">eps_min</span> <span class="o">+</span> <span class="n">eps_max</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">eps_min</span><span class="p">,</span> <span class="n">eps_max</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>        
+        <span class="n">eps</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">eps</span> <span class="o">&lt;</span> <span class="n">eps_min</span><span class="p">,</span> <span class="n">eps_min</span><span class="p">,</span> <span class="n">eps</span><span class="p">)</span>
+        <span class="n">eps</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">eps</span> <span class="o">&gt;</span> <span class="n">eps_max</span><span class="p">,</span> <span class="n">eps_max</span><span class="p">,</span> <span class="n">eps</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">eps</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[9]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">update_design</span><span class="p">(</span><span class="n">eps</span><span class="p">,</span> <span class="n">unfold</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">JaxStructure</span><span class="p">]:</span>
+    <span class="c1"># Reflects the structure about the x-axis.</span>
+    <span class="n">nyii</span> <span class="o">=</span> <span class="n">ny</span>
+    <span class="n">y_min</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">dr_s_y</span> <span class="o">=</span> <span class="n">dr_size_y</span> <span class="o">/</span> <span class="mi">2</span>
+    <span class="n">dr_c_y</span> <span class="o">=</span> <span class="n">dr_s_y</span> <span class="o">/</span> <span class="mi">2</span>
+    <span class="n">eps_val</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">eps</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">eps_val</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">eps_val</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+    
+    <span class="c1"># eps_val = jnp.array(eps).reshape((nx, ny, 1, 1))</span>
+    <span class="k">if</span> <span class="n">unfold</span><span class="p">:</span>
+        <span class="n">nyii</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">ny</span>
+        <span class="n">y_min</span> <span class="o">=</span> <span class="o">-</span><span class="n">dr_size_y</span> <span class="o">/</span> <span class="mi">2</span>
+        <span class="n">dr_s_y</span> <span class="o">=</span> <span class="n">dr_size_y</span>
+        <span class="n">dr_c_y</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">eps_val</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">fliplr</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">eps_val</span><span class="p">)),</span> <span class="n">eps_val</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="c1"># Definition of the coordinates x,y along the design region.</span>
+    <span class="n">coords_x</span> <span class="o">=</span> <span class="p">[(</span><span class="n">dr_center_x</span> <span class="o">-</span> <span class="n">dr_size_x</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="n">ix</span> <span class="o">*</span> <span class="n">dr_grid_size</span> <span class="k">for</span> <span class="n">ix</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nx</span><span class="p">)]</span>
+    <span class="n">coords_y</span> <span class="o">=</span> <span class="p">[</span><span class="n">y_min</span> <span class="o">+</span> <span class="n">iy</span> <span class="o">*</span> <span class="n">dr_grid_size</span> <span class="k">for</span> <span class="n">iy</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nyii</span><span class="p">)]</span>
+    <span class="n">coords</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">coords_x</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">coords_y</span><span class="p">,</span> <span class="n">z</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">f</span><span class="o">=</span><span class="p">[</span><span class="n">freq</span><span class="p">])</span>
+
+    <span class="c1"># Creation of a custom medium using the values of the design parameters.</span>
+    <span class="n">eps_components</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="sa">f</span><span class="s2">"eps_</span><span class="si">{</span><span class="n">dim</span><span class="si">}{</span><span class="n">dim</span><span class="si">}</span><span class="s2">"</span><span class="p">:</span> <span class="n">JaxDataArray</span><span class="p">(</span><span class="n">values</span><span class="o">=</span><span class="n">eps_val</span><span class="p">,</span> <span class="n">coords</span><span class="o">=</span><span class="n">coords</span><span class="p">)</span> <span class="k">for</span> <span class="n">dim</span> <span class="ow">in</span> <span class="s2">"xyz"</span>
+    <span class="p">}</span>
+    <span class="n">eps_dataset</span> <span class="o">=</span> <span class="n">JaxPermittivityDataset</span><span class="p">(</span><span class="o">**</span><span class="n">eps_components</span><span class="p">)</span>
+    <span class="n">eps_medium</span> <span class="o">=</span> <span class="n">JaxCustomMedium</span><span class="p">(</span><span class="n">eps_dataset</span><span class="o">=</span><span class="n">eps_dataset</span><span class="p">)</span>
+    <span class="n">box</span> <span class="o">=</span> <span class="n">JaxBox</span><span class="p">(</span><span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="n">dr_center_x</span><span class="p">,</span> <span class="n">dr_c_y</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">dr_size_x</span><span class="p">,</span> <span class="n">dr_s_y</span><span class="p">,</span> <span class="n">w_thick</span><span class="p">))</span>
+    <span class="n">design_structure</span> <span class="o">=</span> <span class="n">JaxStructure</span><span class="p">(</span><span class="n">geometry</span><span class="o">=</span><span class="n">box</span><span class="p">,</span> <span class="n">medium</span><span class="o">=</span><span class="n">eps_medium</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">design_structure</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[10]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">make_adjoint_sim</span><span class="p">(</span>
+    <span class="n">design_param</span><span class="p">,</span> <span class="n">beta</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.00</span><span class="p">,</span> <span class="n">unfold</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">binarize</span><span class="p">:</span> <span class="nb">bool</span><span class="o">=</span><span class="kc">False</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">JaxSimulation</span><span class="p">:</span>
+    <span class="c1"># Builds the design region from the design parameters.</span>
+    <span class="n">eps</span> <span class="o">=</span> <span class="n">get_eps</span><span class="p">(</span><span class="n">design_param</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">binarize</span><span class="p">)</span>
+    <span class="n">design_structure</span> <span class="o">=</span> <span class="n">update_design</span><span class="p">(</span><span class="n">eps</span><span class="p">,</span> <span class="n">unfold</span><span class="o">=</span><span class="n">unfold</span><span class="p">)</span>
+
+    <span class="c1"># Creates a uniform mesh for the design region.</span>
+    <span class="n">adjoint_dr_mesh</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">MeshOverrideStructure</span><span class="p">(</span>
+        <span class="n">geometry</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">Box</span><span class="p">(</span>
+            <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="n">dr_center_x</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">dr_size_x</span><span class="p">,</span> <span class="n">dr_size_y</span><span class="p">,</span> <span class="n">w_thick</span><span class="p">)</span>
+        <span class="p">),</span>
+        <span class="n">dl</span><span class="o">=</span><span class="p">[</span><span class="n">dr_grid_size</span><span class="p">,</span> <span class="n">dr_grid_size</span><span class="p">,</span> <span class="n">dr_grid_size</span><span class="p">],</span>
+        <span class="n">enforce</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">JaxSimulation</span><span class="p">(</span>
+        <span class="n">size</span><span class="o">=</span><span class="p">[</span><span class="n">size_x</span><span class="p">,</span> <span class="n">size_y</span><span class="p">,</span> <span class="n">size_z</span><span class="p">],</span>
+        <span class="n">center</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="n">center_z</span><span class="p">],</span>
+        <span class="n">grid_spec</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">GridSpec</span><span class="o">.</span><span class="n">auto</span><span class="p">(</span>
+            <span class="n">wavelength</span><span class="o">=</span><span class="n">wl_max</span><span class="p">,</span>
+            <span class="n">min_steps_per_wvl</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span>
+            <span class="n">override_structures</span><span class="o">=</span><span class="p">[</span><span class="n">adjoint_dr_mesh</span><span class="p">],</span>
+        <span class="p">),</span>
+        <span class="n">symmetry</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+        <span class="n">structures</span><span class="o">=</span><span class="p">[</span><span class="n">waveguide</span><span class="p">,</span> <span class="n">sio2_substrate</span><span class="p">,</span> <span class="n">si_substrate</span><span class="p">],</span>
+        <span class="n">input_structures</span><span class="o">=</span><span class="n">design_structure</span><span class="p">,</span>
+        <span class="n">sources</span><span class="o">=</span><span class="p">[</span><span class="n">gauss_source</span><span class="p">],</span>
+        <span class="n">monitors</span><span class="o">=</span><span class="p">[],</span>
+        <span class="n">output_monitors</span><span class="o">=</span><span class="p">[</span><span class="n">fom_monitor</span><span class="p">],</span>
+        <span class="n">run_time</span><span class="o">=</span><span class="n">run_time</span><span class="p">,</span>
+        <span class="n">subpixel</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[11]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">init_design</span> <span class="o">=</span> <span class="n">make_adjoint_sim</span><span class="p">(</span><span class="n">init_par</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="n">beta_min</span><span class="p">)</span>
+
+<span class="n">fig</span><span class="p">,</span> <span class="p">(</span><span class="n">ax1</span><span class="p">,</span> <span class="n">ax2</span><span class="p">)</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">tight_layout</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
+<span class="n">init_design</span><span class="o">.</span><span class="n">plot_eps</span><span class="p">(</span><span class="n">z</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax1</span><span class="p">)</span>
+<span class="n">init_design</span><span class="o">.</span><span class="n">plot_eps</span><span class="p">(</span><span class="n">y</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax2</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedImage jp-OutputArea-output" tabindex="0">
+<img alt="No description has been provided for this image" class="" src="/assets/tidy3d/examples/image/AdjointPlugin6GratingCoupler/AdjointPlugin6GratingCoupler_1.png"/>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>The permittivity values obtained from the design parameters are then used to build a <a href="https://docs.flexcompute.com/projects/tidy3d/en/latest/_autosummary/tidy3d.plugins.adjoint.JaxCustomMedium.html" target="_blank">JaxCustomMedium</a>. As we will consider symmetry about the x-axis in the simulations, only the upper-half part of the design region needs to be populated. A <code>JaxStructure</code> built using the <code>JaxCustomMedium</code> will be returned by the following function:</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[12]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">update_design</span><span class="p">(</span><span class="n">eps</span><span class="p">,</span> <span class="n">unfold</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">JaxStructure</span><span class="p">]:</span>
+    <span class="c1"># Reflects the structure about the x-axis.</span>
+    <span class="n">nyii</span> <span class="o">=</span> <span class="n">ny</span>
+    <span class="n">y_min</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">dr_s_y</span> <span class="o">=</span> <span class="n">dr_size_y</span> <span class="o">/</span> <span class="mi">2</span>
+    <span class="n">dr_c_y</span> <span class="o">=</span> <span class="n">dr_s_y</span> <span class="o">/</span> <span class="mi">2</span>
+    <span class="n">eps_val</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">eps</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">nx</span><span class="p">,</span> <span class="n">ny</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">unfold</span><span class="p">:</span>
+        <span class="n">nyii</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">ny</span>
+        <span class="n">y_min</span> <span class="o">=</span> <span class="o">-</span><span class="n">dr_size_y</span> <span class="o">/</span> <span class="mi">2</span>
+        <span class="n">dr_s_y</span> <span class="o">=</span> <span class="n">dr_size_y</span>
+        <span class="n">dr_c_y</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">eps_val</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">fliplr</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">eps_val</span><span class="p">)),</span> <span class="n">eps_val</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="c1"># Definition of the coordinates x,y along the design region.</span>
+    <span class="n">coords_x</span> <span class="o">=</span> <span class="p">[(</span><span class="n">dr_center_x</span> <span class="o">-</span> <span class="n">dr_size_x</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="n">ix</span> <span class="o">*</span> <span class="n">dr_grid_size</span> <span class="k">for</span> <span class="n">ix</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nx</span><span class="p">)]</span>
+    <span class="n">coords_y</span> <span class="o">=</span> <span class="p">[</span><span class="n">y_min</span> <span class="o">+</span> <span class="n">iy</span> <span class="o">*</span> <span class="n">dr_grid_size</span> <span class="k">for</span> <span class="n">iy</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nyii</span><span class="p">)]</span>
+    <span class="n">coords</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">coords_x</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">coords_y</span><span class="p">,</span> <span class="n">z</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">f</span><span class="o">=</span><span class="p">[</span><span class="n">freq</span><span class="p">])</span>
+
+    <span class="c1"># Creation of a custom medium using the values of the design parameters.</span>
+    <span class="n">eps_components</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="sa">f</span><span class="s2">"eps_</span><span class="si">{</span><span class="n">dim</span><span class="si">}{</span><span class="n">dim</span><span class="si">}</span><span class="s2">"</span><span class="p">:</span> <span class="n">JaxDataArray</span><span class="p">(</span><span class="n">values</span><span class="o">=</span><span class="n">eps_val</span><span class="p">,</span> <span class="n">coords</span><span class="o">=</span><span class="n">coords</span><span class="p">)</span> <span class="k">for</span> <span class="n">dim</span> <span class="ow">in</span> <span class="s2">"xyz"</span>
+    <span class="p">}</span>
+    <span class="n">eps_dataset</span> <span class="o">=</span> <span class="n">JaxPermittivityDataset</span><span class="p">(</span><span class="o">**</span><span class="n">eps_components</span><span class="p">)</span>
+    <span class="n">eps_medium</span> <span class="o">=</span> <span class="n">JaxCustomMedium</span><span class="p">(</span><span class="n">eps_dataset</span><span class="o">=</span><span class="n">eps_dataset</span><span class="p">)</span>
+    <span class="n">box</span> <span class="o">=</span> <span class="n">JaxBox</span><span class="p">(</span><span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="n">dr_center_x</span><span class="p">,</span> <span class="n">dr_c_y</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">dr_size_x</span><span class="p">,</span> <span class="n">dr_s_y</span><span class="p">,</span> <span class="n">w_thick</span><span class="p">))</span>
+    <span class="n">design_structure</span> <span class="o">=</span> <span class="n">JaxStructure</span><span class="p">(</span><span class="n">geometry</span><span class="o">=</span><span class="n">box</span><span class="p">,</span> <span class="n">medium</span><span class="o">=</span><span class="n">eps_medium</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">design_structure</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>Next, we will write a function to return the <code>JaxSimulation</code> object. Note that we are using a <code>MeshOverrideStructure</code> to obtain a uniform mesh over the design region.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[13]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">make_adjoint_sim</span><span class="p">(</span>
+    <span class="n">design_param</span><span class="p">,</span> <span class="n">beta</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.00</span><span class="p">,</span> <span class="n">unfold</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">binarize</span><span class="p">:</span> <span class="nb">bool</span><span class="o">=</span><span class="kc">False</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">JaxSimulation</span><span class="p">:</span>
+    <span class="c1"># Builds the design region from the design parameters.</span>
+    <span class="n">eps</span> <span class="o">=</span> <span class="n">get_eps</span><span class="p">(</span><span class="n">design_param</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">binarize</span><span class="p">)</span>
+    <span class="n">design_structure</span> <span class="o">=</span> <span class="n">update_design</span><span class="p">(</span><span class="n">eps</span><span class="p">,</span> <span class="n">unfold</span><span class="o">=</span><span class="n">unfold</span><span class="p">)</span>
+
+    <span class="c1"># Creates a uniform mesh for the design region.</span>
+    <span class="n">adjoint_dr_mesh</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">MeshOverrideStructure</span><span class="p">(</span>
+        <span class="n">geometry</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">Box</span><span class="p">(</span>
+            <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="n">dr_center_x</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">dr_size_x</span><span class="p">,</span> <span class="n">dr_size_y</span><span class="p">,</span> <span class="n">w_thick</span><span class="p">)</span>
+        <span class="p">),</span>
+        <span class="n">dl</span><span class="o">=</span><span class="p">[</span><span class="n">dr_grid_size</span><span class="p">,</span> <span class="n">dr_grid_size</span><span class="p">,</span> <span class="n">dr_grid_size</span><span class="p">],</span>
+        <span class="n">enforce</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">JaxSimulation</span><span class="p">(</span>
+        <span class="n">size</span><span class="o">=</span><span class="p">[</span><span class="n">size_x</span><span class="p">,</span> <span class="n">size_y</span><span class="p">,</span> <span class="n">size_z</span><span class="p">],</span>
+        <span class="n">center</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="n">center_z</span><span class="p">],</span>
+        <span class="n">grid_spec</span><span class="o">=</span><span class="n">td</span><span class="o">.</span><span class="n">GridSpec</span><span class="o">.</span><span class="n">auto</span><span class="p">(</span>
+            <span class="n">wavelength</span><span class="o">=</span><span class="n">wl_max</span><span class="p">,</span>
+            <span class="n">min_steps_per_wvl</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span>
+            <span class="n">override_structures</span><span class="o">=</span><span class="p">[</span><span class="n">adjoint_dr_mesh</span><span class="p">],</span>
+        <span class="p">),</span>
+        <span class="n">symmetry</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+        <span class="n">structures</span><span class="o">=</span><span class="p">[</span><span class="n">waveguide</span><span class="p">,</span> <span class="n">sio2_substrate</span><span class="p">,</span> <span class="n">si_substrate</span><span class="p">],</span>
+        <span class="n">input_structures</span><span class="o">=</span><span class="n">design_structure</span><span class="p">,</span>
+        <span class="n">sources</span><span class="o">=</span><span class="p">[</span><span class="n">gauss_source</span><span class="p">],</span>
+        <span class="n">monitors</span><span class="o">=</span><span class="p">[],</span>
+        <span class="n">output_monitors</span><span class="o">=</span><span class="p">[</span><span class="n">fom_monitor</span><span class="p">],</span>
+        <span class="n">run_time</span><span class="o">=</span><span class="n">run_time</span><span class="p">,</span>
+        <span class="n">subpixel</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>Let's visualize the simulation set up and verify if all the elements are in their correct places.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[14]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">init_design</span> <span class="o">=</span> <span class="n">make_adjoint_sim</span><span class="p">(</span><span class="n">init_par</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="n">beta_min</span><span class="p">)</span>
+
+<span class="n">fig</span><span class="p">,</span> <span class="p">(</span><span class="n">ax1</span><span class="p">,</span> <span class="n">ax2</span><span class="p">)</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">tight_layout</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
+<span class="n">init_design</span><span class="o">.</span><span class="n">plot_eps</span><span class="p">(</span><span class="n">z</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax1</span><span class="p">)</span>
+<span class="n">init_design</span><span class="o">.</span><span class="n">plot_eps</span><span class="p">(</span><span class="n">y</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax2</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedImage jp-OutputArea-output" tabindex="0">
+<img alt="No description has been provided for this image" class="" src="/assets/tidy3d/examples/image/AdjointPlugin6GratingCoupler/AdjointPlugin6GratingCoupler_2.png"/>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="Optimization">Optimization<a class="anchor-link" href="#Optimization">¶</a></h2><p>We need to provide an objective function and its gradients with respect to the design parameters of the optimization algorithm.</p>
+<p>Our figure-of-merit (FOM) is the coupling efficiency of the incident power into the fundamental transverse electric mode of the $Si$ waveguide. The optimization algorithm will call the objective function at each iteration step. Therefore, the objective function will create the adjoint simulation, run it, and return the FOM value.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[15]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Figure of Merit (FOM) calculation.</span>
+<span class="k">def</span> <span class="nf">fom</span><span class="p">(</span><span class="n">sim_data</span><span class="p">:</span> <span class="n">JaxSimulationData</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Return the power at the mode index of interest."""</span>
+    <span class="n">output_amps</span> <span class="o">=</span> <span class="n">sim_data</span><span class="o">.</span><span class="n">output_data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">amps</span>
+    <span class="n">amp</span> <span class="o">=</span> <span class="n">output_amps</span><span class="o">.</span><span class="n">sel</span><span class="p">(</span><span class="n">direction</span><span class="o">=</span><span class="s2">"-"</span><span class="p">,</span> <span class="n">f</span><span class="o">=</span><span class="n">freq</span><span class="p">,</span> <span class="n">mode_index</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">jnp</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">amp</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">penalty</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">delta_eps</span><span class="o">=</span><span class="mf">0.49</span><span class="p">):</span>
+    <span class="n">params</span> <span class="o">=</span> <span class="n">pre_process</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="n">beta</span><span class="p">)</span>
+    <span class="n">dilate_fn</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">filter_project</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">eta</span><span class="o">=</span><span class="mf">0.5</span><span class="o">-</span><span class="n">delta_eps</span><span class="p">)</span>
+    <span class="n">eroded_fn</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">filter_project</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">eta</span><span class="o">=</span><span class="mf">0.5</span><span class="o">+</span><span class="n">delta_eps</span><span class="p">)</span>
+
+    <span class="n">params_dilate_erode</span> <span class="o">=</span> <span class="n">eroded_fn</span><span class="p">(</span><span class="n">dilate_fn</span><span class="p">(</span><span class="n">params</span><span class="p">))</span>
+    <span class="n">params_erode_dilate</span> <span class="o">=</span> <span class="n">dilate_fn</span><span class="p">(</span><span class="n">eroded_fn</span><span class="p">(</span><span class="n">params</span><span class="p">))</span>
+    <span class="n">diff</span> <span class="o">=</span> <span class="n">params_dilate_erode</span> <span class="o">-</span> <span class="n">params_erode_dilate</span>
+    <span class="k">return</span> <span class="n">jnp</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">diff</span><span class="p">)</span> <span class="o">/</span> <span class="n">jnp</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="n">diff</span><span class="p">))</span>
+    
+<span class="c1"># Objective function to be passed to the optimization algorithm.</span>
+<span class="k">def</span> <span class="nf">obj</span><span class="p">(</span>
+    <span class="n">design_param</span><span class="p">,</span> <span class="n">beta</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span> <span class="n">step_num</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+    <span class="n">sim</span> <span class="o">=</span> <span class="n">make_adjoint_sim</span><span class="p">(</span><span class="n">design_param</span><span class="p">,</span> <span class="n">beta</span><span class="p">)</span>
+    <span class="n">task_name</span> <span class="o">=</span> <span class="s2">"inv_des"</span>
+    <span class="k">if</span> <span class="n">step_num</span><span class="p">:</span>
+        <span class="n">task_name</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">"_step_</span><span class="si">{</span><span class="n">step_num</span><span class="si">}</span><span class="s2">"</span>
+    <span class="n">sim_data</span> <span class="o">=</span> <span class="n">run</span><span class="p">(</span><span class="n">sim</span><span class="p">,</span> <span class="n">task_name</span><span class="o">=</span><span class="n">task_name</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
+    <span class="n">fom_val</span> <span class="o">=</span> <span class="n">fom</span><span class="p">(</span><span class="n">sim_data</span><span class="p">)</span>
+    <span class="n">feature_size_penalty</span> <span class="o">=</span> <span class="n">penalty</span><span class="p">(</span><span class="n">design_param</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="n">beta</span><span class="p">)</span>
+    <span class="n">J</span> <span class="o">=</span> <span class="n">fom_val</span> <span class="o">-</span> <span class="n">feature_size_penalty</span>
+    <span class="k">return</span> <span class="n">J</span><span class="p">,</span> <span class="n">sim_data</span>
+
+<span class="c1"># Function to calculate the objective function value and its</span>
+<span class="c1"># gradient with respect to the design parameters.</span>
+<span class="n">obj_grad</span> <span class="o">=</span> <span class="n">value_and_grad</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">has_aux</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>Next we will define the optimizer using <code>optax</code>. We will save the optimization progress in a <code>pickle</code> file. If that file is found, it will pick up the optimization from the last state. Otherwise, we will create a blank history.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[16]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">optax</span>
+<span class="kn">import</span> <span class="nn">pickle</span>
+
+<span class="c1"># hyperparameters</span>
+<span class="n">learning_rate</span> <span class="o">=</span> <span class="mf">0.3</span>
+<span class="n">optimizer</span> <span class="o">=</span> <span class="n">optax</span><span class="o">.</span><span class="n">adam</span><span class="p">(</span><span class="n">learning_rate</span><span class="o">=</span><span class="n">learning_rate</span><span class="p">)</span>
+
+<span class="c1"># where to store history</span>
+<span class="n">history_fname</span> <span class="o">=</span> <span class="s2">"misc/grating_coupler_history.pkl"</span>
+
+<span class="k">def</span> <span class="nf">save_history</span><span class="p">(</span><span class="n">history_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Convenience function to save the history to file."""</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">history_fname</span><span class="p">,</span> <span class="s1">'wb'</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+        <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">history_dict</span><span class="p">,</span> <span class="n">file</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">load_history</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Convenience method to load the history from file."""</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">history_fname</span><span class="p">,</span> <span class="s1">'rb'</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+        <span class="n">history_dict</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">history_dict</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h3 id="Checking-For-a-Previous-Optimization">Checking For a Previous Optimization<a class="anchor-link" href="#Checking-For-a-Previous-Optimization">¶</a></h3><p>If <code>history_fname</code> is a valid file, the results of a previous optimization are loaded, then the optimization will continue from the last iteration step. If the optimization was completed, only the final structure will be simulated. The pickle file used in this notebook can be downloaded from our documentation <a href="https://github.com/flexcompute-readthedocs/tidy3d-docs/tree/readthedocs/docs/source/notebooks/misc" target="_blank">repo</a>.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[17]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="k">try</span><span class="p">:</span>
+    <span class="n">history_dict</span> <span class="o">=</span> <span class="n">load_history</span><span class="p">()</span>
+    <span class="n">opt_state</span> <span class="o">=</span> <span class="n">history_dict</span><span class="p">[</span><span class="s2">"opt_states"</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">params</span> <span class="o">=</span> <span class="n">history_dict</span><span class="p">[</span><span class="s2">"params"</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">num_iters_completed</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">history_dict</span><span class="p">[</span><span class="s2">"params"</span><span class="p">])</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"Loaded optimization checkpoint from file."</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Found </span><span class="si">{</span><span class="n">num_iters_completed</span><span class="si">}</span><span class="s2"> iterations previously completed out of </span><span class="si">{</span><span class="n">total_iter</span><span class="si">}</span><span class="s2"> total."</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">num_iters_completed</span> <span class="o">&lt;</span> <span class="n">total_iter</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Will resume optimization."</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">"Optimization completed, will return results."</span><span class="p">)</span>
+
+<span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
+    
+    <span class="n">params</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">init_par</span><span class="p">)</span>
+    <span class="n">opt_state</span> <span class="o">=</span> <span class="n">optimizer</span><span class="o">.</span><span class="n">init</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+    <span class="n">history_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+        <span class="n">values</span><span class="o">=</span><span class="p">[],</span>
+        <span class="n">params</span><span class="o">=</span><span class="p">[],</span>
+        <span class="n">gradients</span><span class="o">=</span><span class="p">[],</span>
+        <span class="n">opt_states</span><span class="o">=</span><span class="p">[</span><span class="n">opt_state</span><span class="p">],</span>
+        <span class="n">data</span><span class="o">=</span><span class="p">[],</span>
+        <span class="n">beta</span><span class="o">=</span><span class="p">[],</span>
+    <span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Loaded optimization checkpoint from file.
+Found 74 iterations previously completed out of 75 total.
+Will resume optimization.
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[18]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">iter_done</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">history_dict</span><span class="p">[</span><span class="s1">'values'</span><span class="p">])</span>
+
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">iter_done</span><span class="p">,</span> <span class="n">total_iter</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"iteration = (</span><span class="si">{</span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2"> / </span><span class="si">{</span><span class="n">total_iter</span><span class="si">}</span><span class="s2">)"</span><span class="p">)</span>
+
+    <span class="c1"># compute gradient and current objective funciton value</span>
+    <span class="n">perc_done</span> <span class="o">=</span> <span class="n">i</span> <span class="o">/</span> <span class="p">(</span><span class="n">total_iter</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">beta_i</span> <span class="o">=</span> <span class="n">beta_min</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">perc_done</span><span class="p">)</span> <span class="o">+</span> <span class="n">beta_max</span> <span class="o">*</span> <span class="n">perc_done</span>
+    <span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">sim_data_i</span><span class="p">),</span> <span class="n">gradient</span> <span class="o">=</span> <span class="n">obj_grad</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="n">beta_i</span><span class="p">)</span>
+    
+    <span class="c1"># outputs</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="se">\t</span><span class="s2">beta = </span><span class="si">{</span><span class="n">beta_i</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="se">\t</span><span class="s2">J = </span><span class="si">{</span><span class="n">value</span><span class="si">:</span><span class="s2">.4e</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="se">\t</span><span class="s2">grad_norm = </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">gradient</span><span class="p">)</span><span class="si">:</span><span class="s2">.4e</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>    
+
+    <span class="c1"># compute and apply updates to the optimizer based on gradient (-1 sign to maximize obj_fn)</span>
+    <span class="n">updates</span><span class="p">,</span> <span class="n">opt_state</span> <span class="o">=</span> <span class="n">optimizer</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="o">-</span><span class="n">gradient</span><span class="p">,</span> <span class="n">opt_state</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
+    <span class="n">params</span> <span class="o">=</span> <span class="n">optax</span><span class="o">.</span><span class="n">apply_updates</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">updates</span><span class="p">)</span>
+
+    <span class="c1"># cap parameters between 0 and 1</span>
+    <span class="n">params</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+    <span class="n">params</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+    
+    <span class="c1"># save history</span>
+    <span class="n">history_dict</span><span class="p">[</span><span class="s2">"values"</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+    <span class="n">history_dict</span><span class="p">[</span><span class="s2">"params"</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+    <span class="n">history_dict</span><span class="p">[</span><span class="s2">"beta"</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">beta_i</span><span class="p">)</span>
+    <span class="n">history_dict</span><span class="p">[</span><span class="s2">"gradients"</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">gradient</span><span class="p">)</span>
+    <span class="n">history_dict</span><span class="p">[</span><span class="s2">"opt_states"</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">opt_state</span><span class="p">)</span>
+    <span class="c1"># history_dict["data"].append(sim_data_i) # uncomment to store data, can create large files</span>
+    <span class="n">save_history</span><span class="p">(</span><span class="n">history_dict</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>iteration = (75 / 75)
+	beta = 30.0
+	J = 5.5126e-01
+	grad_norm = 2.0114e-02
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h3 id="Optimization-Results">Optimization Results<a class="anchor-link" href="#Optimization-Results">¶</a></h3><p>After 150 iterations, a coupling efficiency value of 0.71 (-1.48 dB) was achieved at the central wavelength.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[19]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">obj_vals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">history_dict</span><span class="p">[</span><span class="s2">"values"</span><span class="p">])</span>
+<span class="n">final_par</span> <span class="o">=</span> <span class="n">history_dict</span><span class="p">[</span><span class="s2">"params"</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+<span class="n">final_beta</span> <span class="o">=</span> <span class="n">history_dict</span><span class="p">[</span><span class="s2">"beta"</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[20]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">obj_vals</span><span class="p">,</span> <span class="s2">"ro"</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">"iterations"</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">"objective function"</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Final Objective Function Value: </span><span class="si">{</span><span class="n">obj_vals</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedImage jp-OutputArea-output" tabindex="0">
+<img alt="No description has been provided for this image" class="" src="/assets/tidy3d/examples/image/AdjointPlugin6GratingCoupler/AdjointPlugin6GratingCoupler_3.png"/>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>The final grating coupler structure is well binarized, with mostly black (<code>eps_max</code>) and white (<code>eps_min</code>) regions.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[21]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
+<span class="n">sim_final</span> <span class="o">=</span> <span class="n">make_adjoint_sim</span><span class="p">(</span><span class="n">final_par</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="n">final_beta</span><span class="p">,</span> <span class="n">unfold</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">sim_final</span> <span class="o">=</span> <span class="n">sim_final</span><span class="o">.</span><span class="n">to_simulation</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">sim_final</span><span class="o">.</span><span class="n">plot_eps</span><span class="p">(</span><span class="n">z</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">source_alpha</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">monitor_alpha</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedImage jp-OutputArea-output" tabindex="0">
+<img alt="No description has been provided for this image" class="" src="/assets/tidy3d/examples/image/AdjointPlugin6GratingCoupler/AdjointPlugin6GratingCoupler_4.png"/>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>Once the inverse design is complete, we can visualize the field distributions and the wavelength dependent coupling efficiency.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[22]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Field monitors to visualize the final fields.</span>
+<span class="n">field_xy</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">FieldMonitor</span><span class="p">(</span>
+    <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">td</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">td</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+    <span class="n">freqs</span><span class="o">=</span><span class="p">[</span><span class="n">freq</span><span class="p">],</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">"field_xy"</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">field_xz</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">FieldMonitor</span><span class="p">(</span>
+    <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">td</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">td</span><span class="o">.</span><span class="n">inf</span><span class="p">),</span>
+    <span class="n">freqs</span><span class="o">=</span><span class="p">[</span><span class="n">freq</span><span class="p">],</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">"field_xz"</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># Monitor to compute the grating coupler efficiency.</span>
+<span class="n">gc_efficiency</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">ModeMonitor</span><span class="p">(</span>
+    <span class="n">center</span><span class="o">=</span><span class="p">[</span><span class="n">mon_pos_x</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+    <span class="n">size</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">mon_w</span><span class="p">,</span> <span class="n">mon_h</span><span class="p">],</span>
+    <span class="n">freqs</span><span class="o">=</span><span class="n">freqs</span><span class="p">,</span>
+    <span class="n">mode_spec</span><span class="o">=</span><span class="n">mode_spec</span><span class="p">,</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">"gc_efficiency"</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">sim_final</span> <span class="o">=</span> <span class="n">sim_final</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">update</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">monitors</span><span class="o">=</span><span class="p">(</span><span class="n">field_xy</span><span class="p">,</span> <span class="n">field_xz</span><span class="p">,</span> <span class="n">gc_efficiency</span><span class="p">)))</span>
+<span class="n">sim_data_final</span> <span class="o">=</span> <span class="n">web</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">sim_final</span><span class="p">,</span> <span class="n">task_name</span><span class="o">=</span><span class="s2">"inv_des_final"</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">[11:37:14] </span><span style="color: #800000; text-decoration-color: #800000">WARNING: Default value for the field monitor </span><span style="color: #008000; text-decoration-color: #008000">'colocate'</span><span style="color: #800000; text-decoration-color: #800000"> setting has  </span>
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span><span style="color: #800000; text-decoration-color: #800000">changed to </span><span style="color: #008000; text-decoration-color: #008000">'True'</span><span style="color: #800000; text-decoration-color: #800000"> in Tidy3D </span><span style="color: #008080; text-decoration-color: #008080; font-weight: bold">2.4</span><span style="color: #800000; text-decoration-color: #800000">.</span><span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0</span><span style="color: #800000; text-decoration-color: #800000">. All field components will be      </span>
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span><span style="color: #800000; text-decoration-color: #800000">colocated to the grid boundaries. Set to </span><span style="color: #008000; text-decoration-color: #008000">'False'</span><span style="color: #800000; text-decoration-color: #800000"> to get the raw      </span>
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span><span style="color: #800000; text-decoration-color: #800000">fields on the Yee grid instead.                                      </span>
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span><span style="color: #800000; text-decoration-color: #800000">WARNING: Default value for the field monitor </span><span style="color: #008000; text-decoration-color: #008000">'colocate'</span><span style="color: #800000; text-decoration-color: #800000"> setting has  </span>
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span><span style="color: #800000; text-decoration-color: #800000">changed to </span><span style="color: #008000; text-decoration-color: #008000">'True'</span><span style="color: #800000; text-decoration-color: #800000"> in Tidy3D </span><span style="color: #008080; text-decoration-color: #008080; font-weight: bold">2.4</span><span style="color: #800000; text-decoration-color: #800000">.</span><span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0</span><span style="color: #800000; text-decoration-color: #800000">. All field components will be      </span>
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span><span style="color: #800000; text-decoration-color: #800000">colocated to the grid boundaries. Set to </span><span style="color: #008000; text-decoration-color: #008000">'False'</span><span style="color: #800000; text-decoration-color: #800000"> to get the raw      </span>
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span><span style="color: #800000; text-decoration-color: #800000">fields on the Yee grid instead.                                      </span>
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span>Created task <span style="color: #008000; text-decoration-color: #008000">'inv_des_final'</span> with task_id                            
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span><span style="color: #008000; text-decoration-color: #008000">'fdve-b40ee6f2-7170-4dae-b15d-bb755d817cb9v1'</span>.                       
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span>View task using web UI at                                            
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span><a href="https://tidy3d.simulation.cloud/workbench?taskId=fdve-b40ee6f2-7170-4dae-b15d-bb755d817cb9v1" target="_blank"><span style="color: #000080; text-decoration-color: #000080; text-decoration: underline">'https://tidy3d.simulation.cloud/workbench?taskId=fdve-b40ee6f2-7170-</span></a>
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span><a href="https://tidy3d.simulation.cloud/workbench?taskId=fdve-b40ee6f2-7170-4dae-b15d-bb755d817cb9v1" target="_blank"><span style="color: #000080; text-decoration-color: #000080; text-decoration: underline">4dae-b15d-bb755d817cb9v1'</span></a><span style="color: #000080; text-decoration-color: #000080; text-decoration: underline">.</span>                                           
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Output()</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">[11:37:17] </span>status = queued                                                      
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Output()</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">[11:37:20] </span>status = preprocess                                                  
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">[11:37:27] </span>Maximum FlexCredit cost: <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0.183</span>. Use <span style="color: #008000; text-decoration-color: #008000">'web.real_cost(task_id)'</span> to get  
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span>the billed FlexCredit cost after a simulation run.                   
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span>starting up solver                                                   
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">[11:37:28] </span>running solver                                                       
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span>To cancel the simulation, use <span style="color: #008000; text-decoration-color: #008000">'web.abort(task_id)'</span> or                
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span><span style="color: #008000; text-decoration-color: #008000">'web.delete(task_id)'</span> or abort/delete the task in the web UI.        
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span>Terminating the Python script will not stop the job running on the   
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span>cloud.                                                               
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Output()</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">[11:37:54] </span>early shutoff detected, exiting.                                     
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span>status = postprocess                                                 
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Output()</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">[11:37:59] </span>status = success                                                     
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span>View simulation result at                                            
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span><a href="https://tidy3d.simulation.cloud/workbench?taskId=fdve-b40ee6f2-7170-4dae-b15d-bb755d817cb9v1" target="_blank"><span style="color: #000080; text-decoration-color: #000080; text-decoration: underline">'https://tidy3d.simulation.cloud/workbench?taskId=fdve-b40ee6f2-7170-</span></a>
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span><a href="https://tidy3d.simulation.cloud/workbench?taskId=fdve-b40ee6f2-7170-4dae-b15d-bb755d817cb9v1" target="_blank"><span style="color: #000080; text-decoration-color: #000080; text-decoration: underline">4dae-b15d-bb755d817cb9v1'</span></a><span style="color: #000080; text-decoration-color: #000080; text-decoration: underline">.</span>                                           
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Output()</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">[11:38:01] </span>loading SimulationData from simulation_data.hdf5                     
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[23]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">mode_amps</span> <span class="o">=</span> <span class="n">sim_data_final</span><span class="p">[</span><span class="s2">"gc_efficiency"</span><span class="p">]</span>
+<span class="n">coeffs_f</span> <span class="o">=</span> <span class="n">mode_amps</span><span class="o">.</span><span class="n">amps</span><span class="o">.</span><span class="n">sel</span><span class="p">(</span><span class="n">direction</span><span class="o">=</span><span class="s2">"-"</span><span class="p">)</span>
+<span class="n">power_0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">coeffs_f</span><span class="o">.</span><span class="n">sel</span><span class="p">(</span><span class="n">mode_index</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span> <span class="o">**</span> <span class="mi">2</span>
+<span class="n">power_0_db</span> <span class="o">=</span> <span class="mi">10</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">power_0</span><span class="p">)</span>
+
+<span class="n">sim_plot</span> <span class="o">=</span> <span class="n">sim_final</span><span class="o">.</span><span class="n">updated_copy</span><span class="p">(</span><span class="n">symmetry</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">monitors</span><span class="o">=</span><span class="p">(</span><span class="n">field_xy</span><span class="p">,</span> <span class="n">field_xz</span><span class="p">,</span> <span class="n">gc_efficiency</span><span class="p">))</span>
+<span class="n">sim_data_plot</span> <span class="o">=</span> <span class="n">sim_data_final</span><span class="o">.</span><span class="n">updated_copy</span><span class="p">(</span><span class="n">simulation</span><span class="o">=</span><span class="n">sim_plot</span><span class="p">)</span>
+
+<span class="n">f</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">6</span><span class="p">),</span> <span class="n">tight_layout</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">sim_plot</span><span class="o">.</span><span class="n">plot_eps</span><span class="p">(</span><span class="n">z</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">source_alpha</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">monitor_alpha</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">wl_range</span><span class="p">,</span> <span class="n">power_0_db</span><span class="p">,</span> <span class="s2">"-k"</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">"Wavelength (um)"</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">"Power (db)"</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="o">-</span><span class="mi">15</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="n">wl</span> <span class="o">-</span> <span class="n">bw</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">wl</span> <span class="o">+</span> <span class="n">bw</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">"Coupling Efficiency"</span><span class="p">)</span>
+<span class="n">sim_data_plot</span><span class="o">.</span><span class="n">plot_field</span><span class="p">(</span><span class="s2">"field_xy"</span><span class="p">,</span> <span class="s2">"E"</span><span class="p">,</span> <span class="s2">"abs^2"</span><span class="p">,</span> <span class="n">z</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">obj_vals</span><span class="p">,</span> <span class="s2">"ro"</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">"iterations"</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">"objective function"</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Final Objective Function Value: </span><span class="si">{</span><span class="n">obj_vals</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedImage jp-OutputArea-output" tabindex="0">
+<img alt="No description has been provided for this image" class="" src="/assets/tidy3d/examples/image/AdjointPlugin6GratingCoupler/AdjointPlugin6GratingCoupler_5.png"/>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[24]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">loss_db</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">power_0_db</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"optimized loss of </span><span class="si">{</span><span class="n">loss_db</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> dB"</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>optimized loss of -2.30 dB
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">[ ]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body>
+<script type="application/vnd.jupyter.widget-state+json">
+{"state": {"066ae3cd7b2843d6ac0977f73d1373ff": {"model_module": "@jupyter-widgets\/base", "model_module_version": "2.0.0", "model_name": "LayoutModel", "state": {"_model_module": "@jupyter-widgets\/base", "_model_module_version": "2.0.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets\/base", "_view_module_version": "2.0.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border_bottom": null, "border_left": null, "border_right": null, "border_top": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}, "1377d3a4074543dc8772ada613a50024": {"model_module": "@jupyter-widgets\/output", "model_module_version": "1.0.0", "model_name": "OutputModel", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets\/output", "_model_module_version": "1.0.0", "_model_name": "OutputModel", "_view_count": null, "_view_module": "@jupyter-widgets\/output", "_view_module_version": "1.0.0", "_view_name": "OutputView", "layout": "IPY_MODEL_6bf536a19d7241258dd64a0053933ea1", "msg_id": "", "outputs": [{"data": {"text\/html": "<pre style=\"white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace\"><span style=\"color: #008000; text-decoration-color: #008000\">\ud83c\udfc3 <\/span> <span style=\"color: #008000; text-decoration-color: #008000; font-weight: bold\">Finishing 'inv_des_final'...<\/span>\n<\/pre>\n", "text\/plain": "\u001b[32m\ud83c\udfc3 \u001b[0m \u001b[1;32mFinishing 'inv_des_final'...\u001b[0m\n"}, "metadata": {}, "output_type": "display_data"}], "tabbable": null, "tooltip": null}}, "2ee47e11bd644b928d4e1958161923bb": {"model_module": "@jupyter-widgets\/output", "model_module_version": "1.0.0", "model_name": "OutputModel", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets\/output", "_model_module_version": "1.0.0", "_model_name": "OutputModel", "_view_count": null, "_view_module": "@jupyter-widgets\/output", "_view_module_version": "1.0.0", "_view_name": "OutputView", "layout": "IPY_MODEL_91395efbed0d4032b01f7d69e8722e11", "msg_id": "", "outputs": [{"data": {"text\/html": "<pre style=\"white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace\"><span style=\"color: #800000; text-decoration-color: #800000; font-weight: bold\">\u2191<\/span> <span style=\"color: #000080; text-decoration-color: #000080; font-weight: bold\">simulation.hdf5.gz<\/span> <span style=\"color: #729c1f; text-decoration-color: #729c1f\">\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501<\/span> <span style=\"color: #800080; text-decoration-color: #800080\">100.0%<\/span> \u2022 <span style=\"color: #008000; text-decoration-color: #008000\">77.0\/77.0 kB<\/span> \u2022 <span style=\"color: #800000; text-decoration-color: #800000\">?<\/span> \u2022 <span style=\"color: #008080; text-decoration-color: #008080\">0:00:00<\/span>\n<\/pre>\n", "text\/plain": "\u001b[1;31m\u2191\u001b[0m \u001b[1;34msimulation.hdf5.gz\u001b[0m \u001b[38;2;114;156;31m\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u001b[0m \u001b[35m100.0%\u001b[0m \u2022 \u001b[32m77.0\/77.0 kB\u001b[0m \u2022 \u001b[31m?\u001b[0m \u2022 \u001b[36m0:00:00\u001b[0m\n"}, "metadata": {}, "output_type": "display_data"}], "tabbable": null, "tooltip": null}}, "509db80a6caf47edb14635ddd1380a94": {"model_module": "@jupyter-widgets\/base", "model_module_version": "2.0.0", "model_name": "LayoutModel", "state": {"_model_module": "@jupyter-widgets\/base", "_model_module_version": "2.0.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets\/base", "_view_module_version": "2.0.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border_bottom": null, "border_left": null, "border_right": null, "border_top": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}, "699ec8475ab7423c9745a72caefeecde": {"model_module": "@jupyter-widgets\/output", "model_module_version": "1.0.0", "model_name": "OutputModel", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets\/output", "_model_module_version": "1.0.0", "_model_name": "OutputModel", "_view_count": null, "_view_module": "@jupyter-widgets\/output", "_view_module_version": "1.0.0", "_view_name": "OutputView", "layout": "IPY_MODEL_d0b35e0ff7244f9bad5f047689ee6aef", "msg_id": "", "outputs": [{"data": {"text\/html": "<pre style=\"white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace\"><span style=\"color: #008000; text-decoration-color: #008000\">\ud83d\udeb6 <\/span> <span style=\"color: #008000; text-decoration-color: #008000; font-weight: bold\">Starting 'inv_des_final'...<\/span>\n<\/pre>\n", "text\/plain": "\u001b[32m\ud83d\udeb6 \u001b[0m \u001b[1;32mStarting 'inv_des_final'...\u001b[0m\n"}, "metadata": {}, "output_type": "display_data"}], "tabbable": null, "tooltip": null}}, "6bf536a19d7241258dd64a0053933ea1": {"model_module": "@jupyter-widgets\/base", "model_module_version": "2.0.0", "model_name": "LayoutModel", "state": {"_model_module": "@jupyter-widgets\/base", "_model_module_version": "2.0.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets\/base", "_view_module_version": "2.0.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border_bottom": null, "border_left": null, "border_right": null, "border_top": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}, "7102600812d14200a8e80dc3bbb4b1b1": {"model_module": "@jupyter-widgets\/output", "model_module_version": "1.0.0", "model_name": "OutputModel", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets\/output", "_model_module_version": "1.0.0", "_model_name": "OutputModel", "_view_count": null, "_view_module": "@jupyter-widgets\/output", "_view_module_version": "1.0.0", "_view_name": "OutputView", "layout": "IPY_MODEL_509db80a6caf47edb14635ddd1380a94", "msg_id": "", "outputs": [{"data": {"text\/html": "<pre style=\"white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace\">solver progress (field decay = 2.07e-04) <span style=\"color: #729c1f; text-decoration-color: #729c1f\">\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501<\/span> <span style=\"color: #800080; text-decoration-color: #800080\">100%<\/span> <span style=\"color: #008080; text-decoration-color: #008080\">0:00:00<\/span>\n<\/pre>\n", "text\/plain": "solver progress (field decay = 2.07e-04) \u001b[38;2;114;156;31m\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u001b[0m \u001b[35m100%\u001b[0m \u001b[36m0:00:00\u001b[0m\n"}, "metadata": {}, "output_type": "display_data"}], "tabbable": null, "tooltip": null}}, "91395efbed0d4032b01f7d69e8722e11": {"model_module": "@jupyter-widgets\/base", "model_module_version": "2.0.0", "model_name": "LayoutModel", "state": {"_model_module": "@jupyter-widgets\/base", "_model_module_version": "2.0.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets\/base", "_view_module_version": "2.0.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border_bottom": null, "border_left": null, "border_right": null, "border_top": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}, "c2f0576e0ecd418eb80b2449d5c3a2e8": {"model_module": "@jupyter-widgets\/output", "model_module_version": "1.0.0", "model_name": "OutputModel", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets\/output", "_model_module_version": "1.0.0", "_model_name": "OutputModel", "_view_count": null, "_view_module": "@jupyter-widgets\/output", "_view_module_version": "1.0.0", "_view_name": "OutputView", "layout": "IPY_MODEL_066ae3cd7b2843d6ac0977f73d1373ff", "msg_id": "", "outputs": [{"data": {"text\/html": "<pre style=\"white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace\"><span style=\"color: #008000; text-decoration-color: #008000; font-weight: bold\">\u2193<\/span> <span style=\"color: #000080; text-decoration-color: #000080; font-weight: bold\">monitor_data.hdf5<\/span> <span style=\"color: #729c1f; text-decoration-color: #729c1f\">\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501<\/span> <span style=\"color: #800080; text-decoration-color: #800080\">100.0%<\/span> \u2022 <span style=\"color: #008000; text-decoration-color: #008000\">4.2\/4.2 MB<\/span> \u2022 <span style=\"color: #800000; text-decoration-color: #800000\">19.0 MB\/s<\/span> \u2022 <span style=\"color: #008080; text-decoration-color: #008080\">0:00:00<\/span>\n<\/pre>\n", "text\/plain": "\u001b[1;32m\u2193\u001b[0m \u001b[1;34mmonitor_data.hdf5\u001b[0m \u001b[38;2;114;156;31m\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u001b[0m \u001b[35m100.0%\u001b[0m \u2022 \u001b[32m4.2\/4.2 MB\u001b[0m \u2022 \u001b[31m19.0 MB\/s\u001b[0m \u2022 \u001b[36m0:00:00\u001b[0m\n"}, "metadata": {}, "output_type": "display_data"}], "tabbable": null, "tooltip": null}}, "d0b35e0ff7244f9bad5f047689ee6aef": {"model_module": "@jupyter-widgets\/base", "model_module_version": "2.0.0", "model_name": "LayoutModel", "state": {"_model_module": "@jupyter-widgets\/base", "_model_module_version": "2.0.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets\/base", "_view_module_version": "2.0.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border_bottom": null, "border_left": null, "border_right": null, "border_top": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}}, "version_major": 2, "version_minor": 0}
+</script>
+</html>

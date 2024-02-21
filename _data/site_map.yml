@@ -1,0 +1,200 @@
+---
+main_menu:
+- text: Flow360 (CFD)
+  url: /flow360/solver/
+  click_id: flow360_btn
+  footer_class: col-md-3 col-lg-3
+  header_enable: true
+  footer_enable: true
+  menu_type: dropdown
+  submenu:
+    - text: Flow360 Solver
+      url: /flow360/solver/
+      click_id: flow360-solver_btn
+    - text: Flow360 Solution
+      url: /flow360/solution/
+      click_id: solution-flow360_btn
+    - text: Flow360 Documentation
+      url: https://docs.flexcompute.com/flow360
+      click_id: flow360-documentation_btn
+      target: _blank
+    - text: Publications
+      url: /flow360/publications/
+      click_id: flow360-publications_btn
+    - text: Support
+      url: /flow360/technical-support/
+      click_id: flow360-technical-support_btn
+      header_hide: true
+      footer_hide: true
+    - text: Contact Us
+      url: /flow360/contact/
+      click_id: flow360-contact-us_btn
+      header_hide: true
+      footer_hide: true
+    - text: Release Notes
+      url: /flow360/release-notes/
+      click_id: flow360-release-notes_btn
+      header_hide: true
+      footer_hide: true
+- text: Tidy3D (EM)
+  url: /tidy3d/solver/
+  click_id: tidy3d_btn
+  footer_class: col-md-3 col-lg-3
+  header_enable: true
+  footer_enable: true
+  menu_type: dropdown
+  submenu:
+    - text: Tidy3D Solver
+      url: /tidy3d/solver/
+      click_id: tidy3d-solver_btn
+    - text: Tidy3D Documentation
+      url: https://docs.flexcompute.com/tidy3d
+      click_id: tidy3d-documentation_btn
+      target: _blank
+#      hide this menu from https://flow360.atlassian.net/browse/MKTG-283
+#    - text: Tidy3D Knowledge Base
+#      url: https://kb.flexcompute.com/tidy3d
+#      click_id: tidy3d-knowledge-base_btn
+#      target: _blank
+#      hide this menu from https://flow360.atlassian.net/browse/MKTG-253
+#    - text: Tidy3D Example Library
+#      click_id: tidy3d-example-library
+#      url: /tidy3d/examples/
+    - text: Tidy3D Learning Center
+      click_id: tidy3d-learning-center
+      url: /tidy3d/learning-center/
+    - text: Educational Licenses
+      click_id: tidy3d-educational-licenses
+      url: /tidy3d/educational-licenses/
+    - text: White Paper
+      url: /download-whitepaper/
+      click_id: tidy3d-white-paper_btn
+#    - text: Publications
+#      url: /tidy3d/learning-center/publications/
+#      click_id: tidy3d-publications_btn
+    - text: Support
+      url: /tidy3d/technical-support/
+      click_id: tidy3d-technical-support_btn
+    - text: Contact Us
+      url: /tidy3d/contact/
+      click_id: tidy3d-contact-us_btn
+      header_hide: true
+      footer_hide: true
+    - text: Release Notes
+      url: /tidy3d/release-notes/
+      click_id: tidy3d-release-notes_btn
+      header_hide: true
+      footer_hide: true
+#    - text: Contact Us
+#      url: /tidy3d/contact/
+#      click_id: tidy3d-contact-us_btn
+#- text: Solution
+#  url:
+#  header_enable: true
+#  footer_enable: false
+#  footer_class: col-md-3 col-lg-3
+#  menu_type: dropdown
+#  click_id: solution_btn
+#  submenu:
+#    - text: Flow360 Solution
+#      url: /solution/flow360/
+#      click_id: solution-flow360_btn
+
+- text: Resources
+  url:
+  footer_class: col-md-3 col-lg-3
+  footer_enable: true
+  header_enable: true
+  menu_type: dropdown
+  click_id: resources_btn
+  submenu:
+    - text: FDTD 101
+      url: /tidy3d/learning-center/
+      click_id: resources_fdtd101_btn
+    - text: Aircraft CFD 101
+      url: /aircraft-cfd101/
+      click_id: resources_aircraft-cfd101_btn
+    - text: CFD Essentials
+      url: /cfd-essentials/
+      click_id: resources_cfd-essentials_btn
+    - text: Newsroom
+      url: /newsroom/
+      click_id: resources_newsroom_btn
+    - text: Blog
+      url: "/blog/"
+      click_id: resources_blog_btn
+    - text: Python FDTD
+      url: "/python-fdtd/"
+      click_id: resources_python-fdtd_btn
+    - text: FDTD
+      url: "/fdtd/"
+      click_id: resources_fdtd_btn
+    - text: FDTD Acceleration
+      url: "/fdtd-acceleration/"
+      click_id: resources_fdtd-acceleration_btn
+- text: About
+  url:
+  menu_type: dropdown
+  click_id: about_btn
+  footer_enable: true
+  header_enable: true
+  footer_class: col-md-3 col-lg-3
+  submenu:
+  - text: Vision
+    url: /vision/
+    click_id: about_version_btn
+  - text: Story
+    url: /story/
+    click_id: about_story_btn
+  - text: Team
+    url: /team/
+    click_id: about_team_btn
+  - text: Careers
+    url: /careers/
+    click_id: about_careers_btn
+  - text: Trust Guide
+    url: /trust-guide/
+    click_id: about_trust-guide_btn
+  - text: Contact Us
+    url: /contact/
+    click_id: about_contact_btn
+- text: Search
+  icon: 'jam jam-search'
+  url: /search/
+  click_id: search_btn
+  footer_enable: false
+  header_enable: true
+  footer_class: col-md-3 col-lg-3
+
+- text: Login
+  url:
+  menu_type: dropdown
+  click_id: login_btn
+  class: d-block d-lg-none
+  footer_class: col-md-3 col-lg-3
+  footer_enable: false
+  header_enable: true
+  submenu:
+  - text: Flow360
+    url: https://flow360.simulation.cloud
+    target: _blank
+    click_id: login_flow360_btn
+  - text: Tidy3D
+    url: https://tidy3d.simulation.cloud
+    click_id: login_tidy3d_btn
+    target: _blank
+- text: "Terms & Conditions"
+  url: "/term-of-use/"
+  menu_type: dropdown
+  footer_enable: false
+  header_enable: false
+- text: "Privacy Policy"
+  url: "/privacy/"
+  menu_type: dropdown
+  footer_enable: false
+  header_enable: false
+- text: "Flexcompute"
+  url: "/"
+  menu_type: dropdown
+  footer_enable: false
+  header_enable: false

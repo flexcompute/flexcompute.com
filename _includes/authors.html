@@ -1,0 +1,6 @@
+{% assign authors = include.authors | split: ',' %}
+<span class="author mr-20"><i class="jam jam-user"></i>By
+  {% for author in authors %}
+  <a id="__pg_blog_post-author-{{author | slugify}}" href="/blog/author/{{author | slugify}}/">{{author}}</a>{%unless forloop.last%},&nbsp;&nbsp;{%endunless%}
+  {% endfor %}
+</span>

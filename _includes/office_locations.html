@@ -1,0 +1,34 @@
+{% if site.data.general_settings.office.enable %}
+{% assign data = site.data.general_settings.office %}
+<div class="space60"></div>
+<div class="wrapper">
+  <div class="container" >
+    <h2 style="position: relative;z-index: 2;">
+      {{data.title}}
+      {% if data.icon %}
+      <img src="{{data.icon}}" alt="" class="office-location-icon">
+      {% endif %}
+    </h2>
+    
+    <div class="row">
+      {% for item in data.lists %}
+      {% if item.enable %}
+      <div class="col-md-12 col-lg-6 pr-10 pl-10">
+        <div class="box shadow pb-40">
+          {% if item.image %}
+          <img src="{{item.image}}" alt="" class="d-block mx-auto" style="width: 97px;">
+          {% endif %}
+          {% if item.company %}
+          <span class="d-inline-block font-size-20 color-dark font-weight-bold">{{item.company}}</span>
+          {% endif %}
+          {% if item.info %}
+          <span class="d-inline-block font-size-18 color-dark-gray mt-10">{{item.info}}</span>
+          {% endif %}
+        </div>
+      </div>
+      {% endif %}
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endif %}

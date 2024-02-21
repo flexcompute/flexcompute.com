@@ -1,0 +1,34 @@
+{% assign tabs = include.tabs %}
+<div class="tabs search-engine-tabs">
+  <div class="headers d-flex initial">
+    {% for tab in tabs %}
+    {% if tab.enable %}
+    {% assign tabName = tab.tab | slugify %}
+    <div data-tab-name="{{tabName}}" class="tab-title {%if forloop.first%}selected{%endif%} font-size-18 line-height-20 color-black-1" onclick="$searchEngine.onProductChange(event)">
+      {% if tab.icon %}
+      <img data-tab-name="{{tabName}}" width="197" height="80" src="{{tab.icon}}" alt="{{tab.tab}}">
+      {% else %}
+      {{tab.tab}}
+      {% endif %}
+      {% if tab.short_title %}
+      <span data-tab-name="{{tabName}}" class="font-size-18 line-height-20">({{tab.short_title}})</span>
+      {%endif%}
+    </div>
+    {%endif%}
+    {% endfor %}
+  </div>
+  <div class="containers body">
+    {% for tab in tabs %}
+    {% if tab.enable %}
+    {% assign tabName = tab.tab | slugify %}
+    <div data-tab-name="{{tabName}}" class="tab-body pl-24 pr-24 {%if forloop.first%}selected{%endif%}" style="visibility: hidden; height: 20px">
+      <div class="d-flex flex-wrap column-gap-40 category-selector" onclick="$searchEngine.onCategoryChange(event)">
+        {% for category in tab.categories %}
+        <span class="custom-radio {%if forloop.first%}selected{%endif%} pl-0 pr-0" data-tag-value="{{category}}" data-tag-slugify="{{category | slugify}}">{{category}}</span>
+        {% endfor %}
+      </div>
+    </div>
+    {%endif%}
+    {% endfor %}
+  </div>
+</div>

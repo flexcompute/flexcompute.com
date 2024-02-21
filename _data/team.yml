@@ -1,0 +1,197 @@
+hero_section:
+  enable: true
+  title: Bringing together some of the most creative minds in their respective fields
+  sub_title: >-
+    Our technical team is laser-focused on creating disruptive technology that
+    can transform the industry
+team_section:
+  enable: true
+  list:
+    - title: Simulation Technology
+      type: Simulation Technology
+      enable: true
+      list:
+        - name: Alec
+          position: BS Mathematics, Engineering Physics
+          university: Stanford University
+          avatar: /assets/images/Team page photos/Alec.png
+          enable: true
+        - name: Ben
+          position: Ph.D. Mechanical Engineering
+          university: University of Iowa
+          avatar: /assets/images/Team page photos/ben.png
+          enable: true
+        - name: Chaitanya
+          position: Ph.D. Computational Science
+          university: MIT
+          avatar: /assets/images/Team page photos/chaitanya.png
+          enable: true
+        - name: Charles
+          position: Ph.D. Electrical Engineering
+          university: Stanford University
+          avatar: /assets/images/Team page photos/charles.png
+          enable: true
+        - name: CJ
+          position: M.S. Aerospace Engineering
+          university: UT Austin
+          avatar: /assets/images/Team page photos/cj.png
+          enable: true
+        - name: Damian
+          position: Ph.D. Electrical and Computer Engineering
+          university: University of Toronto
+          avatar: /assets/images/Team page photos/Damian.png
+          enable: true
+        - name: Daniil
+          position: Ph.D. Mechanical Engineering
+          university: University of California, Santa Barbara
+          avatar: /assets/images/Team page photos/daniil.png
+          enable: true
+        - name: Feilin
+          position: Ph.D. Aerospace Engineering
+          university: The University of Kansas
+          avatar: /assets/images/Team page photos/feilin.png
+          enable: true
+        - name: Jim
+          position: M.S. Mechanical Engineering
+          university: Princeton University
+          avatar: /assets/images/Team page photos/jim.png
+          enable: true
+        - name: Jianmin
+          position: PhD, Electrical Engineering
+          university: University of Michigan
+          avatar: /assets/images/Team page photos/jianming.png
+          enable: true
+        - name: John
+          position: M.S. Aerospace Engineering
+          university: MIT
+          avatar: /assets/images/Team page photos/john.png
+          enable: true
+        - name: Kenny
+          position: Ph.D. High Performance Computing
+          university: Université Paris-Saclay
+          avatar: /assets/images/Team page photos/kenny.png
+          enable: false
+        - name: Lucas
+          position: Ph.D. Electrical Engineering
+          university: Cornell University
+          avatar: /assets/images/Team page photos/lucas.png
+          enable: true
+        - name: Maciej
+          position: Ph.D. Aeronautical Engineering
+          university: Loughborough University, UK
+          avatar: /assets/images/Team page photos/maciej.png
+          enable: true
+        - name: Momchil
+          position: Ph.D. Physics
+          university: EPFL
+          avatar: /assets/images/Team page photos/momchil.png
+          enable: true
+        - name: Nasser
+          position: PhD, Chemical Engineering
+          university: University of Calgary, Canada
+          avatar: /assets/images/Team page photos/nasser.png
+          enable: true
+        - name: Philippe
+          position: National Academy of Engineering
+          university: Ph.D. Stanford University
+          avatar: /assets/images/Team page photos/philippe.png
+          enable: true
+        - name: Payam
+          position: M.S. Vehicle Technology
+          university: University of Kaiserslautern
+          avatar: /assets/images/Team page photos/payam.png
+          enable: true
+        - name: Qiqi
+          position: Ph.D. Applied Math
+          university: Stanford University
+          avatar: /assets/images/Team page photos/qiqi.jpg
+          enable: true
+        - name: Rui
+          position: Ph.D Aeronautics
+          university: Stanford University
+          avatar: /assets/images/Team page photos/rui.png
+          enable: false
+        - name: Runda
+          position: M.S. Aerospace Engineering
+          university: Univeristy of Michigan
+          avatar: /assets/images/Team page photos/runda.png
+          enable: true
+        - name: Shashwat
+          position: Ph.D, Electrical Engineering
+          university: University of Toronto, Canada
+          avatar: /assets/images/Team page photos/shashwat.png
+          enable: false
+        - name: Shanhui
+          position: Ph.D. Physics
+          university: MIT
+          avatar: /assets/images/Team page photos/shanhui.png
+          enable: true
+        - name: Thomas
+          position: Ph.D. Aerospace Engineering
+          university: University of Glasgow
+          avatar: /assets/images/Team page photos/thomas.png
+          enable: true
+        - name: Tyler
+          position: Ph.D. Applied Physics
+          university: Stanford University
+          avatar: /assets/images/Team page photos/tyler.png
+          enable: true
+        - name: Weiliang
+          position: Ph.D. Electrical Engineering
+          university: Princeton University
+          avatar: /assets/images/Team page photos/weiliang.jpg
+          enable: true
+        - name: Xin
+          position: Ph.D. Electrical Engineering
+          university: Stanford University
+          avatar: /assets/images/Team page photos/xin.png
+          enable: true
+        - name: Xinzhong
+          position: Ph.D. Physics
+          university: Stony Brook University
+          avatar: /assets/images/Team page photos/xinzhong.png
+          enable: true
+        - name: Yifan
+          position: Ph.D. Aerospace Engineering
+          university: University of Michigan
+          avatar: /assets/images/Team page photos/yifan.png
+          enable: true
+        - name: Zongfu
+          position: Ph.D. Applied Physics
+          university: Stanford University
+          avatar: /assets/images/Team page photos/zongfu.jpg
+          enable: true
+    - title: Infrastructure
+      type: Infrastructure
+      enable: true
+      list:
+        - name: Cassie
+          avatar: /assets/images/Team page photos/cassie.png
+          enable: false
+        - name: Eric
+          avatar: /assets/images/Team page photos/eric.png
+          enable: true
+        - name: James
+          avatar: /assets/images/Team page photos/james.png
+          enable: true
+        - name: Marjon
+          avatar: /assets/images/Team page photos/marjon.png
+          enable: true
+        - name: Lei
+          avatar: /assets/images/Team page photos/lei.png
+          enable: true
+        - name: Wallace
+          avatar: /assets/images/Team page photos/wallace.png
+          enable: true
+        - name: Qing
+          avatar: /assets/images/Team page photos/Qing.png
+          enable: true
+        - name: Phillip
+          avatar: /assets/images/Team page photos/Phillip.png
+          enable: true
+player_section:
+  enable: true
+  image: /assets/images/logo-small.png
+  title: Be part of creating disruptive technology that can transform the industry
+  link_text: Submit your CV
+  link: javascript:void(0)

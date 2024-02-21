@@ -1,0 +1,15 @@
+{% assign examples = site.data.notebooks.example %}
+{% assign tutorialExamples = examples.example_menus | where: 'type', 'python-tutorial' %}
+{% assign loopIndex = 0%}
+{% for example in tutorialExamples %}
+{% assign checkedExample = example.menus[0] %}
+{% if checkedExample.path %}
+{% assign loopIndex = loopIndex | plus: 1 %}
+{% include learning-center/tidy3d-python/submenu-item.html loop_example_menus=example loop_menu_index=loopIndex %}
+{% else %}
+{% for secondary in example.menus %}
+{% assign loopIndex = loopIndex | plus: 1 %}
+{% include learning-center/tidy3d-python/submenu-item.html loop_example_menus=secondary loop_menu_index=loopIndex %}
+{% endfor %}
+{% endif %}
+{% endfor %}

@@ -1,0 +1,78 @@
+{% assign category = site.data.newsroom.news_by_category %}
+{% if category.enable %}
+<section>
+  <h2>{{category.title | default: "News By Category"}}</h2>
+  <div class="row shadow-box background-linear-white pt-16 pb-16 pl-32 pr-32 news-by-category">
+    {% if category.social.enable %}
+    <div class="col-6 col-lg-2 d-flex justify-content-around align-items-center border-right-item">
+      {% for item in category.social.list %}
+      <a id="__pg_newsroom_new-by-category_social_{{item.name | slugify}}_link" href="{{item.link}}" target="_blank">
+        {% if item.thumbnail %}
+        {% svg "{{ site.baseurl }}{{item.thumbnail}}" width=26 %}
+        {%endif%}
+      </a>
+      {% endfor %}
+    </div>
+    {% endif %}
+    {% if category.flexcompute.enable %}
+    <div class="col-6 col-lg-3 d-flex justify-content-center border-right-item">
+      <div class="d-flex flex-column justify-content-start row-gap-8">
+        {%if category.flexcompute.logo%}
+        <img width="160" height="20" src="{{category.flexcompute.logo}}" alt="Flexcompute">
+        {% endif %}
+        <ul class="list-unstyled mb-0">
+          {% for menu in category.flexcompute.menus %}
+          <li>
+            <a id="__pg_newsroom_new-by-category_flexcompute_{{menu.name | slugify}}_link" class="color-dark-gray color-primary-hover" href="{{menu.link}}">{{menu.name}}</a>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+    {% endif %}
+    <div class="col-12 col-lg-7 row">
+      {% if category.tidy3d.enable %}
+      <div class="col-12 col-md-6 d-flex align-items-center justify-content-start column-gap-24">
+        {% if category.tidy3d.logo %}
+        <img width="96" height="39" src="{{category.tidy3d.logo}}" alt="Tidy3D">
+        {% endif %}
+        <ul class="list-unstyled mb-0">
+          {% for tidy3dMenu in category.tidy3d.menus %}
+          <li>
+            {% if tidy3dMenu.menus %}
+            <span  class="color-dark-gray">{{tidy3dMenu.name}}</span>
+            <ul class="list-unstyled mb-0 font-size-14">
+              {% for submenu in tidy3dMenu.menus %}
+              <li class="strikethrough">
+                <a target="{{submenu.target | default: 'self'}}" id="__pg_newsroom_new-by-category_tidy3d_{{tidy3dMenu.name | slugify}}_{{submenu.name | slugify}}_link" class="color-dark-gray color-primary-hover" href="{{submenu.link}}">{{submenu.name}}</a>
+              </li>
+              {% endfor %}
+            </ul>
+            {% else %}
+            <a id="__pg_newsroom_new-by-category_tidy3d_{{tidy3dMenu.name | slugify}}_link" class="color-dark-gray color-primary-hover" href="{{tidy3dMenu.link}}">{{tidy3dMenu.name}}</a>
+            {%endif%}
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+      {%endif%}
+      {% if category.flow360.enable %}
+      <div class="col-12 col-md-6 d-flex align-items-center justify-content-start column-gap-24">
+        {% if category.flow360.logo %}
+        <img width="96" height="39" src="{{category.flow360.logo}}" alt="Flow360">
+        {%endif%}
+        <ul class="list-unstyled mb-0">
+          {% for flow360Menu in category.flow360.menus %}
+          <li>
+            <a id="__pg_newsroom_new-by-category_flow360_{{flow360Menu.name | slugify}}_link" class="color-dark-gray color-primary-hover" href="{{flow360Menu.link}}">{{flow360Menu.name}}</a>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+      {%endif%}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+

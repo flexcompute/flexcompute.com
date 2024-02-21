@@ -1,0 +1,184 @@
+---
+layout: learning-center/home
+---
+{% assign example_config = site.data.general_settings.example %}
+{% assign url_size = page.url | size %}
+{% assign page_id = page.url | slice: 1, url_size | split: '/' | join: '-' | downcase %}
+{% assign page_metadata = page.metadata %}
+<div class="learn-center-item-container">
+  <div class="row">
+    <div class="col-12 offset-0 col-lg-11 offset-lg-1 pl-20 pr-00 pb-40 pt-0 bg-opacity-default example-library-layout-container">
+      {% assign type = page.menu_config.selected | default: 'fdtd101' | slugify | downcase %}
+      {% assign typeParameter = site.data.general_settings[type] %}
+      <div class="row navigation-header align-items-center color-dark-gray">
+        <div class="col-12 col-md-10 text-nowrap mb-0">
+          <p class="mb-0 text-truncate">
+            <a href="{{typeParameter.link}}" class="color-dark-gray-12 color-primary-hover">{{typeParameter.title}}</a>
+            /
+            <a href="{{typeParameter.link}}?category={{page.metadata.category | slugify}}&tutorial-name={{page.page_title | slugify}}" class="color-dark-gray-12 color-primary-hover">{{page.metadata.category}}</a>
+            /
+            <span class="color-dark-3">{{page.page_title}}</span>
+          </p>
+        </div>
+        <div class="col-12 col-md-2">
+          {% if page_metadata.pagination %}
+          <div class="top-pagination justify-content-between justify-content-md-end">
+            {% if page_metadata.pagination.previous %}
+            <a id="{{page_id}}_top_previous-lecture_btn" title="Previous: {{page_metadata.pagination.previous.name}}" href="/tidy3d/examples/{{page_metadata.pagination.previous.path}}">
+              <i class="jam jam-arrow-left"></i>
+            </a>
+            {% endif %}
+            {% if page_metadata.pagination.next %}
+            <a id="{{page_id}}_top_next-lecture_btn" title="Next: {{page_metadata.pagination.next.name}}" href="/tidy3d/examples/{{page_metadata.pagination.next.path}}">
+              <i class="jam jam-arrow-right"></i>
+            </a>
+            {% endif %}
+          </div>
+          {% endif %}
+        </div>
+      </div>
+      <div class="space30"></div>
+      <div class="row">
+        <div class="col-md-10" id="notebook-container">
+          <h1>{{page.page_title}}<a class="anchor-link" href="#{{page.page_title | slugify}}">¶</a></h1>
+          <div class="widgets d-flex align-items-center flex-wrap" style="column-gap: 15px; row-gap: 15px">
+            {% if example_config.sign_up_btn %}
+            <a id="__pg_{{page_id}}_sign-up-new-to-simulate_btn" class="btn btn-sm btn-fc-primary m-0 font-weight-600" target="_blank" href="{{site.tidy3d.sign_up}}">
+              Sign up now to simulate
+            </a>
+            {% endif %}
+            {% if example_config.sign_up_btn %}
+            <span id="__pg_{{page_id}}_download-python-notebook_btn" class="btn btn-sm btn-fc-primary m-0 d-flex align-items-center" data-trigger="hover" data-toggle="tooltip" data-placement="bottom" title="Download Python Notebook" onclick="downloadIpynb('{{page.source_link}}')">
+                <i class="jam jam-download font-size-20"></i>
+                .ipynb
+            </span>
+            {% endif %}
+          </div>
+          <div class="space10"></div>
+          <div class="example-library-container">
+            <div class="widget-subarea" style="display: none"></div>
+            <style>
+                [class*="space"] {
+                    width: unset;
+                }
+                iframe {
+                    width: 100%;
+                    border: unset;
+                }
+            </style>
+            {{page.content}}
+          </div>
+          {% if page_metadata.enable_more_examples %}
+          <div class="space20"></div>
+          <div class="shadow-box background-linear-white p-20 more-examples-sections expand">
+            <div class="more-examples-header navigation-header d-flex align-items-center" onclick="$searchExamples.expandChange(event)">
+              <i class="jam jam-chevron-down font-size-28"></i>
+              <h2 id="more-examples" class="font-size-28 color-dark-3 mb-0">
+                More Examples
+              </h2>
+            </div>
+            <div class="more-examples-body">
+              <div class="space20"></div>
+              <div id="__pg_tidy3d-learning-center_example-library-tags_" class="custom-radio-group">
+                {% include learning-center/example-library/tags-from-notebook.html enable_redirect=true %}
+              </div>
+              <div class="space30"></div>
+              <div id="__pg_tidy3d-learning-center_example-library_more-examples-results_" class="result example-library-results row" style="row-gap: 30px">
+                {% if page_metadata.more_examples %}
+                {% for item in page_metadata.more_examples %}
+                <div class="col-12 col-sm-6 col-md-4 text-center item" data-example-title="{{item.name}}" data-example-tags="{{item.title}}">
+                  <a id="__pg_tidy3d-learning-center_example-library_{{item.name | downcase | slugify}}_item"
+                     href="/tidy3d/examples/{{item.path}}">
+                    <img style="height:100px; object-fit: scale-down" class="aspect-ratio" src="{{item.thumbnail.image}}"
+                         alt="{{item.thumbnail.description}}">
+                    <div class="space20"></div>
+                    <span class="d-inline-block title">{{item.name}}</span>
+                  </a>
+                </div>
+                {% endfor %}
+                {% endif %}
+              </div>
+              <div class="space30"></div>
+              <div id="__pg_tidy3d-learning-center_example-library-search-results_" class="result example-library-results row d-none" style="row-gap: 30px">
+                {% include learning-center/example-library/examples-from-notebook.html image_loading='eager' %}
+              </div>
+              <div id="not-matched" class="no-result row pl-15 d-none">
+                <p>No matching results found.</p>
+              </div>
+            </div>
+          </div>
+          {% endif %}
+
+          {% if page_metadata.pagination %}
+          <div class="space20"></div>
+          <div class="d-none d-md-flex bottom-pagination">
+            {% if page_metadata.pagination.previous %}
+            <a id="{{page_id}}_bottom_previous-lecture_btn" title="Previous: {{page_metadata.pagination.previous.name}}" href="/tidy3d/examples/{{page_metadata.pagination.previous.path}}">
+              <i class="jam jam-arrow-left"></i>
+              Previous Tutorial
+            </a>
+            {% else %}
+            <div class="placeholder" style="flex-grow: 1;"></div>
+            {% endif %}
+            {% if page_metadata.pagination.next %}
+            <a id="{{page_id}}_bottom_next-lecture_btn" title="Next: {{page_metadata.pagination.next.name}}" href="/tidy3d/examples/{{page_metadata.pagination.next.path}}">
+              Next Tutorial
+              <i class="jam jam-arrow-right"></i>
+            </a>
+            {% endif %}
+          </div>
+
+          <div class="d-flex d-md-none bottom-pagination">
+            {% if page_metadata.pagination.previous %}
+            <a id="{{page_id}}_bottom_previous-lecture_btn" title="Previous: {{page_metadata.pagination.previous.name}}" href="/tidy3d/examples/{{page_metadata.pagination.previous.path}}">
+              <i class="jam jam-arrow-left"></i>
+            </a>
+            {% else %}
+            <div class="placeholder" style="flex-grow: 1;"></div>
+            {% endif %}
+            {% if page_metadata.pagination.next %}
+            <a id="{{page_id}}_bottom_next-lecture_btn" title="Next: {{page_metadata.pagination.next.name}}" href="/tidy3d/examples/{{page_metadata.pagination.next.path}}">
+              <i class="jam jam-arrow-right"></i>
+            </a>
+            {% endif %}
+          </div>
+          {% endif %}
+        </div>
+        {% if example_config.anchors %}
+        <div class="col-md-2 p-0 notebook-anchor">{% include anchor.html %}</div>
+        {% endif %}
+      </div>
+    </div>
+
+  </div>
+</div>
+<script>
+  function downloadIpynb(url) {
+    function _xhrDownload(url, fileName) {
+      let xhr = new XMLHttpRequest();
+      xhr.open('get', url, true);
+      xhr.setRequestHeader('Cache-Control', 'no-cache');
+      xhr.setRequestHeader('Content-type', 'application/ipynb');
+      xhr.responseType = 'blob';
+      xhr.onload = function () {
+        if (this.status === 200) {
+          let blob = this.response;
+          let url = window.URL.createObjectURL(blob);
+          let a = document.createElement('a');
+          a.href = url;
+          a.download = fileName;
+          a.click();
+        }else if (this.status === 404 && !url.endsWith('.txt')) {
+          downloadIpynb(url+'.txt')
+        }
+      };
+      xhr.onerror = function () {
+        console.error('error occurred when download file');
+      };
+      xhr.send();
+    }
+    const fileName = url.split("/").pop();
+    _xhrDownload(`/assets/tidy3d/examples/notebooks/${fileName}`, fileName)
+  }
+
+</script>

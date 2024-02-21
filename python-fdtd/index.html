@@ -1,0 +1,657 @@
+---
+layout: default
+author: Tom Chen
+custom_font: font2
+custom_css:
+  - learning-center/home
+  - collapse
+  - native
+custom_js:
+  - learning-center/collapse.min
+  - copied.min
+title: "Python FDTD Electromagnetic Simulaiton: Tidy3D | Flexcompute"
+description: "Customize FDTD simulations in Tidy3D Python with diverse components and tools"
+tags:
+  - python based fdtd
+  - python driven fdtd
+  - fdtd running by python script
+  - FDTD solver
+  - FDTD Python
+  - Python FDTD
+  - FDTD simulation python
+  - 3D python FDTD
+  - FDTD python code
+  - python fdtd simulation
+  - python simulation
+  - python simulator
+  - Tidy3D python simulation
+  - python Tidy3D solver
+
+hero_section:
+  enable: true
+  title: Python FDTD
+  description: "Tidy3D provides a rich Python interface for defining and running <a id='__pg_python-fdtd_first-section_fdtd_link' class='underline color-primary-hover' href='/tidy3d/learning-center/fdtd101/'>FDTD</a> simulations. Python is used for setting up and analyzing simulation results. The FDTD algorithm runs in the background on Flexcompute's servers, which are highly optimized for solving FDTD efficiently."
+  quick_start:
+    enable: true
+    text: "If you do not wish to install, please click this button to get started quickly."
+    id: "__pg_python-fdtd_quick-start_btn"
+
+first_fdtd_simulation_section:
+  enable: true
+  title: "Set up and run your first FDTD simulation"
+  description: "With just a few steps, you can set up and run your first FDTD simulation using the Python user interface. Additionally, you may want to explore other <a id='__pg_python-fdtd_set-up-and-run-your-first-FDTD-simulation_examples_link' class='underline color-primary-hover' href='/tidy3d/learning-center/example-library/'>examples</a> and <a id='__pg_python-fdtd_set-up-and-run-your-first-FDTD-simulation_tutorials_link' class='underline color-primary-hover' href='/tidy3d/learning-center/'>tutorials</a> to create your own simulations."
+  list:
+    - title: "1. Set up Tidy3D"
+      enable: true
+      codes:
+        - description: "Install the python library for creating, managing, and postprocessing Tidy3d simulations with"
+          code: "pip install tidy3d"
+          enable: true
+        - description: "Next, configure your tidy3d package with the API key from your account. <br><a id='__pg_python-fdtd_set-up-tidy3d_get-your-free-api-key_link' class='underline color-primary-hover' href='https://tidy3d.simulation.cloud/account?tab=apikey' target='_blank'>Get your free API key</a>"
+          code: "tidy3d configure"
+          enable: true
+        - description: "You can also uncomment line 4 below, then copy and paste the API key. For detailed installation instructions, refer to the <a id='__pg_python-fdtd_set-up-tidy3d_tidy3d-documentation_link' class='underline color-primary-hover' href='https://docs.flexcompute.com/projects/tidy3d/en/latest/index.html' target='_blank'>Tidy3D documentation</a>."
+          enable: true
+    - title: "2. Run a simulation"
+      enable: true
+      buttons:
+        - enable: true
+          title: GitHub
+          icon: "github.svg"
+          link: "https://github.com/flexcompute/tidy3d"
+          target: "_blank"
+          click_id: '__pg_python-fdtd_set-up-and-run-your-first-FDTD-simulation_run-a-simulation_github_link'
+        - enable: true
+          title: download
+          icon: "download.svg"
+          target: "_blank"
+          type: 'dropdown'
+          click_id: '__pg_python-fdtd_set-up-and-run-your-first-FDTD-simulation_run-a-simulation_download_link'
+          submenus:
+            - title: .py
+              source: "/assets/python/python-fdtd/run-a-simulation.py"
+              enable: true
+              icon: "python.svg"
+            - title: .ipynb
+              source: "/assets/python/python-fdtd/run-a-simulation.ipynb"
+              enable: true
+              icon: "jupyter.svg"
+      code_file: "code-snippet/python-fdtd/run-a-simulation.py"
+    - title: "3. Analyze results"
+      enable: true
+      code: 'ax = data.plot_field("fields", "Ey", z=0)'
+      result_image:
+        image: '/assets/images/python-fdtd/analyze-results.png'
+        width: 520
+fdtd_perform:
+  enable: true
+  title: How well does python FDTD perform
+  description: "Tidy3D consistently outperforms other conventional FDTD solvers by an order of 100x or more. We achieve this performance improvement through the use of our custom hardware, which is optimized specifically for large scale FDTD simulation. As such, simulations that may take several hours or days on conventional hardware may be done in just minutes using Tidy3D. Furthermore, we can handle simulations with several billions of spatial degrees of freedom, which require too much memory to handle using conventional FDTD solvers.<br>
+For more details, see our <a id='__pg_python-fdtd_how-well-does-python-fdtd-perform_papers_link' class='underline color-primary-hover' href='/tidy3d/learning-center/publications/'>papers</a> and <a id='__pg_python-fdtd_how-well-does-python-fdtd-perform_examples_link' class='underline color-primary-hover' href='/tidy3d/learning-center/example-library/'>examples</a>."
+  left_top:
+    image: '/assets/images/python-fdtd/1x2_MM1.png'
+    alt: '1X2 MMI; 6M grid points 58k of time steps'
+    link: ""
+    duration: 40<sub>s</sub>
+  left_bottom:
+    image: '/assets/images/python-fdtd/8-channel-multiplexer.png'
+    alt: '8-channel multiplexer; 120M grid points 98k of time steps'
+    link: ""
+    duration: 3<sub>min</sub> 40<sub>s</sub>
+  right_top:
+    image: '/assets/images/python-fdtd/cascaded-mzi-filter.png'
+    alt: 'Cascaded MZI filter; 1.3B grid points 556k of time steps'
+    link: ""
+    duration: 57<sub>min</sub>
+  right_bottom:
+    image: '/assets/images/python-fdtd/full-size-metalens.png'
+    alt: 'Full size metalens; 20B grid points 26.4k of time steps'
+    link: ""
+    duration: 59<sub>min</sub>
+  image: '/assets/images/python-fdtd/number-of-unknowns-in-the-simulation.png'
+  alt: 'Number of Unknowns in the simulation'
+fdtd_provide:
+  enable: true
+  title: "What features does the python interface of Tidy3D FDTD provide"
+  description: "Tidy3D contains all of the standard features found in FDTD software, as such it is applicable to almost all problems. For the complete list of Tidy3D Python features and how to use them see the <a id='__pg_python-fdtd_what-features-does-the-python-interface-of-tidy3d-fdtd-provide_documentation_link' class='underline color-primary-hover' href='https://docs.flexcompute.com/projects/tidy3d/en/latest/index.html' target='_blank'>documentation</a>.<br>
+A few of the main features include:"
+  left_features:
+    - text: "Periodic, Bloch periodic, absorbing, and perfect electrically conducting boundary conditions."
+      enable: true
+      link: https://docs.flexcompute.com/projects/tidy3d/en/latest/notebooks/BoundaryConditions.html
+      link_target: '_blank'
+      link_click_id: '__pg_python-fdtd_what-features-does-the-python-interface-of-tidy3d-fdtd-provide_BoundaryConditions'
+    - text: "May exploit symmetry in the system to speed up simulations by up to 8 times."
+      enable: true
+      link: https://docs.flexcompute.com/projects/tidy3d/en/latest/notebooks/Primer.html
+      link_target: '_blank'
+      link_click_id: '__pg_python-fdtd_what-features-does-the-python-interface-of-tidy3d-fdtd-provide_Primer'
+    - text: "Automatic nonuniform meshing, which can auto-generate a discretization scheme for a given geometry to provide finer discretization to regions of the simulation requiring higher accuracy."
+      enable: true
+      link: https://docs.flexcompute.com/projects/tidy3d/en/latest/notebooks/AutoGrid.html
+      link_target: '_blank'
+      link_click_id: '__pg_python-fdtd_what-features-does-the-python-interface-of-tidy3d-fdtd-provide_AutoGrid'
+    - text: "Sub-pixel smoothing applied to structure edges, which dramatically improves accuracy for a given simulation discretization setting."
+      enable: true
+      link: https://docs.flexcompute.com/projects/tidy3d/en/latest/notebooks/Primer.html
+      link_target: '_blank'
+      link_click_id: '__pg_python-fdtd_what-features-does-the-python-interface-of-tidy3d-fdtd-provide_Primer2'
+    - text: "Define device geometry using built in geometric components or GDS and STL file import."
+      enable: true
+      link: https://docs.flexcompute.com/projects/tidy3d/en/latest/notebooks/PICComponents.html
+      link_target: '_blank'
+      link_click_id: '__pg_python-fdtd_what-features-does-the-python-interface-of-tidy3d-fdtd-provide_PICComponents'
+    - text: "Regular, dispersive, or anisotropic mediums available. And they may also be loaded from an extensive library of materials or fit to experimental data using a built in tool."
+      enable: true
+      link: https://docs.flexcompute.com/projects/tidy3d/en/latest/notebooks/Dispersion.html
+      link_target: '_blank'
+      link_click_id: '__pg_python-fdtd_what-features-does-the-python-interface-of-tidy3d-fdtd-provide_Dispersion'
+  right_features:
+    - text: "Fully featured mode solver for generating modal sources and measuring mode amplitudes, including bent and angled waveguides. Quick set-up of strip, rib, and coupled waveguide geometries."
+      enable: true
+      link: https://docs.flexcompute.com/projects/tidy3d/en/latest/notebooks/ModalSourcesMonitors.html
+      link_target: '_blank'
+      link_click_id: '__pg_python-fdtd_what-features-does-the-python-interface-of-tidy3d-fdtd-provide_ModalSourcesMonitors'
+    - text: "Several source definitions including plane wave, Gaussian beam, modal source, and user defined current distributions."
+      enable: true
+      link: https://docs.flexcompute.com/projects/tidy3d/en/latest/notebooks/Primer.html
+      link_target: '_blank'
+      link_click_id: '__pg_python-fdtd_what-features-does-the-python-interface-of-tidy3d-fdtd-provide_Primer3'
+    - text: "Frequency-domain and time-domain monitors for measuring field patterns, flux transmission, and modal amplitudes."
+      enable: true
+      link: https://docs.flexcompute.com/projects/tidy3d/en/latest/notebooks/Primer.html
+      link_target: '_blank'
+      link_click_id: '__pg_python-fdtd_what-features-does-the-python-interface-of-tidy3d-fdtd-provide_Primer4'
+    - text: "Shape and density-based inverse design framework."
+      enable: true
+      link: https://docs.flexcompute.com/projects/tidy3d/en/latest/notebooks/AdjointPlugin1Intro.html
+      link_target: '_blank'
+      link_click_id: '__pg_python-fdtd_what-features-does-the-python-interface-of-tidy3d-fdtd-provide_AdjointPlugin1Intro'
+    - text: "Resonance finder tool to calculate the quality factor of long-lived resonances without the need of running simulations for a long time."
+      enable: true
+      link: https://docs.flexcompute.com/projects/tidy3d/en/latest/notebooks/Bandstructure.html
+      link_target: '_blank'
+      link_click_id: '__pg_python-fdtd_what-features-does-the-python-interface-of-tidy3d-fdtd-provide_Bandstructure'
+    - text: "Near field to far field transformation tool for analyzing the far field response of your device without needing to model the entire geometry. May perform server-side computation to save time and reduce data needed to download."
+      enable: true
+      link: https://docs.flexcompute.com/projects/tidy3d/en/latest/notebooks/FieldProjections.html
+      link_target: '_blank'
+      link_click_id: '__pg_python-fdtd_what-features-does-the-python-interface-of-tidy3d-fdtd-provide_FieldProjections'
+python_UI_GUI:
+  enable: true
+  title: "Compatibility between Python UI and GUI"
+  description: "The Tidy3D Python interface generates JSON files containing all the simulation specifications, including structures, sources, and monitor parameters. These files can be opened in the web-based <a id='__pg_python-fdtd_compatibility-between-python-ui-and-gui_graphical-user-interface_link' class='underline color-primary-hover' href='https://tidy3d.simulation.cloud/' target='_blank'>Graphical User Interface<a> (GUI), where all the components can be visualized in a 3D interface. Simulations built using the GUI can also be loaded using Python script."
+  left_top:
+    image: "/assets/images/python-fdtd/python-script.png"
+    alt: "Python Script"
+  right_bottom:
+    image: "/assets/images/python-fdtd/gui.png"
+    alt: "GUI"
+fdtd_designed:
+  enable: true
+  title: "How is the python interface of Tidy3D FDTD designed"
+  list:
+    - text: "The Tidy3D package allows users to define their simulation programmatically as a collection of basic components, such as geometries, materials, sources, and monitors. Each of these components is a data structure with a well-defined schema combined with validations that ensure that the contents are properly set up. These validations ensure that if a simulation is set up incorrectly, it is immediately caught before starting the FDTD, which saves time and effort. Here is an example"
+      code_file: "code-snippet/python-fdtd/featured_2_snippet_1.py"
+      enable: true
+    - text: "All components are combined into a single <a id='__pg_python-fdtd_how-is-the-python-interface-of-tidy3d-fdtd-designed_simulation_link' class='underline color-primary-hover' href='https://docs.flexcompute.com/projects/tidy3d/en/latest/_autosummary/tidy3d.Simulation.html#tidy3d.Simulation' target='_blank'>Simulation<a> object, which defines an FDTD simulation and can be easily visualized, validated, and exported to a JSON file. We leverage the <a id='__pg_python-fdtd_how-is-the-python-interface-of-tidy3d-fdtd-designed_pydantic_link' class='underline color-primary-hover' href='https://docs.pydantic.dev/latest/' target='_blank'>pydantic<a> python package to define these components. Here is a minimum working example of a Simulation object containing 5 cylinders that are defined programmatically by looping over their positions."
+      code_file: "code-snippet/python-fdtd/featured_2_snippet_2.py"
+      enable: true
+    - text: "Next, the simulation is sent to Flexcompute’s servers through a simple API call from python. The progress of the job is monitored in real time and other functionalities for controlling the job are available directly from python."
+      code_file: "code-snippet/python-fdtd/featured_2_snippet_3.py"
+      enable: true
+    - text: "Finally, the results are loaded into a <a id='__pg_python-fdtd_how-is-the-python-interface-of-tidy3d-fdtd-designed_simulationData_link' class='underline color-primary-hover' href='https://docs.flexcompute.com/projects/tidy3d/en/latest/_autosummary/tidy3d.SimulationData.html' target='_blank'>SimulationData<a> object, which contains the data for each of the supplied monitors. The data is stored in <span class='color-primary'>.hdf5</span> format and the <a id='__pg_python-fdtd_how-is-the-python-interface-of-tidy3d-fdtd-designed_xarray_link' class='underline color-primary-hover' href='https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html' target='_blank'>xarray<a> python package is used to provide a convenient interface for performant plotting, selection, interpolation, and post-processing of the data."
+      code_file: "code-snippet/python-fdtd/featured_2_snippet_4.py"
+      enable: true
+    - text: "As the simulation times are typically on the order of seconds to minutes, this whole process is seamlessly performed within the same python session or broken into different sessions if desired. If one wants to run several simulations in parallel, there is an interface for batch processing of jobs."
+      enable: true
+result_in_python:
+  enable: true
+  title: "How do we visualize results in python"
+  list:
+    - text: "If we have a working Simulation defined, one easy way to visualize it is through the .plot method, which accepts spatial coordinates. For example, using the simulation defined earlier."
+      code_file: "code-snippet/python-fdtd/featured_5_snippet_1.py"
+    - text: "gives the following plot."
+      image: "/assets/images/product/tidy3D/python-fdtd/img.png"
+      image_class: "image-card col-md-10"
+      image_alt: "gives the following plot"
+    - text: "Data can be plotted in a similar way as the SimulationData object and its contents contain .plot_field() and .plot() methods, respectively. More information on plotting and visualization can be seen in our <a id='__pg_python-fdtd_how-do-we-visualize-results-in-python_documentation_link' class='underline color-primary-hover' href='https://docs.flexcompute.com/projects/tidy3d/en/latest/index.html' target='_blank'>documentation</a> and in the following <a id='__pg_python-fdtd_how-do-we-visualize-results-in-python_examples_link' class='underline color-primary-hover' href='/tidy3d/learning-center/example-library/'>examples</a>."
+      images:
+        - image: "/assets/tidy3d/examples/image/apodized_grating_feature_image.png"
+          name: "Focusing apodized grating coupler"
+          link: "/tidy3d/examples/notebooks/FocusedApodGC/"
+          link_target: "_self"
+          link_click_id: "__pg_python-fdtd_how-do-we-visualize-results-in-python_apodized-grating_example_link"
+        - image: "/assets/tidy3d/examples/image/mmi_schematic2.png"
+          name: "1x4 MMI power splitter"
+          link: "/tidy3d/examples/notebooks/MMI1x4/"
+          link_target: "_self"
+          link_click_id: "__pg_python-fdtd_how-do-we-visualize-results-in-python_MMI1x4_example_link"
+        - image: "/assets/tidy3d/examples/image/ring_resonator_2d.png"
+          name: "2D ring resonator"
+          link: "/tidy3d/examples/notebooks/RingResonator/"
+          link_target: "_self"
+          link_click_id: "__pg_python-fdtd_how-do-we-visualize-results-in-python_RingResonator_example_link"
+extra_features:
+  - title: "Running FDTD through python or jupyter notebook"
+    description: "Many of the examples in the Tidy3D documentation are written in the form of <a id='__pg_python-fdtd_running-fdtd-through-python-or-jupyter-notebook_jupyter-notebooks_link' class='underline color-primary-hover' href='https://jupyter.org/' target='_blank'>jupyter notebooks<a>. These notebooks allow users to run code in different sections, which can also contain text or images. It is also a convenient format for sharing code examples or running python through the browser, for example <a id='__pg_python-fdtd_running-fdtd-through-python-or-jupyter-notebook_google-colab_link' class='underline color-primary-hover' href='https://colab.research.google.com/?utm_source=scs-index' target='_blank'>google colab<a>. All of the examples found in our documentation can be downloaded directly as jupyter notebooks from the GitHub repository for the documentation, linked <a id='__pg_python-fdtd_running-fdtd-through-python-or-jupyter-notebook_here_link' class='underline color-primary-hover' href='https://github.com/flexcompute-readthedocs/tidy3d-docs/tree/readthedocs/docs/source/notebooks' target='_blank'>here<a>. A Python <a id='__pg_python-fdtd_running-fdtd-through-python-or-jupyter-notebook_notebook-environment_link' class='underline color-primary-hover' href='https://tidy3d.simulation.cloud/notebook' target='_blank'>notebook environment<a> is also hosted at Tidy3D GUI for your convenience. Tidy3D can be run in notebook format, or regular python script, which may be more convenient for “power users” who may want to create more complex workflows surrounding Tidy3D simulations."
+    enable: true
+    button:
+      text: "Talk to our Tidy3D experts to get a Demo"
+      class: ""
+      id: "__pg_python-fdtd_running-fdtd-through-python-or-jupyter-notebook_talk-to-our-tidy3d-experts-to-get-a-demo_btn_"
+      link: "/contact/"
+      target: "_blank"
+      enable: true
+  - title: "Installing python or use web-based python"
+    description: "Tidy3D works on any python version 3.7 or above. As such, it can be run using your local version of python. For more details on setting up python locally, more information can be found <a id='__pg_python-fdtd_installing-python-or-use-web-based-python_here_link' class='underline color-primary-hover' href='https://www.python.org/downloads/' target='_blank'>here<a>. If one doesn’t want to set up python locally, another alternative is to use a web-based service for running python in the browser, such as <a id='__pg_python-fdtd_installing-python-or-use-web-based-python_google-colab_link' class='underline color-primary-hover' href='https://colab.research.google.com/?utm_source=scs-index' target='_blank'>google colab<a> or <a id='__pg_python-fdtd_installing-python-or-use-web-based-python_binder_link' class='underline color-primary-hover' href='https://mybinder.org/' target='_blank'>binder<a>. Since the FDTD simulations themselves are run through Flexcompute servers, all of the previous approaches are compatible with the python client, which allows users to initialize simulations and work with their resulting data."
+    description_class: mb-0
+    enable: true
+  - title: "How do I sign up for Tidy3D"
+    description: "Use of Tidy3D requires an account to be able to submit jobs to our sever. You can sign up and try if for FREE."
+    sign_up_btn:
+      enable: true
+      id: "__pg_python-fdtd-installing-python-or-use-web-based-python_sign-up-for-free_btn_"
+    enable: true
+
+---
+{% include header.html extra_class="absolute transparent" logo_class="logo fc-logo" container_class="container" %}
+<div class="wrapper bg-opacity-default">
+  <div class="container inner pt-100 pt-md-10 pb-0">
+    {% if page.hero_section.title %}
+    <h1 class="color-dark-3 font-size-24">{{page.hero_section.title}}</h1>
+    {% endif %}
+    {% if page.hero_section.description %}
+    <p class="color-dark-3 line-height-24 font-weight-500 mb-10">{{page.hero_section.description}}</p>
+    {%endif%}
+    {% if page.hero_section.quick_start.enable %}
+    {% assign quick_start = page.hero_section.quick_start %}
+    {% if quick_start.text %}
+    <p class="color-dark-3 line-height-24 font-weight-500 mb-10">{{quick_start.text}}</p>
+    {% endif %}
+    <a id="{{quick_start.id}}" class="btn btn-sm btn-fc-primary m-0 font-weight-600" target="_blank" href="{{site.tidy3d.quick_start_link}}">
+      Run this Python code
+    </a>
+    {% endif %}
+  </div>
+</div>
+<!-- set up and run your first FDTD simulation -->
+{% if page.first_fdtd_simulation_section.enable %}
+{% assign run_steps = page.first_fdtd_simulation_section %}
+<div class="space40"></div>
+<div class="wrapper bg-opacity-default">
+  <div class="container">
+    {% if run_steps.title %}
+    <h2 class="color-dark-3 font-size-20 line-height-24 mb-10">{{run_steps.title}}</h2>
+    {% endif %}
+    {% if run_steps.description %}
+    <p class="color-dark-3 line-height-24">{{run_steps.description}}</p>
+    {% endif %}
+    <div class="simulation-codes-container">
+      {% for step in run_steps.list %}
+      {% if step.enable %}
+      {% assign item_id = step.title | slugify %}
+      {% assign expandHeaderId = "__pg_python-fdtd_set-up-and-run-your-first-fdtd-simulation_" | append: item_id  | append: "_"%}
+      <div class="shadow-box background-linear-white collapsed-item expand">
+        <div id="{{expandHeaderId}}" class="collapsed-header d-flex justify-content-between align-items-center pt-15 pb-15 pl-10 pr-40" onclick="collapseModule.onExpand('{{expandHeaderId}}','simulation-codes-container', false)">
+          <div class="d-flex align-items-center ">
+            <i class="jam jam-chevron-down font-size-20"></i>
+            <h3 class="font-size-20 color-dark-8 mb-0">
+              {{step.title}}
+            </h3>
+          </div>
+          {% if step.buttons %}
+          <div class="extra d-flex" style="column-gap: 16px">
+            {% for button in step.buttons %}
+            {% if button.type == 'dropdown' %}
+            <div class="dropdown-parent position-relative">
+              {% svg "{{ site.baseurl }}/assets/svg-icon/{{button.icon}}" width=28 %}
+              {% if button.submenus %}
+              <div class="dropdown-menus bg-opacity-default position-absolute">
+                {% for menu in button.submenus %}
+                {% if menu.enable %}
+                <span onclick="handleDownload('{{menu.source}}', event)" class="color-dark-3 mb-0 line-height-20 item">
+                  {% svg "{{ site.baseurl }}/assets/svg-icon/{{menu.icon}}" width=14 %}
+                  {{menu.title}}
+                </span>
+                {% endif %}
+                {% endfor %}
+              </div>
+              {% endif %}
+            </div>
+            {% else %}
+            <a id="{{button.click_id}}" href="{{button.link}}" target="{{button.target}}" onclick="stopPropagation(event)">
+              {% svg "{{ site.baseurl }}/assets/svg-icon/{{button.icon}}" width=28 %}
+            </a>
+            {% endif %}
+            {% endfor %}
+          </div>
+          {% endif %}
+        </div>
+        <div class="collapsed-body pl-40 pr-40">
+          <div class="simulation-codes-item-body pt-15 pb-15">
+            {% if step.codes %}
+            {% for code_item in step.codes %}
+            {% if code_item.description %}
+            <p class="color-dark-3 line-height-24 mb-10">{{code_item.description}}</p>
+            {% endif %}
+            {% if code_item.code %}
+            <div class="code-snippet mb-20">
+              {% highlight python %}{{code_item.code}}{% endhighlight %}
+              {% include copy-button.html %}
+            </div>
+            {% endif %}
+            {% endfor %}
+            {% endif %}
+            {% if step.code_file %}
+            <div class="code-snippet">
+              {% highlight python %}{% include {{step.code_file}} %}{% endhighlight %}
+              {% include copy-button.html %}
+            </div>
+            {% endif %}
+            {% if step.code %}
+            <div class="code-snippet">
+              {% highlight python %}{{step.code}}{% endhighlight %}
+              {% include copy-button.html %}
+            </div>
+            {% endif %}
+            {% if step.result_image %}
+            <img style="max-width: 520px" width="{{step.result_image.width}}" class="aspect-ratio" src="{{step.result_image.image}}" alt="{{step.title}}">
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      {% endif %}
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<!-- How well does python FDTD perform -->
+{% if page.fdtd_perform.enable %}
+{% assign fdtd_perform = page.fdtd_perform %}
+<div class="space70"></div>
+<div class="wrapper bg-opacity-default">
+  <div class="container">
+    {% if fdtd_perform.title %}
+    <h2 class="color-dark-3 font-size-20 mb-10">{{fdtd_perform.title}}</h2>
+    {% endif %}
+    {% if fdtd_perform.description %}
+    <p class="color-dark-3 line-height-24">{{fdtd_perform.description}}</p>
+    {% endif %}
+    <div class="row">
+      <div class="col-12 col-md-2 pl-0 pr-0 row">
+        <div class="col-6 col-md-12 example-thumbnail text-center">
+          {% if fdtd_perform.left_top %}
+          <img class="aspect-ratio" src="{{fdtd_perform.left_top.image}}" alt="{{fdtd_perform.left_top.alt}}">
+          <span class="color-primary font-weight-700 font-size-25 example-duration">{{fdtd_perform.left_top.duration}}</span>
+          {% endif %}
+        </div>
+        <div class="col-6 col-md-12 example-thumbnail text-center">
+          {% if fdtd_perform.left_bottom %}
+          <img class="aspect-ratio" src="{{fdtd_perform.left_bottom.image}}" alt="{{fdtd_perform.left_bottom.alt}}">
+          <span class="color-primary font-weight-700 font-size-25 example-duration">{{fdtd_perform.left_bottom.duration}}</span>
+          {% endif %}
+        </div>
+      </div>
+      <div class="col-12 col-md-8">
+        <img class="aspect-ratio" src="{{fdtd_perform.image}}" alt="{{fdtd_perform.alt}}">
+      </div>
+      <div class="col-12 col-md-2 pl-0 pr-0 row">
+        <div class="col-6 col-md-12 example-thumbnail text-center">
+          {% if fdtd_perform.right_top %}
+          <img class="aspect-ratio" src="{{fdtd_perform.right_top.image}}" alt="{{fdtd_perform.right_top.alt}}">
+          <span class="color-primary font-weight-700 font-size-25 example-duration">{{fdtd_perform.right_top.duration}}</span>
+          {% endif %}
+        </div>
+        <div class="col-6 col-md-12 example-thumbnail text-center align-items-end">
+          {% if fdtd_perform.right_bottom %}
+          <img class="aspect-ratio" src="{{fdtd_perform.right_bottom.image}}" alt="{{fdtd_perform.right_bottom.alt}}">
+          <span class="color-primary font-weight-700 font-size-25 example-duration">{{fdtd_perform.right_bottom.duration}}</span>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<!-- What features does the python interface of Tidy3D FDTD provide -->
+{% if page.fdtd_provide.enable %}
+{% assign fdtd_provide = page.fdtd_provide %}
+<div class="space70"></div>
+<div class="wrapper bg-opacity-default">
+  <div class="container">
+    {% if fdtd_provide.title %}
+    <h2 class="color-dark-3 font-size-20 mb-10">{{fdtd_provide.title}}</h2>
+    {% endif %}
+    {% if fdtd_provide.description %}
+    <p class="color-dark-3 line-height-24">{{fdtd_provide.description}}</p>
+    {% endif %}
+    <div class="row">
+      {% if fdtd_provide.left_features %}
+      <div class="col-12 col-md-6">
+        {% for feature in fdtd_provide.left_features %}
+        {% if feature.enable %}
+        <a id="{{feature.link_click_id}}" href="{{feature.link}}" target="{{feature.link_target}}">
+          <div class="d-flex justify-content-start align-items-center feature-box pl-15 pr-10 {% if forloop.last %}mb-0{%else%}mb-15{%endif%}" style="column-gap: 8px">
+            {% svg "{{ site.baseurl }}/assets/svg-icon/checked-circle.svg" width=12 %}
+            <p class="font-size-14 line-height-17 mb-0">{{feature.text}}</p>
+          </div>
+        </a>
+        {% endif %}
+        {% endfor %}
+      </div>
+      {% endif %}
+      {% if fdtd_provide.right_features %}
+      <div class="col-12 col-md-6">
+        {% for feature in fdtd_provide.right_features %}
+        {% if feature.enable %}
+        <a id="{{feature.link_click_id}}" href="{{feature.link}}" target="{{feature.link_target}}">
+          <div class="d-flex justify-content-start align-items-center feature-box pl-15 pr-10 {% if forloop.last %}mb-0{%else%}mb-15{%endif%}" style="column-gap: 8px">
+            {% svg "{{ site.baseurl }}/assets/svg-icon/checked-circle.svg" width=12 %}
+            <p class="color-dark-3 font-size-14 line-height-17 mb-0">{{feature.text}}</p>
+          </div>
+        </a>
+        {% endif %}
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<!-- Compatibility between Python UI and GUI -->
+{% if page.python_UI_GUI.enable %}
+{% assign python_UI_GUI = page.python_UI_GUI %}
+<div class="space70"></div>
+<div class="wrapper bg-opacity-default">
+  <div class="container">
+    <div class="row">
+      <div class="col-12 col-md-6 offset-0 offset-md-6">
+        {% if python_UI_GUI.title %}
+        <h2 class="color-dark-3 font-size-20 mb-10">{{python_UI_GUI.title}}</h2>
+        {% endif %}
+        {% if python_UI_GUI.description %}
+        <p class="color-dark-3 line-height-24">{{python_UI_GUI.description}}</p>
+        {% endif %}
+      </div>
+    </div>
+    <div class="row">
+      {% if python_UI_GUI.left_top %}
+      <div class="col-12 p-0 col-md-5 text-center left-top-image" style="height: fit-content">
+        <div class="shadow-box p-15 bg-opacity-default">
+          <img class="aspect-ratio" src="{{python_UI_GUI.left_top.image}}" alt="{{python_UI_GUI.left_top.alt}}">
+        </div>
+        <div class="space20"></div>
+        <span class="font-size-25 line-height-28 color-dark-gray font-weight-700">{{python_UI_GUI.left_top.alt}}</span>
+      </div>
+      {% endif %}
+      {% if python_UI_GUI.right_bottom %}
+      <div class="col-12 p-0 col-md-7 text-center right-bottom-image" style="height: fit-content">
+        <div class="shadow-box p-15 bg-opacity-default">
+          <img class="aspect-ratio" src="{{python_UI_GUI.right_bottom.image}}" alt="{{python_UI_GUI.right_bottom.alt}}">
+        </div>
+        <div class="space20"></div>
+        <span class="font-size-25 line-height-28 color-dark-gray font-weight-700">{{python_UI_GUI.right_bottom.alt}}</span>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<!-- How is the python interface of Tidy3D FDTD designed -->
+{% if page.fdtd_designed.enable %}
+{% assign fdtd_designed = page.fdtd_designed %}
+<div class="space70"></div>
+<div class="wrapper bg-opacity-default">
+  <div class="container">
+    {% if fdtd_designed.title %}
+    <h2 class="color-dark-3 font-size-20">{{fdtd_designed.title}}</h2>
+    {% endif %}
+    {% for item in fdtd_designed.list %}
+    {% if item.text %}
+    <p class="color-dark-3 line-height-24">{{item.text}}</p>
+    {% endif %}
+    {% if item.code_file %}
+    <div class="row">
+      <div class="col-12 col-md-10">
+        <div class="code-snippet">
+          {% highlight python %}{% include {{item.code_file}} %}{% endhighlight %}
+          {% include copy-button.html %}
+        </div>
+      </div>
+    </div>
+    <div class="space20"></div>
+    {% endif %}
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<!-- How do we visualize results in python -->
+{% if page.result_in_python.enable %}
+{% assign result_in_python = page.result_in_python %}
+<div class="space70"></div>
+<div class="wrapper bg-opacity-default">
+  <div class="container">
+    {% if result_in_python.title %}
+    <h2 class="color-dark-3 font-size-20">{{result_in_python.title}}</h2>
+    {% endif %}
+    {% for item in result_in_python.list %}
+    {% if item.text %}
+    <p class="color-dark-3 line-height-24">{{item.text}}</p>
+    {% endif %}
+    {% if item.code_file %}
+    <div class="row">
+      <div class="col-12 col-md-10">
+        <div class="code-snippet">
+          {% highlight python %}{% include {{item.code_file}} %}{% endhighlight %}
+          {% include copy-button.html %}
+        </div>
+      </div>
+    </div>
+    <div class="space20"></div>
+    {% endif %}
+    {% if item.image %}
+    <div class="row">
+      <div class="col-12">
+        <div class="{{item.image_class}}">
+          <img class="aspect-ratio" src="{{item.image}}" alt="{{item.image_alt}}">
+        </div>
+      </div>
+    </div>
+    <div class="space20"></div>
+    {% endif %}
+    {% if item.images %}
+    <div class="row">
+      {% for image in item.images %}
+      <div class="col-12 col-md-4">
+        {% if image.link %}
+        <a id="{{image.link_click_id}}" href="{{image.link}}" target="{{item.target}}">
+          <div class="{{image.image_class}} results-in-python-examples text-center">
+            <img class="aspect-ratio" style="height: 100px; object-fit: scale-down;" src="{{image.image}}" alt="{{image.image_alt}}">
+            {% if image.name %}
+            <span class="d-inline-block title">{{image.name}}</span>
+            {% endif %}
+          </div>
+        </a>
+        {% else %}
+        <div class="{{image.image_class}}">
+          <img class="aspect-ratio" src="{{image.image}}" alt="{{image.image_alt}}">
+        </div>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    <div class="space20"></div>
+    {% endif %}
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+{% for featured in page.extra_features %}
+{% if featured.enable %}
+<div class="space70"></div>
+<div class="wrapper bg-opacity-default">
+  <div class="container">
+    {% if featured.title %}
+    <h2 class="color-dark-3 font-size-20">{{featured.title}}</h2>
+    {% endif %}
+    {% if featured.description %}
+    <p class="color-dark-3 line-height-24 {{featured.description_class}}">{{featured.description}}</p>
+    {% endif %}
+    {% if featured.sign_up_btn.enable %}
+    <a id="{{featured.sign_up_btn.id}}" class="btn btn-sm btn-fc-primary m-0 font-weight-600" target="_blank" href="{{site.tidy3d.sign_up}}">
+      Sign up for Free
+    </a>
+    {% endif %}
+    {% if featured.button.enable %}
+    <a id="{{featured.button.id}}" class="btn btn-sm btn-dashed-primary m-0 font-weight-600" target="{{featured.button.target}}" href="{{featured.button.link}}">
+      {{featured.button.text}}
+    </a>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+{% endfor %}
+
+<div class="space70"></div>
+{% include footer_2.html %}
+<script>
+  function stopPropagation(event){
+    event.stopPropagation()
+  }
+  function handleDownload(sourceUrl, event) {
+    event.stopPropagation();
+    function _xhrDownload(url, fileName) {
+      let xhr = new XMLHttpRequest();
+      xhr.open('get', url, true);
+      xhr.setRequestHeader('Cache-Control', 'no-cache');
+      xhr.setRequestHeader('Content-type', 'application/ipynb');
+      xhr.responseType = 'blob';
+      xhr.onload = function () {
+        if (this.status === 200) {
+          let blob = this.response;
+          let url = window.URL.createObjectURL(blob);
+          let a = document.createElement('a');
+          a.href = url;
+          a.download = fileName;
+          a.click();
+        }else if (this.status === 404 && !url.endsWith('.txt')) {
+          handleDownload(url+'.txt')
+        }
+      };
+      xhr.onerror = function () {
+        console.error('error occurred when download file');
+      };
+      xhr.send();
+    }
+    const fileName = sourceUrl.split("/").pop();
+    _xhrDownload(sourceUrl, fileName)
+  }
+</script>

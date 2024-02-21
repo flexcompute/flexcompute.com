@@ -1,0 +1,62 @@
+{% if site.data.general_settings.subscribe %}
+<div class="newsletter-wrapper" id="subscribe-footer" style="width: 90%">
+    <form
+        action="{{site.data.general_settings.subscribe.url}}"
+        method="post"
+        id="mc-embedded-subscribe-footer-form"
+        name="mcEmbeddedSubscribeForm"
+        class="validate"
+        target="hideMailChimpIframe"
+    >
+        <div id="form-group-shadow" class="position-relative form-group-shadow">
+            <input type="hidden" value="CFD,EM" name="MLIST" required class="" id="mce-MLIST">
+            <input
+                type="email"
+                name="EMAIL"
+                id="mce-footer-EMAIL"
+                class="form-control reset-input email-chimp pl-5 pr-5"
+                placeholder="* Email Address"
+                required
+                data-error="email is required">
+            <button
+                type="submit"
+                class="position-absolute email-chimp-btn btn mr-0 mb-0 pull-right color-dark-3 font-size-12"
+                id="mc-embedded-footer-subscribe"
+                style="right:0;z-index:100 "
+            >
+                Subscribe
+            </button>
+        </div>
+    </form>
+    <span id="subscribe-footer-success" class="mb-0 color-dark-gray font-weight-400">Thanks for subscribing</span>
+    <iframe id="mailChimpIframe" name="hideMailChimpIframe" style="display:none;"></iframe>
+</div>
+{% endif %}
+
+<script>
+
+   (function (){
+       const subscribeFooterSuccessElement = document.getElementById("subscribe-footer-success");
+       if (subscribeFooterSuccessElement) {
+           subscribeFooterSuccessElement.style.display = 'none'
+       }
+       const subscribeFooterBtn = document.getElementById("mc-embedded-footer-subscribe")
+       const inputFooterEle = document.getElementById("mce-footer-EMAIL");
+       subscribeFooterBtn.addEventListener('click', function (e) {
+           e.stopPropagation()
+           e.cancelBubble = true
+           const reg = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+           if (reg.test(inputFooterEle.value)) {
+
+               if (subscribeFooterSuccessElement) {
+                   subscribeFooterSuccessElement.style.display = 'block'
+                   setTimeout(() => {
+                       inputFooterEle.value = ""
+                       subscribeFooterSuccessElement.style.display = 'none'
+                   }, 3 * 1000)
+               }
+           }
+       })
+   })()
+
+</script>

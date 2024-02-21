@@ -1,0 +1,68 @@
+{
+  "title": "Tidy3D GUI: Tutorial 11",
+  "pages": [
+    {
+      "id": "",
+      "title": "",
+      "transcript": "Model parameterization is a potent tool for dynamically adjusting FDTD simulations. It becomes convenient when you need to explore how devices respond to various changes in geometries, materials, or light properties. Let's delve into the all-dielectric structural color example to illustrate this. As you can observe, the period of the metasurface unit cell plays a fundamental role in determining the peaks on the reflectance spectra, which in turn define the color hue. Rather than having results scattered across multiple FDTD models with different period values, a more robust strategy is to execute a parameter sweep within a single parameterized FDTD model. Let's create such a model."
+    },
+    {
+      "id": "",
+      "title": "",
+      "paragraphs": [
+        {
+          "title": "",
+          "transcript": "Starting with an empty simulation, include the mediums SiO2, TiO2, and Si3N4. Set their refractive indices to 1.45, 2.41, and 2.0, respectively. Next, introduce variables to parameterize the FDTD model. Begin with the \"period\" variable. This variable falls under the \"expression\" type, allowing you to assign a direct value like 0.35 microns or input a mathematical expression using the available operators, which include the plus (+), minus (-), multiplication (*), division (/), and power (**) operator. A good practice is to describe the variables using meaningful and short statements. For instance, you can label it here as \"Period of the metasurface unit cell (um).\". Next, add the \"gap\" variable, representing the distance between adjacent nanoblocks, and set its value to 0.1 microns. Define the width of the nanoblocks by using the mathematical expression \"period - gap\"."
+        },
+        {
+          "title": "",
+          "transcript": "Continue by introducing variables to define the thickness of various mediums: like \"sio2_t\" with a value of 0.1 microns; \"tio2_t\" with 0.14 microns; \"si3n4_t\" with 0.06 micron; \"sub_t\" with 0.6 microns; and \"air_t\" with 1 micron. Establish additional parameters to set the wavelengths of interest, defining a minimum wavelength of 0.4 microns and a maximum wavelength of 0.7 microns. Calculate the central wavelength using the expression within the \"wl_c\" variable. Include the \"wl_n\" variable to establish 151 as the number of wavelength points to be tracked by frequency-domain monitors. To wrap up this step, create a \"wl_range\" variable of the list type and input the variables \"wl_min\", \"wl_max\", and \"wl_n\" to set the wavelength range. Variables of type “boolean” and “string” are available as well, but those are used less often."
+        }
+      ]
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "The final variable to include is \"size_z\", which determines the simulation domain size in the z-direction. Utilize the given expression to calculate its value based on the medium thickness."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "Now, you can set up the FDTD simulation using your defined parameters. Within \"Simulation Domain\", assign \"period\" to the sizes in the x- and y-directions, and the \"size_z\" variable to the z-direction. Adjust the minimum steps per wavelength to 20 under \"Grid Specification\" and set the wavelength to the wavelength center variable (\"wl_c\"). Set boundary conditions to \"Periodic\" in the x- and y-directions. Then choose \"Odd\" symmetry in the x-direction and \"Even\" symmetry in the y-direction."
+    },
+    {
+      "id": "",
+      "title": "",
+      "paragraphs": [
+        {
+          "title": "",
+          "transcript": "Use these parameters to create the metasurface structure. Start by including a \"Box\", then name it \"substrate\", and select the \"bounds\" option. Make the substrate extend beyond the simulation boundaries. Ensuring it will be invariant within the PML in the minus z-direction is important. Specify the minimum and maximum limits as \"-2*period\" and \"2*period\" in the x- and y-directions and \"-size_z\" in the minus z-direction. Set the positive z-direction to \"-size_z/2+sub_t\". So, select the SiO2 medium to finalize the substrate structure."
+        },
+        {
+          "title": "",
+          "transcript": "Now, introduce a new \"Box\" structure named \"si3n4\". Align its z-center using the expression \"-size_z/2+sub_t+si3n4_t/2\". Assign the \"width\" variable to its size in the x- and y-directions, and apply the variable \"si3n4_t\" to its size in the z-direction. Opt for the Si3N4 medium. Then, repeat this process to add the \"tio2\" structure. This time we're dealing with a more intricate expression to set the structure's center in the vertical direction, so click the \"fx\" button to access the \"Expression Editor\" panel and enter the expression \"-size_z/2+sub_t+si3n4_t+tio2_t/2\". Set the medium size as before, then opt for the TiO2 medium. Finally, add the \"sio2\" medium using the same procedure. To better visualize the metasurface unit cell, utilize the simulation domain visualization command."
+        }
+      ]
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "Continuing, insert a \"PlaneWave\" source as demonstrated here, utilizing the parameters \"wl_min\" and \"wl_max\" to configure the source bandwidth."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "To conclude the FDTD model, introduce a \"FluxMonitor\" positioned as shown here, and select the variable \"wl_range\" to establish the monitor wavelengths."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "Upon running the FDTD simulation, you'll observe the metasurface reflectance spectrum, with a pronounced peak near 0.55 micrometers, corresponding to a greenish color."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "To explore the device response across various unit cell periods, initiate a new study and select \"Parameter Sweep\". Feel free to rename it if you want. Click \"Sweep Parameter\" and \"Add a new parameter\" afterward. The \"period\" variable is already preselected because it is the first one in the variables list. Double-click \"values\" and set the range to encompass 6 points between 0.3 and 0.4 microns. Submit the sweep for validation, wait briefly, and execute it. For analysis, navigate to the post-run results and cycle through the \"Simulation\" selection box to view each result individually. Alternatively, to compare reflectance spectra, open the \"Sweep MultiGraph\" tab and select the desired simulation results for comparison."
+    }
+  ]
+}

@@ -1,0 +1,52 @@
+{% assign type = 'tidy3d-python' %}
+{% assign typeParameter = site.data.general_settings[type] %}
+{% assign base = page.url | remove_first: '/' | split:"/" %}
+{% assign tailType = base | last %}
+{% if type == tailType %}
+{% assign page_id = '__pg' | split: "," | concat: base | join:"_" %}
+{% else %}
+{% assign page_id = '__pg' | split: "," | concat: base | join:"_" | append: "_" | append: type %}
+{% endif %}
+<div class="row mr-0 ml-0">
+  <div class="col-12 offset-0 col-lg-11 offset-lg-1 pr-0" style="transform: translateX(-16px)">
+    {% if page.intro_section.enable %}
+    <div class="d-flex justify-content-between align-items-center flex-wrap" style="row-gap: 16px">
+    <h1 class="color-dark-3 font-size-32 line-height-50 mb-0">{{page.intro_section.title}}</h1>
+    {% assign page_id = "__pg_tidy3d_learning-center_faq_btn_subscribe-to-receive-update" %}
+    {% include subscribe_btn.html title="Subscribe to Newsletter" extra_id=page_id %}
+    </div>
+    {% endif %}
+    <div class="background-linear-white shadow-box">
+      <div class="tidy3d-learning-center-publications collapsed-container">
+        {% assign index = 0 %}
+        {% for category in site.data.tidy3d_faqs.faq_categories %}
+        {% assign includeFaq = category.faqs | size %}
+        {% if includeFaq > 0 %}
+        {% assign index = index | plus: 1 %}
+        {% assign categoryTitle = category.category | slugify %}
+        <div id="faq_category_{{categoryTitle}}" data-category-value="{{categoryTitle}}" class="collapsed-item collapsed" style="padding: 8px">
+          {% assign currentFaq = category.category | slugify | split: "," %}
+          {% assign idItem = '__pg_tidy3d-learning-center_faqs_' | split: ',' | concat: currentFaq | join:'' | downcase %}
+          {% assign expandHeader = '_header-expand' | split: ',' %}
+          {% assign expandHeaderId = idItem | split:',' | concat: expandHeader | join:'' | downcase %}
+          <div id="{{expandHeaderId}}" class="preview-header" onclick="collapseModule.onExpandAndScrollTop('{{expandHeaderId}}', 'collapsed-container')" style="cursor: pointer">
+            <div class="title d-flex align-items-center" style="column-gap: 20px">
+              <span class="d-inline-flex number-circle font-weight-600 justify-content-center align-items-center">{{index}}</span>
+              <h2 class="mb-0 font-size-20 higher-display-ellipsis ellipsis-line-2">{{category.category}}</h2>
+            </div>
+          </div>
+          <div class="preview-body line-height-24 color-dark-gray" style="padding-left: 64px">
+            <div class="faq-list collapsed-container">
+              {% for faq in category.faqs %}
+                {% include learning-center/faq/index.html path=faq category=category.category %}
+              {% endfor %}
+            </div>
+            <div class="space20"></div>
+          </div>
+        </div>
+        {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>

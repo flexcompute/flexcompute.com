@@ -1,0 +1,109 @@
+---
+layout: default
+
+custom_font: font2
+---
+{% include header.html extra_class="absolute transparent" logo_class="logo fc-logo" container_class="container" %}
+{% assign example_config = site.data.general_settings.example %}
+{% assign url_size = page.url | size %}
+{% assign page_id = page.url | slice: 1, url_size | split: '/' | join: '-' | downcase %}
+<div class="wrapper bg-opacity-default">
+  <div class="container inner pt-70">
+    <section id="container">
+      <div class="row">
+        {% if example_config.table_of_contents %}
+        <div id="example-left-navigation" class="col-2 pr-0 example-left-menu">
+          {% include example-left-side/menu.html %}
+        </div>
+        {% endif %}
+        <main class="col-md-10 p-0" id="notebook-container">
+          <div class="widget-subarea" style="display: none"></div>
+          <style>
+              [class*="space"] {
+                  width: unset;
+              }
+          </style>
+          <div class="d-flex font-size-14 justify-content-between align-items-center pl-10">
+            <div class="left d-flex align-items-center" style="column-gap: 10px; cursor: pointer;">
+              <span class="color-dark-gray font-size-16 d-flex">
+                <a id="__pg_{{page_id}}_return_link" class="color-primary-hover d-flex align-items-center" href="/tidy3d/examples/">
+                  Learning FDTD through Examples&nbsp;</a>
+                <span title="{{page.page_title}}"> / {{ page.page_title | truncatewords: 3 }}</span>
+              </span>
+            </div>
+            <div class="right pr-20 d-flex align-items-center" style="column-gap: 10px; cursor: pointer;">
+              {% if example_config.sign_up_btn %}
+              <a id="__pg_{{page_id}}_sign-up-new-to-simulate_btn" class="btn btn-sm btn-fc-primary mb-0 mr-15 font-weight-600" target="_blank" href="{{site.tidy3d.sign_up}}">
+                Sign up now to simulate
+              </a>
+              {% endif %}
+              {% if example_config.sign_up_btn %}
+              <span id="__pg_{{page_id}}_download-python-notebook_btn" class="btn btn-sm btn-fc-primary mb-0 d-flex align-items-center" data-trigger="hover" data-toggle="tooltip" data-placement="bottom" title="Download Python Notebook" onclick="downloadIpynb('{{page.source_link}}')">
+                <i class="jam jam-download font-size-20"></i>
+                .ipynb
+              </span>
+              {% endif %}
+            </div>
+          </div>
+          {{page.content}}
+        </main>
+        {% if example_config.anchors %}
+        <div class="col-md-2 p-0 notebook-anchor">{% include anchor.html %}</div>
+        {% endif %}
+      </div>
+    </section>
+  </div>
+</div>
+<div class="space80"></div>
+{% include footer_2.html %}
+<script>
+  const toggleDom = document.getElementById("toggle-navigation")
+  if (toggleDom) {
+    toggleDom.addEventListener('click', e => {
+      const navigation = document.getElementById("example-left-navigation");
+      const displayStyle = window.getComputedStyle(navigation).display;
+      const notebook = document.getElementById("notebook-container");
+      const notebookClassName = notebook.className
+      if (displayStyle !== 'none') {
+        navigation.style.display = "none";
+        notebook.className = notebookClassName.replaceAll('col-8', 'col-10')
+      } else {
+        navigation.style.display = "block";
+        notebook.className = notebookClassName.replaceAll('col-10', 'col-8')
+      }
+    })
+  }
+  function downloadIpynb(url) {
+    function _xhrDownload(url, fileName) {
+      let xhr = new XMLHttpRequest();
+      xhr.open('get', url, true);
+      xhr.setRequestHeader('Cache-Control', 'no-cache');
+      xhr.setRequestHeader('Content-type', 'application/ipynb');
+      xhr.responseType = 'blob';
+      xhr.onload = function () {
+        if (this.status === 200) {
+          let blob = this.response;
+          let url = window.URL.createObjectURL(blob);
+          let a = document.createElement('a');
+          a.href = url;
+          a.download = fileName;
+          a.click();
+        }else if (this.status === 404 && !url.endsWith('.txt')) {
+          downloadIpynb(url+'.txt')
+        }
+      };
+      xhr.onerror = function () {
+        console.error('error occurred when download file');
+      };
+      xhr.send();
+    }
+    const fileName = url.split("/").pop();
+    _xhrDownload(`/assets/tidy3d/examples/notebooks/${fileName}`, fileName)
+  }
+
+  (function () {
+    document.addEventListener('DOMContentLoaded', e => {
+      $('[data-toggle="tooltip"]').tooltip()
+    })
+  })()
+</script>

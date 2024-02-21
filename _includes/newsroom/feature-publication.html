@@ -1,0 +1,72 @@
+{% assign newsHighlight = site.data.newsroom.news_highlight %}
+{% assign newsHighlightPath = '' %}
+{% if newsHighlight.enable %}
+{% assign newsHighlightPath = newsHighlight.publication %}
+{% if newsHighlight.enable_blog %}
+{% assign newsHighlightPath = newsHighlight.blog %}
+{% endif %}
+{% endif %}
+{% assign featurePublication = site.data.newsroom.feature_publication %}
+{%if featurePublication.enable%}
+{% assign featuredPost = site.publications | sort: "date" | reverse | first %}
+{% for post in site.publications %}
+{% if post.path == featurePublication.content %}
+{% assign featuredPost = post %}
+{% endif %}
+{% endfor %}
+{% if featuredPost.path %}
+{% assign default_post_image = "/assets/images/Tidy3D-logo.svg" %}
+{% assign img_src = default_post_image  %}
+{% assign post_image_length = featuredPost.post_image | size %}
+{% if post_image_length > 0 %}
+{% assign img_src = featuredPost.post_image %}
+{% endif %}
+<section>
+  <h2>{{featurePublication.title}}</h2>
+  <div class="row align-items-start">
+    <div class="col-12 col-lg-6">
+      <div id="__pg_newsroom_feature-blog_{{featuredPost.title | slugify}}_card_link" class="p-24 d-flex align-items-center border-1 border-radius-20 position-relative newsroom-featured-card cursor-point" onclick="window.open('{{featuredPost.backlink}}','_blank')">
+        <img class="aspect-ratio" src="{{img_src}}" alt="{{featuredPost.title | default: featuredPost.title}}">
+        <h2 class="position-absolute post-title font-size-18 line-height-20 mb-0 higher-display-ellipsis ellipsis-line-2 l-16 t-16">
+          <a id="__pg_newsroom_feature-blog_{{featuredPost.title | slugify}}_link" href="{{featuredPost.backlink}}" class="color-dark-3 color-primary-hover" onclick="stopPropagation()">
+            {{featuredPost.title}}
+          </a>
+        </h2>
+      </div>
+    </div>
+    <div class="col-12 col-lg-6">
+      {% assign posts = site.publications | sort: "date" | reverse %}
+      {% assign index = 1 %}
+      {% for post in posts %}
+      {% if post.path != featuredPost.path and post.path != newsHighlightPath and index < 4 %}
+      {% assign index = index | plus: 1 %}
+      <div id="__pg_newsroom_feature-publication_{{post.title | slugify}}_card_link" class="feature-box pt-16 pb-16 pl-32 pr-32 mb-15 cursor-point newsroom-featured-item" onclick="window.open('{{post.backlink}}','_blank')">
+        <span class="date font-size-14" style="color: #999999"><i class="jam jam-clock"></i>{{post.date | date_to_string}}</span>
+        <h2 class="post-title font-size-20 line-height-24 mb-0 higher-display-ellipsis ellipsis-line-2">
+          <a id="__pg_newsroom_feature-publication_{{post.title | slugify}}_link" href="{{post.backlink}}" class="color-dark-3 color-primary-hover" target="_blank" onclick="stopPropagation()">
+            {{post.title | default: post.title}}
+          </a>
+        </h2>
+        {% if post.author != nil %}
+        {% assign authorSize = post.author | size%}
+        {% if authorSize>0  %}
+        <span class="author mr-20 font-size-14 line-height-16 d-inline-block higher-display-ellipsis ellipsis-line-2" style="color: #787878">
+          <i class="jam jam-user"></i>By {{post.author}}
+        </span>
+        {% endif %}
+        {% endif %}
+      </div>
+      {% endif %}
+      {% endfor %}
+      <a id="__pg_newsroom_feature-publication_read-more-for-tidy3d_link" class="more btn btn-md btn-dashed-primary color-primary color-primary-hover mb-0" href="/tidy3d/learning-center/publications/" style="padding: 2px 24px">
+        <img width="50" height="20" src="/assets/images/Tidy3D-logo.svg" alt="tidy3d">
+      </a>
+      <a id="__pg_newsroom_feature-publication_read-more-for-flow360_link" class="more btn btn-md btn-dashed-primary color-primary color-primary-hover mb-0" href="/flow360/publications/" style="padding: 2px 24px">
+        <img width="50" height="20" src="/assets/images/Flow360-logo.svg" alt="flow360">
+      </a>
+    </div>
+  </div>
+</section>
+{%endif%}
+{%endif%}
+

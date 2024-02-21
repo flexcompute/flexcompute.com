@@ -1,0 +1,11 @@
+<button
+    class="btn btn-primary color-white font-size-16 m-0 {% if include.ext_class %} {{include.ext_class}} {%else%} subscribe-btn {%endif%}"
+    id="{%if include.extra_id%}{{include.extra_id}}{%else%}global-subscribe-btn {%endif%}"
+    data-toggle="modal"
+    data-target="#Subscribe">
+    {% if include.title %}
+    {{include.title}}
+    {%else%}
+    Subscribe to Receive Updates
+    {%endif%}
+</button>

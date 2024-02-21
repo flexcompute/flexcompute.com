@@ -1,0 +1,113 @@
+lecture_section:
+  enable: true
+  tabs_headers:
+    - title: 'Lecture 1'
+      full_name: 'A Visual Introduction to Turbulence and its Prediction in CFD'
+      id: Lecture-01
+      click_id: 'lecture-01'
+      class: active
+      url: '/cfd-essentials/Lecture-1-A-Visual-Introduction-to-Turbulence-and-its-Prediction-in-CFD/'
+      enable: true
+    - title: 'Lecture 2'
+      full_name: 'The Basics of RANS Turbulence Modeling'
+      id: Lecture-02
+      click_id: 'lecture-02'
+      class: active
+      url: '/cfd-essentials/Lecture-2-The-Basics-of-RANS-Turbulence-Modeling/'
+      enable: true
+    - title: 'Lecture 3'
+      full_name: 'CFD Simulation Methods for High-Lift Aircraft Configurations (Part 1) - RANS Modelling Sensitivities'
+      id: Lecture-03
+      click_id: 'lecture-03'
+      class: active
+      url: '/cfd-essentials/Lecture-3-CFD-Simulation-Methods-for-High-Lift-Aircraft-Configurations-(Part-1)-RANS-Modelling-Sensitivities/'
+      enable: true
+    - title: 'Lecture 4'
+      full_name: 'CFD Simulation Methods for High-Lift Aircraft Configurations (Part 2) - RANS vs DES'
+      id: Lecture-04
+      click_id: 'lecture-04'
+      class: active
+      url: '/cfd-essentials/Lecture-4-CFD-Simulation-Methods-for-High-Lift-Aircraft-Configurations-(Part-2)-RANS-vs-DES/'
+      enable: true
+    - title: 'Lecture 5'
+      full_name: 'Steady Turbulence vs. Turbulence-Resolving Simulations'
+      id: Lecture-05
+      click_id: 'lecture-05'
+      class: active
+      url: '/cfd-essentials/Lecture-5-CFD-Steady-Turbulence-vs-Turbulence-Resolving-Simulations/'
+      enable: true
+    - title: 'Lecture 6'
+      full_name: 'The Mechanics of Turbulent CFD'
+      id: Lecture-06
+      click_id: 'lecture-06'
+      class: active
+      url: '/cfd-essentials/Lecture-6-The-Mechanics-of-Turbulent-CFD/'
+      enable: true
+  tabs_body:
+    - id: Lecture-01
+      enable: true
+      class: active
+      dataSource:
+        - title: "Lecture 1: A Visual Introduction to Turbulence and its Prediction in CFD"
+          click_id: 'lecture-01'
+          description: "Dr. Spalart will discuss the intricacies of turbulent flows and why we should use turbulence models as approximations instead of fully resolving the flow physics."
+          thumbnail: '/assets/images/turbulence/Lecture1.png'
+          class: tab-body-item-left
+          url: '/cfd-essentials/Lecture-1-A-Visual-Introduction-to-Turbulence-and-its-Prediction-in-CFD/'
+          enable: true
+    - id: Lecture-02
+      enable: true
+      class: active
+      dataSource:
+        - title: "Lecture 2: The Basics of RANS Turbulence Modeling"
+          click_id: 'lecture-02'
+          description: "Dr. Spalart discusses the basics of RANS turbulence modeling. We will introduce the theory behind RANS turbulence modeling and present some of the most common RANS turbulence models along with their implementation details."
+          thumbnail: '/assets/images/turbulence/Lecture2.png'
+          class: tab-body-item-left
+          url: '/cfd-essentials/Lecture-2-The-Basics-of-RANS-Turbulence-Modeling/'
+          enable: true
+    - id: Lecture-03
+      enable: true
+      class: active
+      dataSource:
+        - title: "Lecture 3: CFD Simulation Methods for High-Lift Aircraft Configurations (Part 1) - RANS Modelling Sensitivities"
+          click_id: 'lecture-03'
+          description: "This video presents the first part of the contribution by Flexcompute to the 4th High Lift Prediction Workshop based on the Flow360 solver. The analysis of the high-lift prediction results is focused on examining RANS modeling sensitivities. This includes effects of mesh refinement and topology, turbulence modeling choices and solution initialization strategies, with the aim to provide best-practices for RANS simulations of high-lift configurations."
+          thumbnail: '/assets/images/turbulence/Lecture3.png'
+          class: tab-body-item-left
+          url: '/cfd-essentials/Lecture-3-CFD-Simulation-Methods-for-High-Lift-Aircraft-Configurations-(Part-1)-RANS-Modelling-Sensitivities/'
+          enable: true
+    - id: Lecture-04
+      enable: true
+      class: active
+      dataSource:
+        - title: "Lecture 4: CFD Simulation Methods for High-Lift Aircraft Configurations (Part 2) - RANS vs DES"
+          click_id: 'lecture-04'
+          description: "This video presents the second part of the contribution by Flexcompute to the 4th High Lift Prediction Workshop based on the Flow360 solver. The best-practice RANS results are analyzed in further detail and compared with DES predictions with the aim to provide conclusions of the ability of RANS to predict high-lift flows. The DES results were found to significantly improve the comparison with experimental data and showed high confidence in terms of achieving the correct answer for the right reasons."
+          thumbnail: '/assets/images/turbulence/Lecture4.png'
+          class: tab-body-item-left
+          url: '/cfd-essentials/Lecture-4-CFD-Simulation-Methods-for-High-Lift-Aircraft-Configurations-(Part-2)-RANS-vs-DES/'
+          enable: true
+    - id: Lecture-05
+      enable: true
+      class: active
+      dataSource:
+        - title: "Lecture 5: Steady Turbulence vs. Turbulence-Resolving Simulations"
+          click_id: 'lecture-05'
+          description: "In this video, Dr. Spalart will show the differences between the steady-state RANS turbulence model, time-accurate unsteady RANS, Large Eddy Simulation (LES), and Detached Eddy Simulation (DES). We will show how RANS, LES, and DES are complementary to each other and all have their role to play in state-of-the-art CFD. Examples will demonstrate the strengths and weaknesses of each turbulence modeling and/or turbulence resolving technique."
+          thumbnail: '/assets/images/turbulence/Lecture5.png'
+          class: tab-body-item-left
+          url: '/cfd-essentials/Lecture-5-CFD-Steady-Turbulence-vs-Turbulence-Resolving-Simulations/'
+          enable: true
+    - id: Lecture-06
+      enable: true
+      class: active
+      dataSource:
+        - title: "Lecture 6: The Mechanics of Turbulent CFD"
+          click_id: 'lecture-06'
+          description: "We will discuss the mechanics of running a turbulent cfd simulation: The pre-processing steps. Generating grids, which can be very hard. Obtaining solutions. Understanding the solution and using them for engineering purposes."
+          thumbnail: '/assets/images/turbulence/Lecture6.png'
+          class: tab-body-item-left
+          url: '/cfd-essentials/Lecture-6-The-Mechanics-of-Turbulent-CFD/'
+          enable: true
+

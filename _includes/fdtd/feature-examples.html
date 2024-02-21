@@ -1,0 +1,18 @@
+{%assign examples = site.data.fdtd.feature_examples%}
+<div class="row row-gap-16">
+  {% for example in examples %}
+  <div class="col-12 col-md-6 col-lg-4">
+    <div class="text-left p-32 border-1 border-radius-20" style="min-height: 480px">
+      <a id="__pg_fdtd{{example.title|slugify}}_link" href="{{example.link}}">
+        {% if example.thumbnail %}
+        <div style="height: 230px; margin: 0 auto">
+          <img class="aspect-ratio" width="307" height="230" src="{{example.thumbnail}}" alt="{{example.title}}" style="object-fit: contain; max-height: 230px">
+        </div>
+        {%endif%}
+        <h3 class="color-dark font-size-20 mb-16 line-height-24">{{example.title}}</h3>
+        <p class="color-dark-5 line-height-24 higher-display-ellipsis ellipsis-line-5 mb-0">{{example.description}}</p>
+      </a>
+    </div>
+  </div>
+  {% endfor %}
+</div>

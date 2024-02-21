@@ -1,0 +1,225 @@
+{
+  "title": "CFD Essentials - Lecture 6",
+  "pages": [
+    {
+      "id": "",
+      "title": "",
+      "transcript": "Hello, This is Philippe with the fourth video about turbulent cfd at flexcompute."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "So in the past we discussed what turbulence looks like and the basics of turbulence modeling with a few equations. Then we discussed eddy turbulence modeling versus turbulence resolving simulations which are becoming more prevalent. Today we will discuss the mechanics of turbulence cfd:",
+      "list":[
+        {
+          "title": "",
+          "sentence": "The pre-processing steps"
+        },
+        {
+          "title": "",
+          "sentence": "Generating grids, which can be very hard."
+        },
+        {
+          "title": "",
+          "sentence": "Obtaining solutions"
+        },
+        {
+          "title": "",
+          "sentence": "Understanding the solution and using them for engineering purposes."
+        }
+      ]
+    },
+    {
+      "id": "",
+      "title": "",
+      "paragraphs": [
+        {
+          "title": "",
+          "transcript": "There are two types of grids going on. We will start with manually generated grids which go back to the 70s probably and then go to adaptive grids."
+        },
+        {
+          "title": "",
+          "transcript": "At the top we have one of the maybe easiest cases which is just a single airfoil. This is work by the Strelets team in Russia. You can see that they made a structured C grid. You can also see how it's a C wrapping around the airfoil. They have refinement in the regions with rapid flow variations, regions like:",
+          "list": [
+            {
+              "title": "",
+              "sentence": "The leading edge."
+            },
+            {
+              "title": "",
+              "sentence": "In the boundary layers in the wake."
+            },
+            {
+              "title": "",
+              "sentence": "They knew where the shockwave would be approximately, so they put in a very fine grid in that region."
+            }
+          ]
+        },
+        {
+          "title": "",
+          "transcript": "The mach number contours on the left are showing you the shock, of course, the supersonic region, the boundary layers and the wake. If you notice, the separation on the top trailing edge actually extends above the wake grid refinement. We will talk about that on the last slide."
+        },
+        {
+          "title": "",
+          "transcript": "As we can see, one of the hardest things to do is to predict the future thickness of the boundary layer at different angles of attack and thus know where to refine the meshes."
+        },
+        {
+          "title": "",
+          "transcript": "Now, even more difficult is to grid a multi-element airfoil. And we're still only in 2D. Here they used overset grid blocks. We see the overset between the blue and the red blocks here, there's interpolation back and forth between the two blocks. Then they have a C block here on the slat. The outside block, the blue block, is also a C block. But then the way the flap cuts inside the grid is an H grid so the grid lines don’t wrap around the leading edge of the flap the way they do around the leading edge of the slat or the main element."
+        },
+        {
+          "title": "",
+          "transcript": "So these are very many decisions that you need to make to deal with a complex geometry. Then you have refinement plans, especially in the recirculation regions behind the slat, the shear layers here above wing and of course in the boundary layers."
+        }
+      ]
+    },
+    {
+      "id": "",
+      "title": "",
+      "paragraphs": [
+        {
+          "title": "",
+          "transcript": "This slide talks about adaptive grids. These are from two French groups that I'm working with. So again, let's do a transonic airfoil. The grid is now unstructured, it has refinement of the shockwave here for instance and this refinement is anisotropic, it's much finer in X than in Y. The adaptive algorithm finds the boundary layer’s ties to Mach waves. It finds a region where the flow is inviscid but rapidly varying and you notice for instance that the viscous region is much thicker after the shock. All of this is discovered by the adaptation algorithm. You get a substantial improvement in accuracy, also a reduction in the need for user expertise, and a reduction of the time the user will spend meshing.  On the other end there is the cost of creating a series of grids. You want to start with a very coarse grid and this last grid is beautiful, but to get there you have solved the problem about 10 times. First on a coarse grid but still. Adaptation is pretty complex and some people say it's really hard to do on GPUs. The other thing is that it's limited to steady flows. If you had simulations with buffeting and the shocks were moving back and forth you would not be able to do this."
+        },
+        {
+          "title": "",
+          "transcript": "So now, for the multi element airfoil, I'm showing the results from the two groups. The second one is the same as the top and it's a little smoother, you can see how it captured the shear layer from the edge of the slat; it captured the slat wake over the airfoil and all these things. These are things that you can see in the Mach number contours. Again, major Improvement and accuracy and reduction of the huge user load that happens if you do manual grid generation. Imagine doing this now in 3D where you have supports for the slat, the flaps and so on."
+        }
+      ]
+    },
+    {
+      "id": "",
+      "title": "",
+      "paragraphs":[
+        {
+          "title": "",
+          "transcript": "Grid generation: you're going to obtain a geometry file and it needs  to be watertight. This could mean a lot of checking and often some repair or simplification. Say you have a car and it has a gap between the door and the body of the car. You don't want to represent that in CFD. You want to smooth over that. Airplanes also come with many many parts, if it’s only a nanometer between two parts. You don't want to go put grid points into that nanometer gap."
+        },
+        {
+          "title": "",
+          "transcript": "To generate grids, here I'm presuming it's manual, often you will choose to grid blocks one by one. They might be moving if you are doing rotating machinery. Again, unless it's automatic adaptation, the work is manual."
+        },
+        {
+          "title": "",
+          "transcript": "There are many rules that I will get to in the last slide. Flow features such as shock waves and vortices require local refinements. If you want to do a good job capturing a vortex it's difficult because you don't know ahead of time exactly where it's going to be."
+        },
+        {
+          "title": "",
+          "transcript": "Moving on to the solver now, with my turbulence thinking cap on, the big question is whether you're going to do Steady RANS, unsteady URANS or DES."
+        }
+      ]
+    },
+    {
+      "id": "",
+      "title": "",
+      "paragraphs": [
+        {
+          "title": "",
+          "transcript": "Here are pictures, sometimes the engineer will start with steady RANS which is less accurate, but at least finds the inviscid part of the flow. Then move on to unsteady URANS, which could be vortex shedding past a landing gear for instance. It could also be unsteady URANS because you have a rotor. Ultimately you would go all the way to Detached Eddy simulations (DES), which is much more accurate."
+        },
+        {
+          "title": "",
+          "transcript": "At the bottom, I'm showing airfoils. I think you've seen this picture already. So the steady RANS is very clean and simple on the single airfoil. On the multi-element airfoil, the steady RANS is going to keep track here of the slat wake. how the slat wake merges with the boundary layer from the main element. Then you have a lot going on over the flap. Sometimes you get what we call off body separation. You have recirculation, two distinct regions and all these things. So if you're lucky enough, you're going to get a steady solution to the equations. Again this is work done by Strelets but we're definitely moving towards doing turbulence resolving simulations. So this is the same geometry, but we've installed a synthetic turbulence generator and now we are resolving the 3-dimensional chaotic eddies in the slat wake, in the boundary layer, when they merge, the recirculation regions and all that."
+        },
+        {
+          "title": "",
+          "transcript": "This is a detached eddy simulation but there's a lot of activity in wall modeled LES, which is fairly similar. Some people say wall model is going to completely take over. We will see."
+        }
+      ]
+    },
+    {
+      "id": "",
+      "title": "",
+      "paragraphs": [
+        {
+          "title": "",
+          "transcript": "First you will have to get the correct flow conditions, angle of attack and all these things. In some cases you can use continuation, i.e use the solution from let's say 16 degrees angle of attack to go to 18 and you'll get better convergence than if you started from free stream conditions."
+        },
+        {
+          "title": "",
+          "transcript": "I want you to carefully monitor the convergence of the residuals during the iterations. Here is an example of a residual plot. Think of pseudo-steps as iterations and you have a residual for each of the five components of the Q vector and for the turbulence model’s nu-hat."
+        },
+        {
+          "title": "",
+          "transcript": "So you want this to fall to zero which means machine 0. This is a very nice convergence plot because all the residuals get to about $$10^{-12}$$, which is not far from machine zero on this computer."
+        },
+        {
+          "title": "",
+          "transcript": "You can see that the convergence sometimes is irregular. You have sudden drops. Sometimes it comes back up. If you are doing adaptation, you would partially converge and then change the grid so the residuals shoot back up and partially converge and finally on your last grid you would want a machine zero residuals."
+        },
+        {
+          "title": "",
+          "transcript": "Now if convergence is poor, many people in engineering are going to be happy with much less convergence then that. Maybe five orders of magnitude sometimes even less than that, which means that you really are not at zero but because of problems with the grids or problem with the solution wanting to be unsteady, it just refuses to go deep enough. Sometimes people get a limit cycle on average values. This is not the right thing to do, these are not valid flow fields coming  from a steady solver."
+        },
+        {
+          "title": "",
+          "transcript": "It is possible to continue that same simulation on that same grid in time accurate. Essentially URANS, then you could average but often if you try to do that the time step is so short that you can't get a real good sample."
+        },
+        {
+          "title": "",
+          "transcript": "I definitely want you to explore the solution. You should look at results on different grids. With different turbulence models, especially if this is a new geometry or conditions. If you're doing the same Formula One car you have been doing for five years, then you may not need to go try different turbulence models. But It's really good to visualize the flow. Make sure something crazy didn't happen. Look at the pressure, the skin friction, the turbulence index and all these things."
+        },
+        {
+          "title": "",
+          "transcript": "Don't just get the forces and moments and say: “oh the lift is up where I want it, so it must be that all the simulation is good”."
+        }
+      ]
+    },
+    {
+      "id": "",
+      "title": "",
+      "paragraphs": [
+        {
+          "title": "",
+          "transcript": "Last slide. A manual for manual grid generation for turbulent flows:<br>So you're going to distinguish:",
+          "list": [
+            {
+              "title": "",
+              "sentence": "The inviscid regions where the grid is relatively coarse, but still not too too coarse"
+            },
+            {
+              "title": "",
+              "sentence": "Shockwaves, if needed, you will want to put a lot of points there."
+            },
+            {
+              "title": "",
+              "sentence": "Free shear layers, especially if you have a multi-element airfoil or you have the wake of   the wing and you're looking near the horizontal tail."
+            },
+            {
+              "title": "",
+              "sentence": "Vortices"
+            },
+            {
+              "title": "",
+              "sentence": "Boundary layers,"
+            }
+          ]
+        },
+        {
+          "title": "",
+          "transcript": "In inviscid regions the grid cells are fairly isotropic. You saw that in the grids before. The grid density loosely follows the distance from the walls."
+        },
+        {
+          "title": "",
+          "transcript": "In the free turbulent layers the best grids are nearly aligned with the streamlines. You don't want an isotropic grid, you're going to spend too much if you do that. Of course, this is a lot of work for the engineer.  We have guidelines for the transverse resolution. How many points do you need in a shear layer, how many points in a wake, how many points in the vortex core. To get grid convergence, of course, these need to go to infinity."
+        },
+        {
+          "title": "",
+          "transcript": "So in workshops people talk a lot about the boundary layer grid, the other requirements are much more quantitative. In a way, for boundary layer grids, it’s easier to give you hard numbers. The first grid spacing in wall units $$\\Delta y^+$$ should be less than about two for the SA model;  much less than one for the SST model for the same accuracy. Say better than 5% on the skin friction. To get $$y^+$$, you need the friction velocity, which you don't know ahead of time, but you know it within maybe 25%. Which is not too bad. The most difficult point is going to be where skin friction is the highest because this is what makes $$y^+$$ larger for the same y."
+        },
+        {
+          "title": "",
+          "transcript": "This rule is going to depend strongly on the Reynolds number because to keep $$\\Delta y^+$$ correct, since it has a factor of viscosity in it, if you go up in Reynolds number and you reduce the viscosity, then $$\\Delta y$$ divided by the size of the model is gonna have to drop. This is a rule if you're going to extrapolate from one Reynolds number to one much larger."
+        },
+        {
+          "title": "",
+          "transcript": "The wall normal stretching ratio in the boundary layer:  the ratio of the grid spacing at $$J_{+1}$$ divided by the spacing at J will set the spacing in the bulk of the boundary layer.  It's good to have this ratio roughly constant, especially in the log layer. As a rule of thumb this ratio should start at less than about 1.2. For grid convergence, this ratio tends to 1. This will be sustained up to $$\\delta$$ (the edge of the boundary layer) and then you can go to inviscid grid spacing but $$\\delta$$ is actually far more difficult to estimate than $$u_{\\tau}$$. I showed you earlier how, because of separation, the $$\\delta$$ had gone out of what the grid was expecting."
+        },
+        {
+          "title": "",
+          "transcript": "This is it. Thank you."
+        }
+      ]
+    }
+  ]
+}

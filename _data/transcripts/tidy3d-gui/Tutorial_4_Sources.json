@@ -1,0 +1,104 @@
+{
+  "title": "Tidy3D GUI: Tutorial 4",
+  "pages": [
+    {
+      "id": "",
+      "title": "",
+      "transcript": "Hello! It's time to discuss the sources of electromagnetic fields in FDTD simulations. In this tutorial, you'll learn about the different types of sources commonly used and how to set them up to build your FDTD models."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "So, once you've created an empty simulation, add a new source and name it \"dipole\". Then, from the \"type\" drop-down list, select the \"PointDipole\" option."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "This will allow you to simulate oscillating dipoles, which are useful for exciting resonant modes of cavities or calculating photonic crystal band structures. They can also model light emission from fluorescent molecules. You can leave the dipole at its default position, or change it as desired."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "Next, define the source field pattern by selecting one of the electric or magnetic field components."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "These animations demonstrate how the direction of the injected electromagnetic waves changes when you select different point dipole polarizations."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "In addition to the field pattern, you need to set the time-dependency of the source. You can achieve this by choosing a wavelength range, as shown here, or a frequency center and bandwidth."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "Click the \"Plot\" button to visualize the source spectrum and its time-dependence. You can further adjust source bandwidth using the “Customize source bandwidth” parameter, but usually that is not necessary."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "If necessary, you can adjust the source amplitude, phase, and the position of its maximum value in the time domain using the \"Advanced\" tab."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "Finally, create a field monitor and run the simulation to observe the field pattern created by the point dipole."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "Moving forward, use the \"Edit\" command to create a new simulation version. Then, disable the point dipole source and add a new source. Choose the \"UniformCurrentSource\" type, which is similar to the point dipole source but generalized to higher dimensions."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "So, let's create a line source, as shown in this animation. Set its size to 9 microns in the x-direction, select the \"Ex\" polarization, and adjust the time dependence as before. Run the simulation and visualize the results."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "For certain problems like calculating the response of metasurfaces and diffraction gratings, it's necessary to have uniform illumination at different incident angles. In such cases, you can add a \"PlaneWave\" source, as demonstrated here."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "Here, the \"direction\" parameter sets a downward or upward wave, the \"angle_theta\" and \"angle_phi\" represent the polar and azimuth angles of the propagation direction, respectively. You can switch between S and P polarizations using the \"polar_angle\" parameter."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "When computing scattered fields only, such as when calculating scattered cross sections of various objects, you can add a total-field scattered-field (TFSF) source. As shown in these animations, the TFSF source allows you to specify a box region where a plane wave is injected. Inside this region, the fields are a superposition of the incident and scattered waves, while outside the TFSF box, you have only the scattered fields."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "The setup for TFSF is similar to the plane wave one, but you need to define a volume region and set the field injection axis."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "A GaussianBeam source is the ideal choice for simulating the coupling between electromagnetic devices and optical fibers or lenses."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "The new parameters here are the \"waist_radius\", which determines the spot size of the beam at the focal point, and the \"waist_distance\", which must be negative for a converging beam and positive for a diverging one. An \"AstigmaticGaussianBeam\" source is also available for cases where the waist radius should be different in the x- and y-directions."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "Concluding, to excite a device using a specific guided mode, like shown here, you need to use a \"ModeSource\". For a simple example, create a waveguide that is 1.5 microns wide and 0.75 microns thick, with a refractive index of 2.0. Include a mode source in the simulation and set its position and size as shown here. Let's insert the TM1 guided mode, where the electric field oscillates in the z-direction."
+    },
+    {
+      "id": "",
+      "title": "",
+      "transcript": "So, set the \"mode_index\" parameter to 3 to select it. In this case, a \"num_modes\" value of 4 is necessary, as the modes are sorted by their effective indices in descending order. The \"target_neff\" parameter is a guess for the desired mode effective index. In this example, you can set it to the waveguide refractive index to start from the highest effective index mode, which is the TE0."
+    }, {
+      "id": "",
+      "title": "",
+      "transcript": "After running the simulation, you'll observe the TM1 mode propagating through the waveguide in the positive x-direction. Now, you know how to select and set up a light source for different situations. In the next tutorials, you'll learn how to set up monitors to calculate and visualize quantities of interest in FDTD simulations."
+    }
+  ]
+}

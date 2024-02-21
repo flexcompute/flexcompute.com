@@ -1,0 +1,13 @@
+<a
+    href="javascript:void(0)"
+    class="color-black-1 color-primary-hover"
+    id="{%if include.extra_id%}{{include.extra_id}}{%else%}global-subscribe-btn {%endif%}"
+    data-toggle="modal"
+    data-whatever="{{include.url}}"
+    data-target="#download_pdf">
+    {% if include.title %}
+    {{include.title}}
+    {%else%}
+    Download
+    {%endif%}
+</a>
